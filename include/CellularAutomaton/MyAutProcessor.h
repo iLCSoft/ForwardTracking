@@ -146,6 +146,9 @@ class MyAutProcessor : public Processor {
      */    
     void cleanSegments( std::vector < std::vector <Segment* > > & segments );
     
+    //erases what has neither parent nor child
+    void cleanSinguletts( std::vector < std::vector <Segment* > > & segments );
+    
     /** Calculates all the track candidates that can be built from the children of a segment.
      * 
      * Works recursively. You pass it a segment and a vector of all the list the track contains so far, 
@@ -154,6 +157,10 @@ class MyAutProcessor : public Processor {
      * 
      */
     std::vector <Track*> getTrackCandidates ( Segment* segment, std::vector< TrackerHit*> hits );
+    
+    
+    void drawSegmentsInCed( std::vector < std::vector <Segment* > > segments );
+    void drawTracksInCed ( std::vector<Track*> tracks );
    
    /** Input collection name.
    */

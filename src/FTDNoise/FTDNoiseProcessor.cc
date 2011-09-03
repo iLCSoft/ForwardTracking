@@ -98,8 +98,10 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
   
 
   
-  CLHEP::HepRandom::setTheSeed( (unsigned)time(0) );
-   
+//   CLHEP::HepRandom::setTheSeed( (unsigned)time(0) );
+  CLHEP::HepRandom::setTheSeed( 1344652 );
+ 
+
   for (int i = 0; i< _nNoiseHits; i++){
   
      

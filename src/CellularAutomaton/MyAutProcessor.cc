@@ -69,6 +69,9 @@ void MyAutProcessor::init() {
 
     _nRun = 0 ;
     _nEvt = 0 ;
+    
+   
+//     MarlinCED::init(this) ;    //CED
 
 }
 
@@ -82,6 +85,18 @@ void MyAutProcessor::processRunHeader( LCRunHeader* run) {
 
 void MyAutProcessor::processEvent( LCEvent * evt ) { 
 
+
+//--CED---------------------------------------------------------------------
+// Reset drawing buffer and START drawing collection
+/*
+  MarlinCED::newEvent(this , 0) ; 
+
+  CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+
+  pHandler.update(evt); 
+*/
+//-----------------------------------------------------------------------
+   
 
     // this gets called for every event 
     // usually the working horse ...
@@ -163,13 +178,27 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
       hits[0].push_back(centerSegment);
       
       
+      
+//       drawSegmentsInCed ( hits ); //CED
+
+      
       std::cout << "\n---2-Segments---\n";
       // calculate all the 2-segments
       std::vector < std::vector <Segment* > > segments2 = getSegments2 ( hits );
       
+       
+      
+//       drawSegmentsInCed ( segments2 ); //CED
+
+      
       //Now do the cellular Automaton with the segments
       doAutomaton ( segments2 );   
 
+      
+      
+//       drawSegmentsInCed ( segments2 ); //CED
+     
+      
       
       //count the track candidates. this is only for feedback and is not essentially needed
 //       countTracks ( segments2 , 3 ); //start at layer 3 (== 4 hits or more)
@@ -178,6 +207,12 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
       //erase wrong segments
       cleanSegments ( segments2 );
          
+
+
+      
+//       drawSegmentsInCed ( segments2 ); //CED
+     
+      
       
 //       countTracks ( segments2 , 3);
       
@@ -191,11 +226,19 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
       
       doAutomaton ( segments3 );
       
+     
+      
+//       drawSegmentsInCed ( segments3 ); //CED 
+
       
       //erase wrong segments
       cleanSegments ( segments3 );
-      
+      cleanSinguletts ( segments3 );
          
+      
+      
+//       drawSegmentsInCed ( segments3 ); //CED 
+      
 
       //get the track candidates and save them. 
       
@@ -233,6 +276,13 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
     
   std::cout << "\n Overall Track Candidates=" << trackCandidates.size() << "\n";
     
+  
+  
+//   drawTracksInCed ( trackCandidates );   //CED begin
+  
+
+  
+  
   //finally: save the tracks
   LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
   for (unsigned int i=0; i < trackCandidates.size(); i++) trkCol->addElement( trackCandidates[i] );
@@ -249,8 +299,12 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
         << "   in run:  " << evt->getRunNumber() << std::endl ;
 
     
-
-
+  
+        
+//    MarlinCED::draw(this);  //CED begin
+   
+   
+        
     _nEvt ++ ;
 }
 
@@ -682,6 +736,36 @@ void MyAutProcessor::cleanSegments( std::vector < std::vector <Segment* > > & se
 }
 
 
+void MyAutProcessor::cleanSinguletts( std::vector < std::vector <Segment* > > & segments ){
+   
+   
+   for( unsigned int layer=0; layer < segments.size(); layer++ ){//for every layer
+            
+      for( unsigned int iSeg=0; iSeg < segments[layer].size(); iSeg++){//over every segment
+         
+         Segment* seg = segments[layer][iSeg];            
+            
+          
+            if ( ( seg->_children.size() == 0) && (seg->_parents.size() == 0) ){ //state is wrong, delete the segment
+               
+            
+               segments[layer].erase( segments[layer].begin() + iSeg );
+               
+               iSeg--;
+               
+            }
+               
+         
+      }
+         
+   }
+   
+   
+   
+   
+   
+}
+
 
 
 bool MyAutProcessor::areNeighbors ( Segment* parent , Segment* child ){
@@ -927,5 +1011,75 @@ std::vector <Track*> MyAutProcessor::getTrackCandidates ( Segment* segment, std:
 }
 
 
+void MyAutProcessor::drawSegmentsInCed( std::vector < std::vector <Segment* > >  segments ){
+   
+     
+   
+   for( unsigned int layer=0 ; layer < segments.size(); layer++ ){ //over all layers
+      
+      for( unsigned int iSeg=0; iSeg < segments[layer].size(); iSeg++ ){ //over all segments in the layer
+         
+         Segment* segment = segments[layer][iSeg];
+         
+         
+         if (segment->_trackerHits.size() == 1){ //exactly one hit, so draw a point
+         
+                  
+            const double* a = segment->_trackerHits[0]->getPosition();
+            ced_hit( a[0] ,a[1] , a[2] , 0 , 3 ,0xff0000 );
 
+            
+         }
+         else //more than one point or no points
+            for( unsigned int i=1 ; i< segment->_trackerHits.size() ; i++ ){ // over all hits in the segment (as we connect it with the previous we start with hit 1)
+      
+               const double* a = segment->_trackerHits[i]->getPosition();
+               const double* b = segment->_trackerHits[i-1]->getPosition();
+               
+               
+               unsigned int color=0;
+               unsigned int red=0;
+               unsigned int blue=0;
+               unsigned int green=0;
+               
+               float p =  sqrt ((float)  segment->_state[0] / (float) ( segments.size()) );
+               
+               green = ceil ( (1.-p) * 255 );
+               red = floor( 255*p );
+               blue = ceil ( (1.-p) * 255 );
+               
+               color = red * 256*256 + green * 256 + blue;
+      
+               ced_line_ID( a[0], a[1], a[2], b[0], b[1], b[2] , 2 , segment->_state[0]+1 , color, 0);
+               
+            }
+      }
+   }
+   
+   
+   
+}
+
+
+void MyAutProcessor::drawTracksInCed ( std::vector<Track*> tracks ){
+   
+   
+   
+   for ( unsigned iTrack = 0; iTrack < tracks.size(); iTrack++){ //over all tracks
+
+      for ( unsigned iHit = 0; iHit < tracks[iTrack]->getTrackerHits().size() -1 ; iHit++ ){
+         
+                  
+         const double* a = tracks[iTrack]->getTrackerHits()[iHit]->getPosition();
+         const double* b = tracks[iTrack]->getTrackerHits()[iHit+1]->getPosition();
+
+         ced_line_ID( a[0], a[1], a[2], b[0], b[1], b[2] , 2 , 2, 0x00ff00, 0);
+         
+      }
+      
+   }
+
+   
+   
+}
    
