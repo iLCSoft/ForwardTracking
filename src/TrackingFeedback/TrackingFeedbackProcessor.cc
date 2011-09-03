@@ -164,7 +164,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 //-----------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
 
-  MarlinCED::newEvent(this , 0) ; 
+//   MarlinCED::newEvent(this , 0) ; 
 
   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
 
@@ -209,10 +209,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
       
       
-      ///
-      MarlinCED::drawTrack( track, 2, 1, 0xff0000 , 9);
-//       MarlinCED::drawObjectsWithPosition( v.begin(), v.end() , marker, size , color, layer) ;
-      ///
+      //CED begin
+
+      
+//       MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
+
+ 
+      //CED end
       
       //////////////////////////////////////////////////////////////////////////////////
       //If distance from origin is not too high      
@@ -727,7 +730,6 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
     streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
         << "   in run:  " << evt->getRunNumber() << std::endl ;
 
- streamlog_out(DEBUG) <<"MarlinCED::draw(this) "<< std::endl ;
 
      MarlinCED::draw(this);
         
