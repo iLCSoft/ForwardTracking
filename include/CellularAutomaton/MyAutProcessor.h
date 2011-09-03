@@ -168,9 +168,13 @@ class MyAutProcessor : public Processor {
    std::string _AutTrkCollection;
    
    double _ratioMax;
+   double _ptMin; // the minimum transversal momentum
 
    int _nRun ;
    int _nEvt ;
+   
+   
+   double _Bz;
 } ;
 
 #endif

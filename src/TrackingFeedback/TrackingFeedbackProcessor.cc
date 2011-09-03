@@ -166,9 +166,9 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 
 //   MarlinCED::newEvent(this , 0) ; 
 
-  CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+//   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
 
-  pHandler.update(evt); 
+//   pHandler.update(evt); 
 
 //-----------------------------------------------------------------------
 
@@ -731,7 +731,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
         << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
-     MarlinCED::draw(this);
+//      MarlinCED::draw(this); //CED
         
     _nEvt ++ ;
 }

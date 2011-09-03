@@ -20,6 +20,9 @@
 #include <cmath>
 #include <MarlinCED.h>
 
+#include <gear/BField.h>
+
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace FTrack;
@@ -54,6 +57,12 @@ MyAutProcessor::MyAutProcessor() : Processor("MyAutProcessor") {
                                 "Maximal ratio between distance of points divided by z distance"  ,
                                 _ratioMax ,
                                 2. ) ;
+                                
+    registerProcessorParameter( "ptMin" ,
+                                "Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations"  ,
+                                _ptMin ,
+                                0.08 ) ;                                
+                                
 
 }
 
@@ -101,6 +110,7 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
     // this gets called for every event 
     // usually the working horse ...
 
+   _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
   
 
   LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
@@ -831,8 +841,29 @@ bool MyAutProcessor::areNeighbors_2( Segment* parent , Segment* child){
    
    if ( distTo0 > 10. ) return false;
    
-   return true;
+
    
+   
+   
+   // check if pt is bigger than _ptMin
+   
+   /* |omega| = K*Bz/pt
+    * R = pt / (K*Bz)
+    * pt = R * K *Bz
+    *
+    */ 
+   
+   const double K= 0.00029979; //K depends on the used units
+  
+   double pt = R * K * _Bz;
+   
+   if ( pt < _ptMin ) return false;
+   
+   
+   
+   
+   
+   return true;
    
 }
 
