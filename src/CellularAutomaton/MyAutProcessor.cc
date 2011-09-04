@@ -861,6 +861,17 @@ bool MyAutProcessor::areNeighbors_2( Segment* parent , Segment* child){
    
    
    
+   // check, if the distance / zdistance dose change a lot
+   
+   double ratioSquared1 = ((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2])) / (a[2]-b[2])*(a[2]-b[2]);
+                           
+   double ratioSquared2 = ((c[0]-b[0])*(c[0]-b[0]) + (c[1]-b[1])*(c[1]-b[1]) + (c[2]-b[2])*(c[2]-b[2])) / (c[2]-b[2])*(c[2]-b[2]);
+   
+   double ratioChangeMax = 8.; //TODO: this actually the square of the maximum change
+   
+   if ( ratioSquared1 / ratioSquared2 > ratioChangeMax ) return false;
+   if ( ratioSquared1 / ratioSquared2 < 1./ratioChangeMax ) return false;
+   
    
    
    return true;
