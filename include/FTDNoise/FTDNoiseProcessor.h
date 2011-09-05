@@ -59,6 +59,7 @@ class FTDNoiseProcessor : public Processor {
   std::string _colNameFTD ;
   int _nNoiseHits;
 
+  float _pointReso;
 
   int _nRun ;
   int _nEvt ;
