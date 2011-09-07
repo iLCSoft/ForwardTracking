@@ -11,6 +11,7 @@
 #include <marlin/Global.h>
 #include <gear/GEAR.h>
 
+#include <EVENT/TrackerHit.h>
 
 
 using namespace lcio ;
@@ -68,8 +69,9 @@ class FTDGhostProcessor : public Processor {
    
    int _nPetalsPerDisk;
    int _nSensorsPerPetal;
+   int _nStripsPerSensor;
     
-   
+
    
    
 
