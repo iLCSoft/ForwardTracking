@@ -52,12 +52,12 @@ FTDGhostProcessor::FTDGhostProcessor() : Processor("FTDGhostProcessor") {
    registerProcessorParameter( "nPetalsPerDisk" ,
                                "Number of Petals for one disk" ,
                                _nPetalsPerDisk ,
-                               (unsigned int) 16 ) ;
+                               (int) 16 ) ;
 
    registerProcessorParameter( "nSensorsPerPetal" ,
                                "Number of Sensors on one Petal" ,
                                _nSensorsPerPetal ,
-                               (unsigned int) 2 ) ;
+                               (int) 2 ) ;
                                
    
   

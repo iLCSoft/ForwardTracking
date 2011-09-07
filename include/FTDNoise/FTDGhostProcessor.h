@@ -66,8 +66,8 @@ class FTDGhostProcessor : public Processor {
    std::vector <double> _diskInnerRadius;
    std::vector <double> _diskOuterRadius; 
    
-   unsigned int _nPetalsPerDisk;
-   unsigned int _nSensorsPerPetal;
+   int _nPetalsPerDisk;
+   int _nSensorsPerPetal;
     
    
    
