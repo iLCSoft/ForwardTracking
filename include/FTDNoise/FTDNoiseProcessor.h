@@ -57,7 +57,6 @@ class FTDNoiseProcessor : public Processor {
  protected:
 
   std::string _colNameFTD ;
-  int _nNoiseHits;
 
   float _pointReso;
 
@@ -67,6 +66,11 @@ class FTDNoiseProcessor : public Processor {
   std::vector <double> _diskPositionZ;
   std::vector <double> _diskInnerRadius;
   std::vector <double> _diskOuterRadius; 
+  
+  
+   std::vector < float > _backgroundDensity;
+   std::vector < float > _backgroundDensitySigma;
+   std::vector < int >   _integratedBX;
 
 
 } ;

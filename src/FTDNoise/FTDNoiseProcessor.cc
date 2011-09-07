@@ -14,8 +14,9 @@
 #include <cmath>
 #include <math.h>
 #include <CLHEP/Random/RandFlat.h>
+#include <CLHEP/Random/RandGauss.h>
 #include <ctime> 
-
+#include "streamlog/streamlog.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -34,25 +35,68 @@ FTDNoiseProcessor::FTDNoiseProcessor() : Processor("FTDNoiseProcessor") {
   
    
   
-  registerProcessorParameter( "nNoiseHits" ,
-                              "Number of noise hits we want to add to the FTD"  ,
-                              _nNoiseHits ,
-                              0 ) ;
 	
   
-  // Input collection
-  registerInputCollection( LCIO::TRACKERHIT,
+   // Input collection
+   registerInputCollection( LCIO::TRACKERHIT,
                            "FTDCollectionName" , 
                            "Name of the FTD TrackerHit collection"  ,
                            _colNameFTD ,
                            std::string("FTDTrackerHits") ) ;
   
                            
-  registerProcessorParameter( "PointResolution" ,
+   registerProcessorParameter( "PointResolution" ,
                               "Point Resolution"  ,
                               _pointReso ,
-                              (float)0.010 ) ;                           
+                              (float)0.010 ) ; 
+                              
+                              
+   std::vector < float > defaultBgDensity;
+   
+   defaultBgDensity.push_back ( 0.013 );
+   defaultBgDensity.push_back ( 0.008 );
+   defaultBgDensity.push_back ( 0.002 );
+   defaultBgDensity.push_back ( 0.002 );
+   defaultBgDensity.push_back ( 0.001 );
+   defaultBgDensity.push_back ( 0.001 );
+   defaultBgDensity.push_back ( 0.001 );
+   
+   registerProcessorParameter( "BackgroundHitDensity" ,
+                               "Density of background hits in hits / cm^2 / BX" ,
+                               _backgroundDensity ,
+                               defaultBgDensity );
+   
+   
+   std::vector < float > defaultBgDensitySigma;
+   
+   defaultBgDensitySigma.push_back ( 0.005 );
+   defaultBgDensitySigma.push_back ( 0.003 );
+   defaultBgDensitySigma.push_back ( 0.001 );
+   defaultBgDensitySigma.push_back ( 0.001 );
+   defaultBgDensitySigma.push_back ( 0.001 );
+   defaultBgDensitySigma.push_back ( 0.001 );
+   defaultBgDensitySigma.push_back ( 0.001 );
+   
+   registerProcessorParameter( "BackgroundHitDensitySigma" ,
+                               "Standard deviation of density of background hits in hits / cm^2 / BX" ,
+                               _backgroundDensitySigma ,
+                               defaultBgDensitySigma );
   
+   
+   std::vector < int > defaultIntegratedBX;
+   
+   defaultIntegratedBX.push_back ( 100 );
+   defaultIntegratedBX.push_back ( 100 );
+   defaultIntegratedBX.push_back ( 1 );
+   defaultIntegratedBX.push_back ( 1 );
+   defaultIntegratedBX.push_back ( 1 );
+   defaultIntegratedBX.push_back ( 1 );
+   defaultIntegratedBX.push_back ( 1 );
+   
+   registerProcessorParameter( "IntegratedBX" ,
+                               "Number of bunchcrossings that are integrated" ,
+                               _integratedBX ,
+                               defaultIntegratedBX );
 
   
 }
@@ -109,72 +153,95 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
  
    CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( ILDCellID0::encoder_string , col ) ;
   
-   for (int i = 0; i< _nNoiseHits; i++){
-  
-     
-      TrackerHitImpl *hit = new TrackerHitImpl() ;
+
+   unsigned int count=0;
+   
+   for ( int side = -1; side <= 1; side+= 2 ){ //for both sides
+   
+
+      for ( int layer = 0; layer <= 6; layer++ ){ //over all layers
 
 
-      int layer = CLHEP::RandFlat::shootInt(7);      //The layer: 0-6
-      bool isForward = CLHEP::RandFlat::shootBit();    //forward or backward
-      int side = 1;
-      if (!isForward) side = -1;
+         unsigned int hitsOnThisDisk = 0;
 
-      double pos[3] = { 0. , 0. , 0. } ;
+         //generate a random density that's gaussian smeared around the average:
+         double density = CLHEP::RandGauss::shoot( _backgroundDensity[layer] * _integratedBX[ layer ] , _backgroundDensitySigma[layer] * _integratedBX[ layer ] );
 
-      pos[2] = _diskPositionZ[layer] * side; //the z position of the hit is the random layer
-      
+         //calculate the number of hits corresponding to this density on the disk.
+         //therefor: first calculate the area of the disk:
+         double area = M_PI* ( _diskOuterRadius[layer]*_diskOuterRadius[layer] - _diskInnerRadius[layer]*_diskInnerRadius[layer] ) / 100.; //the division through 100 is for converting to cm
 
-      //now we want an x and a y position.
-      //For now we'll just calculate a random phi and a random R (both in the xy plane) and
-      //calculate x and y from that.
+         unsigned int nHits = round( fabs( area*density ) ) ;
+         
+         
+         //So now we have the number of hits --> distribute them on the disk
+         for (unsigned int iHit=0; iHit < nHits; iHit++){
+            
+            
+            double pos[3] = { 0. , 0. , 0. } ; 
 
-      double phi = CLHEP::RandFlat::shoot ( 0. , 2*M_PI ); //angle in xy plane from 0 to 2Pi
-      double R = CLHEP::RandFlat::shoot ( _diskInnerRadius[layer-1] , _diskOuterRadius[layer-1] );
-
-      pos[0] = R* cos(phi);
-      pos[1] = R* sin(phi);
-
-
-      TrackerHitPlaneImpl* trkHit = new TrackerHitPlaneImpl ;        
-
-
-      
-      
-      trkHit->setType( 201+layer);  // needed for FullLDCTracking et al.
-
-      cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
-      cellid_encoder[ ILDCellID0::side   ] = side ;
-      cellid_encoder[ ILDCellID0::layer  ] = layer ;
-      cellid_encoder[ ILDCellID0::module ] = 0 ;
-      cellid_encoder[ ILDCellID0::sensor ] = 0 ;
-      
-      cellid_encoder.setCellID( trkHit ) ;
-
-      trkHit->setPosition(  pos  ) ;
-
-      float u_direction[2] ; // x
-      u_direction[0] = 0.0 ; 
-      u_direction[1] = M_PI/2.0 ;
-      
-      float v_direction[2] ; // y
-      v_direction[0] = M_PI/2.0 ;
-      v_direction[1] = M_PI/2.0 ;
-      
-      trkHit->setU( u_direction ) ;
-      trkHit->setV( v_direction ) ;
-      
-      trkHit->setdU( _pointReso ) ;
-      trkHit->setdV( _pointReso ) ;
+            pos[2] = _diskPositionZ[layer] * side; //the z position of the hit is exact
                
-      trkHit->setEDep( 0. ) ;
+            //now we want an x and a y position.
+            //For now we'll just calculate a random phi and a random R (both in the xy plane) and
+            //calculate x and y from that.
+            //This gives of course more hits in the region of lower R, but that's realistic anyway
 
+            double phi = CLHEP::RandFlat::shoot ( 0. , 2*M_PI ); //angle in xy plane from 0 to 2Pi
+            double R = CLHEP::RandFlat::shoot ( _diskInnerRadius[layer] , _diskOuterRadius[layer] );
 
+            pos[0] = R* cos(phi); //x
+            pos[1] = R* sin(phi); //y
+            
+            TrackerHitPlaneImpl* trkHit = new TrackerHitPlaneImpl ;        
 
-      col->addElement( trkHit ) ; 
+            
+            trkHit->setType( 201+layer);  // needed for FullLDCTracking et al.
 
+            cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
+            cellid_encoder[ ILDCellID0::side   ] = side ;
+            cellid_encoder[ ILDCellID0::layer  ] = layer ;
+            cellid_encoder[ ILDCellID0::module ] = 0 ;
+            cellid_encoder[ ILDCellID0::sensor ] = 0 ;
+            
+            cellid_encoder.setCellID( trkHit ) ;
+
+            trkHit->setPosition(  pos  ) ;
+
+            float u_direction[2] ; // x
+            u_direction[0] = 0.0 ; 
+            u_direction[1] = M_PI/2.0 ;
+            
+            float v_direction[2] ; // y
+            v_direction[0] = M_PI/2.0 ;
+            v_direction[1] = M_PI/2.0 ;
+            
+            trkHit->setU( u_direction ) ;
+            trkHit->setV( v_direction ) ;
+            
+            trkHit->setdU( _pointReso ) ;
+            trkHit->setdV( _pointReso ) ;
+                     
+            trkHit->setEDep( 0. ) ;
+
+            col->addElement( trkHit ) ; 
+            
+            hitsOnThisDisk++;         
+
+         }
+         
+         streamlog_out( DEBUG4 ) << "\n Added background hits on layer " << (layer+1)*side << ": " << hitsOnThisDisk;
+         count += hitsOnThisDisk;
+
+      }
+   
+   }
+   
+   streamlog_out( DEBUG4 ) << "\n\n Total added background hits on all layers: " << count << "\n";
+   
+   
   
-  }
+
   
   
   

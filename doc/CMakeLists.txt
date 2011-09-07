@@ -5,6 +5,7 @@
 
 
 FIND_PACKAGE( Doxygen )
+FIND_PACKAGE( LATEX )
 
 IF( DOXYGEN_FOUND )
 

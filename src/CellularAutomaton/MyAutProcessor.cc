@@ -7,6 +7,8 @@
 #include <EVENT/Track.h>
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
+#include <EVENT/LCRelation.h>
+#include <EVENT/MCParticle.h>
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -14,6 +16,7 @@
 #include "Segment.h"
 #include "TVector3.h"
 #include <vector>
+#include <set>
 #include <algorithm>
 
 #include "SimpleCircle.h"
@@ -22,10 +25,17 @@
 
 #include <gear/BField.h>
 
+#include "MarlinTrk/Factory.h"
+#include "MarlinTrk/IMarlinTrack.h"
+
+#include <UTIL/BitField64.h>
+#include <UTIL/ILDConf.h>
+
 
 using namespace lcio ;
 using namespace marlin ;
 using namespace FTrack;
+using namespace MarlinTrk ;
 
 
 
@@ -35,35 +45,61 @@ MyAutProcessor aMyAutProcessor ;
 
 MyAutProcessor::MyAutProcessor() : Processor("MyAutProcessor") {
 
-    // modify processor description
-    _description = "MyAutProcessor tests the Cellular Automaton" ;
-    
-
-    // register steering parameters: name, description, class-variable, default value
-    registerInputCollection(LCIO::TRACKERHIT,
-                            "FTDHitCollectionName",
-                            "FTD Hit Collection Name",
-                            _FTDHitCollection,
-                            std::string("FTDTrackerHits")); 
+   // modify processor description
+   _description = "MyAutProcessor tests the Cellular Automaton" ;
 
 
-    registerOutputCollection(LCIO::TRACK,
-                             "AutTrkCollection",
-                             "Name of Cellular Automaton Track output collection",
-                             _AutTrkCollection,
-                             std::string("AutTracks"));
-    
-    registerProcessorParameter( "RdivZratioMax" ,
-                                "Maximal ratio between distance of points divided by z distance"  ,
-                                _ratioMax ,
-                                2. ) ;
+   // register steering parameters: name, description, class-variable, default value
+   registerInputCollection(LCIO::TRACKERHIT,
+                           "FTDHitCollectionName",
+                           "FTD Hit Collection Name",
+                           _FTDHitCollection,
+                           std::string("FTDTrackerHits")); 
+
+
+   registerOutputCollection(LCIO::TRACK,
+                           "AutTrkCollection",
+                           "Name of Cellular Automaton Track output collection",
+                           _AutTrkCollection,
+                           std::string("AutTracks"));
+
+   registerProcessorParameter( "RdivZratioMax" ,
+                              "Maximal ratio between distance of points divided by z distance"  ,
+                              _ratioMax ,
+                              2. ) ;
+                              
+   registerProcessorParameter( "ptMin" ,
+                              "Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations"  ,
+                              _ptMin ,
+                              0.08 ) ;               
+                              
+   registerProcessorParameter( "AngleMax" ,
+                              "Maximum angle of 3 hits in degree"  ,
+                              _angleMax ,
+                              8. ) ;     
+                              
+   _cosAngleMin = cos ( _angleMax* M_PI / 180. );                                 
+                              
+                              
+    //For fitting:
+                              
+   registerProcessorParameter("MultipleScatteringOn",
+                              "Use MultipleScattering in Fit",
+                              _MSOn,
+                              bool(true));
+
+   registerProcessorParameter("EnergyLossOn",
+                              "Use Energy Loss in Fit",
+                              _ElossOn,
+                              bool(true));
+
+   registerProcessorParameter("SmoothOn",
+                              "Smooth All Measurement Sites in Fit",
+                              _SmoothOn,
+                              bool(false));
                                 
-    registerProcessorParameter( "ptMin" ,
-                                "Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations"  ,
-                                _ptMin ,
-                                0.08 ) ;                                
                                 
-
+                                
 }
 
 
@@ -81,6 +117,25 @@ void MyAutProcessor::init() {
     
    
 //     MarlinCED::init(this) ;    //CED
+    
+  /*  
+  // For KalTest  
+    
+  // set up the geometery needed by KalTest
+  //FIXME: for now do KalTest only - make this a steering parameter to use other fitters
+  _trksystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
+  
+  if( _trksystem == 0 ){
+    
+    throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
+    
+  }
+
+  _trksystem->setOption( IMarlinTrkSystem::CFG::useQMS,        _MSOn ) ;
+  _trksystem->setOption( IMarlinTrkSystem::CFG::usedEdx,       _ElossOn) ;
+  _trksystem->setOption( IMarlinTrkSystem::CFG::useSmoothing,  _SmoothOn) ;
+  _trksystem->init() ;  
+  */  
 
 }
 
@@ -94,18 +149,18 @@ void MyAutProcessor::processRunHeader( LCRunHeader* run) {
 
 void MyAutProcessor::processEvent( LCEvent * evt ) { 
 
-
+/*
 //--CED---------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
-/*
+
   MarlinCED::newEvent(this , 0) ; 
 
   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
 
   pHandler.update(evt); 
-*/
+
 //-----------------------------------------------------------------------
-   
+*/
 
     // this gets called for every event 
     // usually the working horse ...
@@ -114,6 +169,16 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
   
 
   LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
+
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                              //
+  //                                                                                                              //
+  //                            Track Search with the Cellular Automaton                                          //
+  //                                                                                                              //
+  //                                                                                                              //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
 
   
   //this is a vector of a vector of TrackerHits. 
@@ -126,7 +191,7 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
   // in the vectors the hits are saved.
   // so hits[2][0].Z() will give the z coordinate of the first hit in the second layer.
 
-  
+  //First: collect all the hits and store them
   if( col != NULL ){
 
       int nHits = col->getNumberOfElements()  ;
@@ -143,6 +208,7 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
          
         Segment* segment = new Segment(trkHit); 
         
+
         if (trkHit->getPosition()[2] > 0.){
            
            
@@ -268,9 +334,14 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
                
                for ( unsigned int i=0; i < newTrackCands.size(); i++){  //add the track candidates
                         
-                  trackCandidates.push_back( newTrackCands[i] ); 
-                        
-                  count++;
+                  if (  newTrackCands[i]->getTrackerHits().size() > 0 ){ //a track candidate must have at least 4 hits otherwise we can't fit is
+                     
+                    
+
+                     trackCandidates.push_back( newTrackCands[i] ); 
+                     count++;
+                     
+                  }
                         
                }
                
@@ -300,7 +371,7 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
   
 
   
- 
+
   
   
 //-- note: this will not be printed if compiled w/o MARLINDEBUG=1 !
@@ -311,9 +382,184 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
     
   
         
-//    MarlinCED::draw(this);  //CED begin
+
+   
+  
+        
+        
+        
+        
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                              //
+  //                                                                                                              //
+  //                            Track Refit with KalTest                                                          //
+  //                                                                                                              //
+  //                                                                                                              //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ /*         
+        //temp begin 
+        
+          std::vector<Track*> trueTracks;
+   LCCollection* colTrue = evt->getCollection( "TrueTracksMCP" );
+
+    
+   int nMCTracks = colTrue->getNumberOfElements();
    
    
+   for( int i=0; i < nMCTracks; i++){
+      
+          
+
+      LCRelation* rel = dynamic_cast <LCRelation*> (colTrue->getElementAt(i) );
+      MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );
+      Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
+      
+      if (track->getTrackerHits().size()>3)
+      trueTracks.push_back( track );
+        
+        
+   }
+    
+
+
+        //temp end
+        
+   
+        
+        
+   streamlog_out(DEBUG) << " Start Fitting "      << std::endl ;    
+        
+   
+   std::vector<Track*> fittedTracks; 
+    
+   unsigned int count = 0;
+
+   
+   // loop over the input tacks and refit using KalTest    
+   for( unsigned int i=0; i< trueTracks.size() ; ++i){
+      
+      std::cout.precision( 8 );
+      
+
+
+      
+      Track* track = trueTracks[i] ;
+               
+      MarlinTrk::IMarlinTrack* marlin_trk = _trksystem->createTrack();
+
+      EVENT::TrackerHitVec trkHits = track->getTrackerHits() ;        
+
+      //sort the hits
+      sort(trkHits.begin(), trkHits.end(), MyAutProcessor::compare_z() );
+
+      EVENT::TrackerHitVec::iterator it = trkHits.begin();
+
+      //add hits to the MarlinTrk
+      for( it = trkHits.begin() ; it != trkHits.end() ; ++it )
+         {
+         
+         marlin_trk->addHit(*it);
+         
+         }
+
+      bool direction = false ; //from outside in (backwards in time)
+      marlin_trk->initialise( direction ) ;
+      int fit_status = marlin_trk->fit( direction ) ; // SJA:FIXME: false means from out to in here i.e. backwards. This would be better if had a more meaningful name perhaps fit_fwd and fit_rev
+
+
+      if( fit_status == 0 ){  //succesfull
+
+
+         gear::Vector3D xing_point ; 
+
+         UTIL::BitField64 encoder( ILDCellID0::encoder_string ) ; 
+
+         encoder.reset() ;  // reset to 0
+         
+
+
+         encoder[ILDCellID0::subdet] = ILDDetID::FTD ;
+         encoder[ILDCellID0::side] = 1 ;
+         encoder[ILDCellID0::layer]  = 1 ;
+         encoder[ILDCellID0::module] = 0 ;
+         encoder[ILDCellID0::sensor] = 0 ;
+         int  layerID = encoder.lowWord() ;  
+         
+         // direction is in time 
+         bool forwards = true ;
+         bool backwards = false ;
+         
+         
+         
+         marlin_trk->intersectionWithLayer( backwards, layerID, xing_point); // first FTD layer          
+
+         
+         // get track state at the first and last measurement sites
+         TrackStateImpl trkState_at_begin;       
+
+         marlin_trk->getTrackState( trkState_at_begin ) ;
+         
+         TrackStateImpl trkState_at_end;
+         
+         marlin_trk->getTrackState(  trkHits.back(), trkState_at_end ) ;         
+
+         const gear::Vector3D point(0.,0.,0.); // nominal IP
+
+
+         // use propagate, i.e. include material during propagation of the cov matrix 
+         TrackStateImpl* trkState = new TrackStateImpl() ;
+         int return_code = marlin_trk->propagate(point, *trkState) ;
+
+         std::cout << "\n trackstate at 0 returncode=" << return_code << "\n";
+         
+         if ( return_code == 0 ) {
+         
+            IMPL::TrackImpl* refittedTrack = new IMPL::TrackImpl();
+            
+            refittedTrack->addTrackState(trkState);
+
+            for( it = trkHits.begin() ; it != trkHits.end() ; ++it )
+               {
+                  
+                  refittedTrack->addHit(*it);
+                  
+               }
+               
+            
+            
+            fittedTracks.push_back ( refittedTrack );
+            count++;
+
+         }
+         else{ // it didn't work!
+
+//             drawTrackInCed ( trackCandidates[i] );
+
+            
+         }
+         
+      }
+        
+      delete marlin_trk;
+       std::cout << "\n savedEND=" << i << "\n"; 
+   } 
+
+   
+        
+   std::cout << "\n refitted Track Candidates=" << count << "\n";
+        
+*/        
+        
+  
+        
+        
+        
+        
+        
+//    MarlinCED::draw(this);  //CED begin    
+        
+        
         
     _nEvt ++ ;
 }
@@ -358,52 +604,57 @@ std::vector < std::vector <Segment* > > MyAutProcessor::getSegments2 ( std::vect
    for (unsigned int layer=hits.size()-1; layer>0; layer--){ //over all layers from outside to inside
         
       //decide on which steps (how far) to take
-      std::vector < int > step;
+      std::set<int> step; // a set is used instead of a vector, so that no step value can exist twice! 
       
-      if ( layer >= 1 ) step.push_back (1); //that far we always want to go (except when we are at the end)
-      if (( layer <= 4 )&&( layer >= 2 )) step.push_back( layer ); // allow jumping to 0 from layer 4 or lower (we don't add layer 1 because we allow jumpint 1 anyway. TODO: maybe this should better be a set than a vector?) 
-      if ( layer >= 2) step.push_back ( 2 );
-      
+      if ( layer >= 1 ) step.insert (1); //that far we always want to go (except when we are at the end)
+      if (( layer <= 4 )&&( layer >= 2 )) step.insert( layer ); // allow jumping to 0 from layer 4 or lower 
+      if ( layer >= 2) step.insert ( 2 ); //allow jumping over 1 layer. from layer 1 this makes no sense (because there is only one more layer)
+                                             //and from layer 2 this equals a jump to layer 0 which is already included.
+     
+     
       //      std::cout << "\nhitsForward2[i].size()= " << hitsForward2[i].size() ;
       for (unsigned int iHit=0; iHit < hits[layer].size(); iHit++){ //over all hits in the layer
          
             
-         for (unsigned int i=0; i < step.size(); i++) //over diverent ranges of step
+         for ( std::set<int>::iterator iStep= step.begin(); iStep != step.end(); iStep++){ //over different ranges of step
                            
-               for(unsigned int k=0; k< hits[layer-step[i] ].size(); k++){ //over all hits in the next inner layer
-                     
-                  const double* a =  hits[layer][iHit]->_trackerHits[0]->getPosition(); //the outer hit
-                  const double* b =  hits[layer-step[i] ][k]->_trackerHits[0]->getPosition(); //the inner hit
+            for(unsigned int k=0; k< hits[layer-*iStep ].size(); k++){ //over all hits in the next inner layer
+                  
+               const double* a =  hits[layer][iHit]->_trackerHits[0]->getPosition(); //the outer hit
+               const double* b =  hits[layer-*iStep ][k]->_trackerHits[0]->getPosition(); //the inner hit
+                        
+                        
+                        
+               double ratio = sqrt( (a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2]) ) / fabs ( a[2]-b[2] );
+                        
+               //            std::cout << "\nratio=" << ratio ;
+                        
+               if (ratio <= _ratioMax){ //ratio is good -> build segments. and store the links to them in the 1-segments
+                           
+                  std::vector <TrackerHit*> segHits;
+                  segHits.push_back ( hits[layer][iHit]->_trackerHits[0] ); //the outer one
+                  segHits.push_back ( hits[layer-*iStep][k]->_trackerHits[0] ); //the inner one
+                           
+                  int layersSkipped = segHits[0]->getType() - segHits[1]->getType() -1; //number of skipped layers
                            
                            
+                           //Create a new segment
+                  Segment* newSeg= new Segment ( segHits );
                            
-                  double ratio = sqrt( (a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2]) ) / fabs ( a[2]-b[2] );
+                  newSeg->_state.resize( layersSkipped +1);
+                              
+                  segments2[layer-*iStep].push_back( newSeg );  //Segments always belong to the layer of their innermost point
                            
-                  //            std::cout << "\nratio=" << ratio ;
-                           
-                  if (ratio <= _ratioMax){ //ratio is good -> build segments. and store the links to them in the 1-segments
-                              
-                     std::vector <TrackerHit*> segHits;
-                     segHits.push_back ( hits[layer][iHit]->_trackerHits[0] ); //the outer one
-                     segHits.push_back ( hits[layer-step[i] ][k]->_trackerHits[0] ); //the inner one
-                              
-                     int layersSkipped = segHits[0]->getType() - segHits[1]->getType() -1; //number of skipped layers
-                              
-                              
-                              //Create a new segment
-                     Segment* newSeg= new Segment ( segHits );
-                              
-                     newSeg->_state.resize( layersSkipped +1);
-                                 
-                     segments2[layer-step[i] ].push_back( newSeg );  //Segments always belong to the layer of their innermost point
-                              
-                              //Store the pointer to the created 2-segments in these points, so we can easily connect the segments afterwards
-                     hits[layer][iHit]->_children.push_back(  newSeg ); 
-                     hits[layer-step [i] ][k]->_parents.push_back(  newSeg );
-                     count++;
-                  }
-               
+                           //Store the pointer to the created 2-segments in these points, so we can easily connect the segments afterwards
+                  hits[layer][iHit]->_children.push_back(  newSeg ); 
+                  hits[layer-*iStep][k]->_parents.push_back(  newSeg );
+                  
+                  count++;
                }
+               
+            }
+         
+         }
             
       }
          
@@ -455,6 +706,10 @@ std::vector < std::vector <Segment* > > MyAutProcessor::getSegments2 ( std::vect
 
 std::vector < std::vector <Segment* > > MyAutProcessor::getSegments3( std::vector < std::vector <Segment* > > segments2 ) {
    
+   
+   //***********************************//
+   //***********************************//
+   //Build 3-segments from combining all 2-segments with their children
    
    unsigned int count=0;
       
@@ -796,40 +1051,71 @@ bool MyAutProcessor::areNeighbors ( Segment* parent , Segment* child ){
 bool MyAutProcessor::areNeighbors_2( Segment* parent , Segment* child){
    
 
+   /**********************************************************************************************/
+   /*                            check the angle                                                 */
+   /**********************************************************************************************/
    
-   //check the angle
+   //the three dimensional angle between two 2-segments is not allowed to be too big (or else track is too curly)
+   
+   //this is not written very beautiful, because this code gets called often needs to be fast.
+   //But it's just a simple angle calculation of two vectors cos(alpha) = u*v/|u||v|
+   //
+   //Because of speed, I avoided using stuff like sqrt or cos or something in here.
+   //That's why it may look a bit odd.
+   
    
    const double* a = parent->_trackerHits[0]->getPosition();
    const double* b = parent->_trackerHits[1]->getPosition();
    const double* c = child->_trackerHits[1]->getPosition();
       
-   double zaehler=0.;
-   double uBetrag=0.;
-   double vBetrag=0.;
+   double numerator=0.;
+   double uSquared=0.;
+   double vSquared=0.;
+   
+   double u[3];
+   double v[3];
    
    for (int i=0; i <= 2; i++){
       
-      double u = b[i] - a[i];
-      double v = c[i] - b[i];
+      u[i] = b[i] - a[i];
+      v[i] = c[i] - b[i];
       
-      zaehler+= u*v;
-      uBetrag +=  u*u;
-      vBetrag += v*v;
+      numerator  += u[i]*v[i];
+      uSquared   += u[i]*u[i];
+      vSquared   += v[i]*v[i];
       
    }
    
-   double nenner = sqrt ( uBetrag * vBetrag );
+   double denomSquared = uSquared * vSquared;
    
-   if (nenner > 0){
+   if ( denomSquared > 0.){ //don't divide by 0
    
-      double cosTheta = fabs(zaehler / nenner );
-      if (cosTheta < 0.9962) return false; // = 5degree, TODO: calculate this at another point!  
+      double cosThetaSquared = numerator * numerator / ( uSquared * vSquared );
+      
+      if (cosThetaSquared < _cosAngleMin*_cosAngleMin) return false;  
    
    }
    
+   /**********************************************************************************************/
+   /*            check the change of distance / z-distance                                       */
+   /**********************************************************************************************/
    
    
-   //check the distance of a circle defined by the two 2-segments to the origin in xy
+   
+   double ratioSquared1 = ( u[0]*u[0] + u[1]*u[1] + u[2]*u[2] ) / (u[2]*u[2]);
+                           
+   double ratioSquared2 = ( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] ) / (v[2]*v[2]);
+   
+   double ratioChangeMaxSquared = 2.; //TODO: make this tunable
+   
+   if ( ratioSquared1 / ratioSquared2 > ratioChangeMaxSquared) return false;
+   if ( ratioSquared2 / ratioSquared1 > ratioChangeMaxSquared ) return false;
+   
+   
+   /**********************************************************************************************/
+   /*                            check the distance of (0,0) from circle                         */
+   /**********************************************************************************************/   
+
    
    SimpleCircle circle ( a[0] , a[1] , b[0] , b[1] , c[0] , c[1] );
    
@@ -837,23 +1123,27 @@ bool MyAutProcessor::areNeighbors_2( Segment* parent , Segment* child){
    double y = circle.getCenterY();
    double R = circle.getRadius();
    
-   double distTo0 = fabs ( R - sqrt ( x*x + y*y ) );
+      
+   double distToCircleMax = 10.;
    
-   if ( distTo0 > 10. ) return false;
+   if ( fabs( R - sqrt (x*x+y*y) )  > distToCircleMax ) return false;
    
 
-   
+   /**********************************************************************************************/
+   /*                            check the pt                                                    */
+   /**********************************************************************************************/   
    
    
    // check if pt is bigger than _ptMin
-   
-   /* |omega| = K*Bz/pt
-    * R = pt / (K*Bz)
-    * pt = R * K *Bz
-    *
-    */ 
+   //
+   // |omega| = K*Bz/pt
+   // R = pt / (K*Bz)
+   // pt = R * K *Bz
+   //
+     
    
    const double K= 0.00029979; //K depends on the used units
+
   
    double pt = R * K * _Bz;
    
@@ -861,16 +1151,7 @@ bool MyAutProcessor::areNeighbors_2( Segment* parent , Segment* child){
    
    
    
-   // check, if the distance / zdistance dose change a lot
-   
-   double ratioSquared1 = ((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2])) / (a[2]-b[2])*(a[2]-b[2]);
-                           
-   double ratioSquared2 = ((c[0]-b[0])*(c[0]-b[0]) + (c[1]-b[1])*(c[1]-b[1]) + (c[2]-b[2])*(c[2]-b[2])) / (c[2]-b[2])*(c[2]-b[2]);
-   
-   double ratioChangeMax = 8.; //TODO: this actually the square of the maximum change
-   
-   if ( ratioSquared1 / ratioSquared2 > ratioChangeMax ) return false;
-   if ( ratioSquared1 / ratioSquared2 < 1./ratioChangeMax ) return false;
+
    
    
    
@@ -1125,3 +1406,19 @@ void MyAutProcessor::drawTracksInCed ( std::vector<Track*> tracks ){
    
 }
    
+   
+void MyAutProcessor::drawTrackInCed ( Track* track ){
+   
+   const double* c = track->getTrackerHits().back()->getPosition();
+   ced_line_ID( c[0], c[1], c[2], 0, 0, 0 , 2 , 2, 0x00ff00, 0);
+ 
+   for (unsigned int i=0; i < track->getTrackerHits().size()-1; i++){
+      
+       const double* a = track->getTrackerHits()[i]->getPosition();
+       const double* b = track->getTrackerHits()[i+1]->getPosition();
+   
+       ced_line_ID( a[0], a[1], a[2], b[0], b[1], b[2] , 2 , 2, 0x00ff00, 0);
+       
+   }
+   
+}

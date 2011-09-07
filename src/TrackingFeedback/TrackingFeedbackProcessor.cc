@@ -146,7 +146,7 @@ void TrackingFeedbackProcessor::init() {
     _nRun = 0 ;
     _nEvt = 0 ;
     
-     MarlinCED::init(this) ;
+//      MarlinCED::init(this) ;
 
 }
 
@@ -397,6 +397,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       ///////////////////////////
       //ouput the data:
       
+      std::cout.precision (8);
       
       
       for( unsigned int i=0; i < myRelations.size(); i++){

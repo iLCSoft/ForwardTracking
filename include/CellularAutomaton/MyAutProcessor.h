@@ -8,6 +8,8 @@
 #include <EVENT/Track.h>
 #include "Segment.h"
 
+#include "MarlinTrk/IMarlinTrack.h"
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -27,11 +29,22 @@ using namespace FTrack;
  * 
  * @param AutTrkCollection The output collection
  * 
+ * @param ptMin Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations. Measured in GeV
+ * 
+ * @param MultipleScatteringOn Whether to take multiple scattering into account when fitting the tracks
+ * 
+ * @param EnergyLossOn Whether to take energyloss into account when fitting the tracks
+ * 
+ * @param SmoothOn Whether to smooth all measurement sites in fit
+ * 
  * @author R. Glattauer HEPHY, Wien
  *
  */
 
 
+namespace MarlinTrk{
+  class IMarlinTrkSystem ;
+}
 
 
 class MyAutProcessor : public Processor {
@@ -63,6 +76,16 @@ class MyAutProcessor : public Processor {
   /** Called after data processing for clean up.
    */
   virtual void end() ;
+  
+  /** struct, that is used to sort TrackerHits by their distance from 0.
+   */
+  struct compare_z {
+    bool operator()( EVENT::TrackerHit* a, EVENT::TrackerHit* b)  const { 
+      double z_a_sqd = a->getPosition()[2] * a->getPosition()[2]; 
+      double z_b_sqd = b->getPosition()[2] * b->getPosition()[2]; 
+      return ( z_a_sqd < z_b_sqd ) ; 
+    }
+  } ;
   
   
  protected:
@@ -146,7 +169,8 @@ class MyAutProcessor : public Processor {
      */    
     void cleanSegments( std::vector < std::vector <Segment* > > & segments );
     
-    //erases what has neither parent nor child
+    /** Erases all Segments that have neither parents nor children.
+     */
     void cleanSinguletts( std::vector < std::vector <Segment* > > & segments );
     
     /** Calculates all the track candidates that can be built from the children of a segment.
@@ -161,20 +185,37 @@ class MyAutProcessor : public Processor {
     
     void drawSegmentsInCed( std::vector < std::vector <Segment* > > segments );
     void drawTracksInCed ( std::vector<Track*> tracks );
+    void drawTrackInCed ( Track* track );
    
-   /** Input collection name.
-   */
-   std::string _FTDHitCollection;
-   std::string _AutTrkCollection;
-   
-   double _ratioMax;
-   double _ptMin; // the minimum transversal momentum
+    /** Input collection name.
+    */
+    std::string _FTDHitCollection;
+    
+    /** Output collection name.
+     */
+    std::string _AutTrkCollection;
 
-   int _nRun ;
-   int _nEvt ;
-   
-   
-   double _Bz;
+    double _ratioMax;
+    double _ptMin; // the minimum transversal momentum
+    double _angleMax; //the maxmium anglle between two 2-segments.
+    double _cosAngleMin; //the minimum cos( angle ) between two 2-segments. (the higher the cos, the smaller the angle, cos = 1 --> angle = 0°)
+
+    int _nRun ;
+    int _nEvt ;
+
+
+    double _Bz; //B field in z direction
+    
+    //For Fitting
+    /** pointer to the IMarlinTrkSystem instance.
+     *Needed for the fitting of the track. 
+    */
+    MarlinTrk::IMarlinTrkSystem* _trksystem ;
+    
+    bool _MSOn ;
+    bool _ElossOn ;
+    bool _SmoothOn ;
+    
 } ;
 
 #endif
