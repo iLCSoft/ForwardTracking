@@ -1,5 +1,5 @@
-#ifndef FTDNoiseProcessor_h
-#define FTDNoiseProcessor_h 1
+#ifndef FTDGhostProcessor_h
+#define FTDGhostProcessor_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -17,19 +17,19 @@ using namespace lcio ;
 using namespace marlin ;
 
 
-/** Generates Noise Hits in the FTD detector.
- * The number of noise hits are given by the parameter nNoiseHits.
+/** Generates Ghost Hits in the FTD detector.
+ * 
  * 
  * @author Robin Glattauer, HEPHY
  */
-class FTDNoiseProcessor : public Processor {
+class FTDGhostProcessor : public Processor {
   
  public:
   
-    virtual Processor*  newProcessor() { return new FTDNoiseProcessor ; }
+    virtual Processor*  newProcessor() { return new FTDGhostProcessor ; }
   
   
-    FTDNoiseProcessor() ;
+    FTDGhostProcessor() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
@@ -55,21 +55,23 @@ class FTDNoiseProcessor : public Processor {
 
  protected:
 
-  std::string _colNameFTD ;
+   std::string _colNameFTD ;
 
-  float _pointReso;
+   float _pointReso;
 
-  int _nRun ;
-  int _nEvt ;
+   int _nRun ;
+   int _nEvt ;
 
-  std::vector <double> _diskPositionZ;
-  std::vector <double> _diskInnerRadius;
-  std::vector <double> _diskOuterRadius; 
-  
-  
-   std::vector < float > _backgroundDensity;
-   std::vector < float > _backgroundDensitySigma;
-   std::vector < int >   _integratedBX;
+   std::vector <double> _diskPositionZ;
+   std::vector <double> _diskInnerRadius;
+   std::vector <double> _diskOuterRadius; 
+   
+   unsigned int _nPetalsPerDisk;
+   unsigned int _nSensorsPerPetal;
+    
+   
+   
+   
 
 
 } ;
