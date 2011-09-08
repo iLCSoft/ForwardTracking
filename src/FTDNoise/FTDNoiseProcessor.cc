@@ -162,16 +162,18 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
       for ( int layer = 0; layer <= 6; layer++ ){ //over all layers
 
 
-         unsigned int hitsOnThisDisk = 0;
+         unsigned int hitsOnThisDisk = 0; // to count the added hits for one disk
 
-         //generate a random density that's gaussian smeared around the average:
+         //generate a random density that's gaussian smeared around the average.
+         //And of course multiply the density with the number of integrations. (If we do this later at nHits, we will
+         //for lets say 100 integrations always a multiple of 100)
          double density = CLHEP::RandGauss::shoot( _backgroundDensity[layer] * _integratedBX[ layer ] , _backgroundDensitySigma[layer] * _integratedBX[ layer ] );
 
          //calculate the number of hits corresponding to this density on the disk.
          //therefor: first calculate the area of the disk:
          double area = M_PI* ( _diskOuterRadius[layer]*_diskOuterRadius[layer] - _diskInnerRadius[layer]*_diskInnerRadius[layer] ) / 100.; //the division through 100 is for converting to cm
 
-         unsigned int nHits = round( fabs( area*density ) ) ;
+         unsigned int nHits = round( fabs( area*density ) ) ; // hit = density * area
          
          
          //So now we have the number of hits --> distribute them on the disk
@@ -188,7 +190,7 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
             //This gives of course more hits in the region of lower R, but that's realistic anyway
 
             double phi = CLHEP::RandFlat::shoot ( 0. , 2*M_PI ); //angle in xy plane from 0 to 2Pi
-            double R = CLHEP::RandFlat::shoot ( _diskInnerRadius[layer] , _diskOuterRadius[layer] );
+            double R = CLHEP::RandFlat::shoot ( _diskInnerRadius[layer] , _diskOuterRadius[layer] ); // radius of the hit
 
             pos[0] = R* cos(phi); //x
             pos[1] = R* sin(phi); //y

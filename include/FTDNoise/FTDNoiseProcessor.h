@@ -21,8 +21,32 @@ using namespace marlin ;
 /** Generates Noise Hits in the FTD detector.
  * The number of noise hits are given by the parameter nNoiseHits.
  * 
+ * @param FTDCollectionName Name of the FTD TrackerHit collection where the background hits will be added.
+ * (default name FTDTrackerHits)
+ * 
+ * @param PointResolution the resolution of a hit on the FTD. 
+ * As the simulated background hits are placed at random no smearing is necessary. However, as the resolution in the plane
+ * of the detector is saved for a TrackerHitPlaneImpl this value will get stored.
+ * (default value 0.010)
+ * 
+ * @param BackgroundHitDensity the densities of the background hits measured in hits / cm^2 /BX  (BX= bunchcrossing) for
+ * the different layers.
+ * These units are chosen because they are identical with those in the LOI.
+ * (default values 0.013 0.008 0.002 0.002 0.001 0.001 0.001 )
+ * 
+ * @param BackgroundHitDensitySigma the sigmas corresponding to the BackgroundHitDensity. Also in hits / cm^2 /BX.
+ * The actual number of created background hits will be smeared gaussian aroung the BackgroundHitDensity with these values.
+ * (default values 0.005 0.003 0.001 0.001 0.001 0.001 0.001 ) 
+ * 
+ * @param IntegratedBX the number of integrations of bunchcrossings the FTDs do before readout. For strip detectors this
+ * is usually 1 and for Pixels a lot more.
+ * (default values 100 100 1 1 1 1 1 )
+ * 
  * @author Robin Glattauer, HEPHY
  */
+
+
+
 class FTDNoiseProcessor : public Processor {
   
  public:

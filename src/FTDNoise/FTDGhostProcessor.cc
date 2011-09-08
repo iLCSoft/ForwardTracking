@@ -64,8 +64,23 @@ FTDGhostProcessor::FTDGhostProcessor() : Processor("FTDGhostProcessor") {
    registerProcessorParameter( "nStripsPerSensor" ,
                                "Number of Strips per sensor" ,
                                _nStripsPerSensor ,
-                               (int) 2 ) ;                               
-  
+                               (int) 1000 ) ;                               
+ 
+   std::vector < int > defaultIsStrip;
+   
+   defaultIsStrip.push_back ( 0 );
+   defaultIsStrip.push_back ( 0 );
+   defaultIsStrip.push_back ( 1 );
+   defaultIsStrip.push_back ( 1 );
+   defaultIsStrip.push_back ( 1 );
+   defaultIsStrip.push_back ( 1 );
+   defaultIsStrip.push_back ( 1 );
+   
+   registerProcessorParameter( "IsStrip" ,
+                               "Vector or bools (tarned as ints) if a disk is a strip detector (1) or not (0)" ,
+                               _isStrip ,
+                               defaultIsStrip );                               
+                               
 }
 
 
@@ -114,14 +129,12 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
   }
   
 
-  
-//   CLHEP::HepRandom::setTheSeed( (unsigned)time(0) );
-//    CLHEP::HepRandom::setTheSeed( 1344652 ); // currently used so that the results are better comparable.
- 
+
    CellIDEncoder<TrackerHit> cellid_encoder(  ILDCellID0::encoder_string , col );
   
    
-   std::map < lcio::long64 , std::vector < TrackerHit* > > area;
+   std::map < lcio::long64 , std::vector < TrackerHit* > > area; // a map linking the cellID code to a vector of hits, 
+                                                                 //that are supposed to be in the area defined by the code
    std::map < lcio::long64 , std::vector < TrackerHit* > >::iterator it;
    
    
@@ -130,7 +143,8 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
       int nHits = col->getNumberOfElements()  ;
       
     
-      // Sort all the hits according to theyr cellID0 code into the map "area"
+      // Sort all the hits according to their cellID0 code into the map "area"
+      
       for ( int i=0; i < nHits; i++ ){ //for all hits in the collection
          
        
@@ -139,12 +153,14 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
          const double* pos = hit->getPosition();
          
          //find out direction
-         int side = round( pos[2] / fabs( pos[2] ) );
+         int side = round( pos[2] / fabs( pos[2] ) ); //direction is either +1 for forward or -1 for backward
+         
          
          //find out the layer
-         
          int layer = 0;
          
+         //The aproach here is simple: if a hit is closer in z to the next FTD layer than to the current one then assign
+         //the next. If this is checked for layers, at the end it will belong to the layer it is closest to.
          for ( unsigned int j=1; j < _diskPositionZ.size(); j++ ){
             
             if ( fabs( pos[2] ) > ( _diskPositionZ[j] + _diskPositionZ[j-1] )/2. ){
@@ -154,43 +170,50 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
            
          }
          
-         if ( layer >= 2 ){ //inner 2 disks are pixels --> no ghosts there TODO: make this a steering parameter
+         if ( _isStrip[ layer ]  ){ //only make ghosts for strip detectors
          
             //find out the petal (= modul)
             
-            double angle = atan2 ( pos[1] , pos[0] ); 
+            double angle = atan2 ( pos[1] , pos[0] ); // the phi angle
             if (angle < 0.) angle += 2*M_PI; // to the range of 0-2Pi
             
-            double angleRel = angle / 2. /M_PI;
+            double angleRel = angle / 2. /M_PI; //the angle in a range from 0 to 1
             
-            int petal = floor ( angleRel * _nPetalsPerDisk );
-            if ( petal >= _nPetalsPerDisk ) petal = _nPetalsPerDisk - 1; //just in case, the hit really is at the exact boarder of a petal
+            int petal = floor ( angleRel * _nPetalsPerDisk ); //the number of the corresponding petal
+            if ( petal == _nPetalsPerDisk ) petal--; //just in case, the hit really is at the exact boarder of a petal
             
+
+
             //find out the sensor
             
             double r = sqrt ( pos[0]*pos[0] + pos[1]*pos[1] );
       
+            // The relative radial position: from 0 to 1. 
+            // 0 means at the inner radius of the petal.
+            // 1 means at the outer radius of the petal.
             double posRel = (r - _diskInnerRadius[layer]) / ( _diskOuterRadius[layer] - _diskInnerRadius[layer] ); 
             
-            int sensor = floor ( posRel * _nSensorsPerPetal );
-            if ( sensor >= _nSensorsPerPetal ) sensor = _nSensorsPerPetal -1; //just in case, the hit really is at the exact boarder
+            
+            int sensor = floor ( posRel * _nSensorsPerPetal ); //the number of the sensor
+            if ( sensor == _nSensorsPerPetal ) sensor--; //just in case, the hit really is at the exact boarder
             
 
             // Now we have the information where the hit belongs.
-            //So set up the code
+            // So set up the code
             cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
             cellid_encoder[ ILDCellID0::side   ] = side ;
             cellid_encoder[ ILDCellID0::layer  ] = layer ;
             cellid_encoder[ ILDCellID0::module ] = petal ;
             cellid_encoder[ ILDCellID0::sensor ] = sensor ;
             
-            lcio::long64 cellID = cellid_encoder.getValue();
+            lcio::long64 cellID = cellid_encoder.getValue(); //get the long (64 bit) integer of the code.
             
             std::vector < TrackerHit* > emptyHitVec;
-            //create the element in the map (if it already exists nothing happens. So anyway after this we habe the value in the map
+            
+            // create the element in the map (if it already exists nothing happens. So anyway after this we have the value in the map)
             area.insert( pair< lcio::long64 , std::vector < TrackerHit* > >( cellID , emptyHitVec ) ); 
             
-            area[ cellID ].push_back( hit );
+            area[ cellID ].push_back( hit ); //store the hit in the vector
             
 //             streamlog_out( DEBUG4 ) << "\n Saved real hit from layer " << (layer+1)*side 
 //                            << ", Petal " << petal
@@ -203,35 +226,38 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
       
       
       
-      //Now enter all entries in area and make the ghost hits
+      //Now have a look at all entries in area and make the ghost hits for every CellID
       
-      unsigned int allGhosts=0;
-      unsigned int allTrueHits=0;
+      unsigned int allGhosts=0;         // all ghost hits from all CellIDs
+      unsigned int allTrueHits=0;       // all true hits from all CellIDs that are used to create ghost hits (so it's less than the overall true hits!!!)
       
       CellIDEncoder<TrackerHitPlaneImpl> newCellid( ILDCellID0::encoder_string , col ) ;
       
       for ( it = area.begin(); it != area.end(); it++ ){ //over all entries in the map 
          
-         unsigned int nTrueHits = 0;
+         unsigned int nTrueHits = 0; //all true hits for this CellID
          unsigned int nGhosts = 0;
          unsigned int nHits = 0;
 
 
-         //Those sets correspond to the strips
-         std::set < int > radial;
+         // Those sets correspond to the strips.
+         // The integers correspond to the number of the strip that got activated
+         // Sets, because a strip can't be activated twice, either it is or it isn't. (that's of course a little simplyfied)
+         std::set < int > radial; 
          std::set < int > angular;
 
-         vector < vector <int> > hitStripNumbers; //here the Strip numbers of the real hits are stored. 
-                                                   // In the inner vector first the radial, then the angular is stored
+         vector < vector <int> > hitStripNumbers; // here the strip numbers of the real hits are stored. 
+                                                  // In the inner vector first the radial strip number, then the angular is stored
       
-         std::vector < TrackerHit* > hits = it->second;
+         std::vector < TrackerHit* > hits = it->second; // the values of the map "area" are vectors of the hits that share the CellID stored in the key
          
          
 
       
-         if ( hits.size() > 1 ){
+         if ( hits.size() > 1 ){ // there are only ghost hits, when more than 1 hit happens in a sensor
             
-            BitField64 b("subdet:5,side:-2,layer:9,module:8,sensor:8,fill:32" );
+            BitField64 b("subdet:5,side:-2,layer:9,module:8,sensor:8,fill:32" ); //use a BitFiel64 to extract the information again 
+                                                                                 //TODO: there surely is a more elegant and generic way to do this
             b.setValue ( it->first ); //does that work that way?
             int petal = b[ "module" ];
             int sensor = b[ "sensor" ];
@@ -239,7 +265,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
             int side = b[ "side" ];
             
 
-            
+            // the inner and outer radius of the sensor
             double rSensorMin = _diskInnerRadius[layer] + (_diskOuterRadius[layer] - _diskInnerRadius[layer])/_nSensorsPerPetal*sensor;
             double rSensorMax = rSensorMin + (_diskOuterRadius[layer] - _diskInnerRadius[layer])/_nSensorsPerPetal;
             
@@ -254,78 +280,86 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                
 //                streamlog_out( DEBUG4 ) << "\nTrueHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
                
-               double angle = atan2 ( pos[1] , pos[0] ); 
+               double angle = atan2 ( pos[1] , pos[0] ); //the phi angle of the hit in the xy plane
                if (angle < 0.) angle += 2*M_PI; // to the range of 0-2Pi
                
-               double angleRel = ( angle - petal*2.*M_PI/ _nPetalsPerDisk ) * _nPetalsPerDisk / 2. /M_PI; //should now be a value between 0 and 1
+               double angleRel = ( angle - petal*2.*M_PI/ _nPetalsPerDisk ) * _nPetalsPerDisk / 2. /M_PI; //a value between 0 and 1
+                                          // 0 == at the angle at the begin of the petal
+                                          // 1 == at the angle at the end of the petal
                
-               int radialStrip = floor ( angleRel * _nStripsPerSensor );
+               int radialStrip = floor ( angleRel * _nStripsPerSensor ); //the number of the radial strip that's activated by this hit
                if (radialStrip == _nStripsPerSensor) radialStrip--;
                
                
                double r = sqrt ( pos[0]*pos[0] + pos[1]*pos[1] );
 
-               double rRel = ( r - rSensorMin ) / (rSensorMax - rSensorMin);
+               double rRel = ( r - rSensorMin ) / (rSensorMax - rSensorMin); //the relative radius of the hit in the sensor.
+                                 // between 0 and 1
+                                 // 0 == at the inner radius of the sensor
+                                 // 1 == at the outer radius of the sensor
                
-               int angularStrip = floor (rRel * _nStripsPerSensor);
+               int angularStrip = floor (rRel * _nStripsPerSensor); //number of the activated angular strip
                if (angularStrip == _nStripsPerSensor) angularStrip--;
                
                
                
                // So now we know what numbers the strips have, so let's save that
                
-               radial.insert( radialStrip );
+               radial.insert( radialStrip );    //Store the activated strips
                angular.insert( angularStrip );
                
                std::vector < int > newNumbers; 
                newNumbers.push_back( radialStrip );
                newNumbers.push_back( angularStrip );
                
-               hitStripNumbers.push_back( newNumbers );
+               hitStripNumbers.push_back( newNumbers ); //store the hits that caused the activation (so we don't add them later as additional ghost hits)
                
             }
             
             
-            // calculate all the ghosthits
+            // Now calculate all the ghosthits
             std::set < int >::iterator itRad;
             std::set < int >::iterator itAng;
             
-            for ( itRad = radial.begin(); itRad != radial.end(); itRad++){
+            for ( itRad = radial.begin(); itRad != radial.end(); itRad++){ //Over all radial strips
                
-               for ( itAng = angular.begin(); itAng!= angular.end(); itAng++){
+               for ( itAng = angular.begin(); itAng!= angular.end(); itAng++){ //Over all angular strips
                   
                   bool isGhostHit = true;
                   
-                  //check if this corresponds to a real hit
-                  for ( unsigned int k=0; k< hitStripNumbers.size(); k++){
+                  //check if this corresponds to a real hit (because: as said before: we don't want to add a real hit again)
+                  for ( unsigned int k=0; k< hitStripNumbers.size(); k++){ //check all real hits
                      
-                     if (( hitStripNumbers[k][0]== *itRad) && ( hitStripNumbers[k][1]== *itAng))
+                     if (( hitStripNumbers[k][0]== *itRad) && ( hitStripNumbers[k][1]== *itAng)) //it is a real hit
                         isGhostHit = false;
                      
                   }
                   
                   if ( isGhostHit ){ //Only for ghost hits, we don't want to save the real hits a second time
                      
-                     //calculate the position of the hit
-                     double ang = (double) *itAng;
-                     double rad = (double) *itRad;
+                     // calculate the position of the hit
+                     double ang = (double) *itAng; // the angular number
+                     double rad = (double) *itRad; // the radial number
                      
-                     double r = rSensorMin + (rSensorMax - rSensorMin)* ang / (double) _nStripsPerSensor;
+                     // the radius of the hit in the xy plane
+                     double r = rSensorMin + (rSensorMax - rSensorMin)* ang / (double) _nStripsPerSensor; 
                      
+                     // the phi angle in the xy plane
                      double phi = petal * 2. * M_PI / (double) _nPetalsPerDisk + rad / 
                                   (double) _nStripsPerSensor * 2 * M_PI/ (double)_nPetalsPerDisk;
                                   
               
                      
                      double pos[3] = {0. , 0. , 0.};
-                     pos[0] = r * cos(phi);
-                     pos[1] = r * sin(phi);
-                     pos[2] = _diskPositionZ[ layer ];
+                     pos[0] = r * cos(phi);     //x
+                     pos[1] = r * sin(phi);     //y
+                     pos[2] = _diskPositionZ[ layer ]; // the z postion is exact
+                     
+                     // smear the hit position
+                     pos[0] = CLHEP::RandGauss::shoot( pos[0] , _pointReso );
+                     pos[1] = CLHEP::RandGauss::shoot( pos[1] , _pointReso );
                      
 //                      streamlog_out( DEBUG4 ) << "\nGhostHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
-                     
-                     
-                     //TODO: SMEAR THE HITS
                      
                      
                      //So now make the Hit
@@ -378,7 +412,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                
             }
             
-                        // Output the results
+            
             
 //             streamlog_out( DEBUG4 ) << "\n Added ghost hits on layer " << (layer+1)*side 
 //                                     << ", Petal " << petal

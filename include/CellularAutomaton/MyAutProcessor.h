@@ -16,6 +16,12 @@ using namespace marlin ;
 using namespace FTrack;
 
 
+
+namespace MarlinTrk{
+  class IMarlinTrkSystem ;
+}
+
+
 /**  Cellular Automaton processor for marlin.
  * 
  * 
@@ -41,10 +47,6 @@ using namespace FTrack;
  *
  */
 
-
-namespace MarlinTrk{
-  class IMarlinTrkSystem ;
-}
 
 
 class MyAutProcessor : public Processor {
