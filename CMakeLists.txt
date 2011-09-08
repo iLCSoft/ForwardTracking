@@ -18,7 +18,7 @@ SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 ### DEPENDENCIES ############################################################
 
-FIND_PACKAGE( ILCUTIL REQUIRED COMPONENTS ILCSOFT_CMAKE_MODULES )
+FIND_PACKAGE( ILCUTIL REQUIRED COMPONENTS ILCSOFT_CMAKE_MODULES ILCTEST )
 
 # load default settings from ILCSOFT_CMAKE_MODULES
 INCLUDE( ilcsoft_default_settings )
@@ -103,6 +103,35 @@ AUX_SOURCE_DIRECTORY( ./src/FTDNoise library_sources )
 
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
 INSTALL_SHARED_LIBRARY( ${PROJECT_NAME} DESTINATION lib )
+
+
+
+### TESTING #################################################################
+
+MACRO( ADD_UNIT_TEST _name )
+    IF( BUILD_TESTING )
+        ADD_EXECUTABLE( test_${_name} ${ARGN} )
+    ELSE()
+        ADD_EXECUTABLE( test_${_name} EXCLUDE_FROM_ALL ${ARGN} )
+    ENDIF()        
+    TARGET_LINK_LIBRARIES( test_${_name} ${PROJECT_NAME} )
+    GET_TARGET_PROPERTY( _executable test_${_name} LOCATION )
+    ADD_TEST( t_${_name} ${_executable} )
+ENDMACRO()
+
+INCLUDE_DIRECTORIES( ${ILCTEST_INCLUDE_DIRS} )
+
+
+ADD_UNIT_TEST( hello ./src/testing/test_hello_world.cc )
+#SET_TESTS_PROPERTIES( t_hello PROPERTIES PASS_REGULAR_EXPRESSION "Hello World" )
+
+ADD_UNIT_TEST( simple_circle ./src/testing/test_simple_circle.cc )
+SET_TESTS_PROPERTIES( t_simple_circle PROPERTIES FAIL_REGULAR_EXPRESSION "TEST_FAILED" )
+SET_TESTS_PROPERTIES( t_simple_circle PROPERTIES PASS_REGULAR_EXPRESSION "TEST_PASSED" )
+SET_TESTS_PROPERTIES( t_simple_circle PROPERTIES WILL_FAIL TRUE )
+
+
+
 
 # display some variables and write them to cache
 DISPLAY_STD_VARIABLES()
