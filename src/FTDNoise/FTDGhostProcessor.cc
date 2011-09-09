@@ -278,7 +278,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                
                const double* pos = hits[j]->getPosition();
                
-//                streamlog_out( DEBUG4 ) << "\nTrueHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
+               streamlog_out( DEBUG2 ) << "\nTrueHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
                
                double angle = atan2 ( pos[1] , pos[0] ); //the phi angle of the hit in the xy plane
                if (angle < 0.) angle += 2*M_PI; // to the range of 0-2Pi
@@ -359,7 +359,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                      pos[0] = CLHEP::RandGauss::shoot( pos[0] , _pointReso );
                      pos[1] = CLHEP::RandGauss::shoot( pos[1] , _pointReso );
                      
-//                      streamlog_out( DEBUG4 ) << "\nGhostHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
+                     streamlog_out( DEBUG2 ) << "\nGhostHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
                      
                      
                      //So now make the Hit
@@ -414,13 +414,13 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
             
             
             
-//             streamlog_out( DEBUG4 ) << "\n Added ghost hits on layer " << (layer+1)*side 
-//                                     << ", Petal " << petal
-//                                     << ", Sensor " << sensor
-//                                     << "\n\t trueHits: " << nTrueHits
-//                                     << "\n\t GhostHits: " << nGhosts
-//                                     << "\n\t AllHits: " << nHits
-//                                     << "\n";
+            streamlog_out( DEBUG4 ) << "\n Added ghost hits on layer " << (layer+1)*side 
+                                    << ", Petal " << petal
+                                    << ", Sensor " << sensor
+                                    << "\n\t trueHits: " << nTrueHits
+                                    << "\n\t GhostHits: " << nGhosts
+                                    << "\n\t AllHits: " << nHits
+                                    << "\n";
                                     
             allGhosts += nGhosts;
             allTrueHits += nTrueHits;

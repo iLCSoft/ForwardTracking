@@ -188,7 +188,8 @@ class MyAutProcessor : public Processor {
     void drawSegmentsInCed( std::vector < std::vector <Segment* > > segments );
     void drawTracksInCed ( std::vector<Track*> tracks );
     void drawTrackInCed ( Track* track );
-   
+    void drawFTDSensors ();
+    
     /** Input collection name.
     */
     std::string _FTDHitCollection;

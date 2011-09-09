@@ -149,18 +149,19 @@ void MyAutProcessor::processRunHeader( LCRunHeader* run) {
 
 void MyAutProcessor::processEvent( LCEvent * evt ) { 
 
-/*
+
 //--CED---------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
 
-  MarlinCED::newEvent(this , 0) ; 
-
-  CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
-
-  pHandler.update(evt); 
+//   MarlinCED::newEvent(this , 0) ; 
+// 
+//   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+// 
+//   pHandler.update(evt); 
 
 //-----------------------------------------------------------------------
-*/
+
+//   drawFTDSensors();
 
     // this gets called for every event 
     // usually the working horse ...
@@ -557,8 +558,7 @@ void MyAutProcessor::processEvent( LCEvent * evt ) {
         
         
         
-//    MarlinCED::draw(this);  //CED begin    
-        
+   MarlinCED::draw(this);  //CED
         
         
     _nEvt ++ ;
@@ -617,7 +617,7 @@ std::vector < std::vector <Segment* > > MyAutProcessor::getSegments2 ( std::vect
          
             
          for ( std::set<int>::iterator iStep= step.begin(); iStep != step.end(); iStep++){ //over different ranges of step
-                           
+            
             for(unsigned int k=0; k< hits[layer-*iStep ].size(); k++){ //over all hits in the next inner layer
                   
                const double* a =  hits[layer][iHit]->_trackerHits[0]->getPosition(); //the outer hit
@@ -1420,5 +1420,77 @@ void MyAutProcessor::drawTrackInCed ( Track* track ){
        ced_line_ID( a[0], a[1], a[2], b[0], b[1], b[2] , 2 , 2, 0x00ff00, 0);
        
    }
+   
+}
+
+void MyAutProcessor::drawFTDSensors (){
+   
+      //get FTD geometry info
+   const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
+
+   std::vector <double> diskPositionZ = paramFTD.getDoubleVals( "FTDZCoordinate" ) ;
+   std::vector <double> diskInnerRadius = paramFTD.getDoubleVals( "FTDInnerRadius" ) ;
+   std::vector <double> diskOuterRadius = paramFTD.getDoubleVals( "FTDOuterRadius" ) ; 
+   
+   unsigned int color = 0x9999ff;
+   
+   int nPetalsPerDisk = 16;
+   int nSensorsPerPetal = 2;
+   
+   for ( int side = -1; side <= 1; side +=2){ //for backward and forward
+
+      for ( unsigned int disk=0; disk < diskPositionZ.size(); disk++ ){ //over all disks
+
+
+         double rMin = diskInnerRadius[ disk ];
+         double rMax = diskOuterRadius[ disk ];
+         double z      = side * diskPositionZ[ disk ];            
+
+         //draw the radial boarders (i.e. straight lines)
+         for (unsigned int petal=0; petal < nPetalsPerDisk; petal++){ //over all petals
+
+            double phi = 2 * M_PI / (float) nPetalsPerDisk * (float) petal; //the phi angle of the first boarder of the petal
+
+            
+            double xStart = rMin * cos( phi );
+            double yStart = rMin * sin( phi );
+            double xEnd   = rMax * cos( phi );
+            double yEnd   = rMax * sin( phi );
+            
+            
+            ced_line_ID( xStart, yStart, z , xEnd , yEnd , z , 2 , 2, color, 2);
+            
+            
+         }
+         
+         //draw the angular boarders (i.e. circles)
+         for (unsigned int i=0; i <= nSensorsPerPetal; i++){
+            
+            int nLines = 360;
+            
+            double r = rMin + ( rMax - rMin ) / (float) nSensorsPerPetal * (float) i; //the radius of the circle
+            
+            for (unsigned int j=0; j<nLines; j++){
+               
+               double phiStart = 2.*M_PI / nLines * j;
+               double phiEnd   = 2.*M_PI / nLines * (j +1);
+               
+               double xStart = r * cos(phiStart);
+               double yStart = r * sin(phiStart);
+               double xEnd   = r * cos(phiEnd);
+               double yEnd   = r * sin(phiEnd);
+         
+               ced_line_ID( xStart, yStart, z , xEnd , yEnd , z , 2 , 2, color, 2);
+               
+            }
+            
+         }
+               
+      }
+      
+   }
+             
+            
+            
    
 }
