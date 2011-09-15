@@ -110,32 +110,32 @@ void FTDGhostProcessor::processRunHeader( LCRunHeader* run) {
 
 void FTDGhostProcessor::processEvent( LCEvent * evt ) { 
 
-  LCCollection* col = 0 ;
-  
-  try{
-    
-    col = evt->getCollection( _colNameFTD ) ;
-    
-  }    
-  catch(DataNotAvailableException &e){
-    
-    
-    streamlog_out( WARNING ) << " FTD collection " << _colNameFTD  
-                             << " not found - do nothing ! " << std::endl ;
-    
-    
-    return ;
-    
-  }
-  
-
-
-   CellIDEncoder<TrackerHit> cellid_encoder(  ILDCellID0::encoder_string , col );
-  
    
-   std::map < lcio::long64 , std::vector < TrackerHit* > > area; // a map linking the cellID code to a vector of hits, 
+   LCCollection* col = 0 ;
+
+   try{
+      
+      col = evt->getCollection( _colNameFTD ) ;
+      
+   }    
+   catch(DataNotAvailableException &e){
+      
+      
+      streamlog_out( WARNING ) << " FTD collection " << _colNameFTD  
+                              << " not found - do nothing ! " << std::endl ;
+      
+      
+      return ;
+      
+   }
+  
+
+
+ 
+   
+   std::map < int , std::vector < TrackerHit* > > area; // a map linking the cellID code to a vector of hits, 
                                                                  //that are supposed to be in the area defined by the code
-   std::map < lcio::long64 , std::vector < TrackerHit* > >::iterator it;
+   std::map < int , std::vector < TrackerHit* > >::iterator it;
    
    
    if( col != NULL ){
@@ -150,83 +150,41 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
        
          TrackerHit* hit = dynamic_cast <TrackerHit*>( col->getElementAt (i) );
       
-         const double* pos = hit->getPosition();
+         const int cellID0 = hit->getCellID0();
          
-         //find out direction
-         int side = round( pos[2] / fabs( pos[2] ) ); //direction is either +1 for forward or -1 for backward
-         
+        
          
          //find out the layer
-         int layer = 0;
+      
+         UTIL::BitField64  cellID( ILDCellID0::encoder_string );
          
-         //The aproach here is simple: if a hit is closer in z to the next FTD layer than to the current one then assign
-         //the next. If this is checked for layers, at the end it will belong to the layer it is closest to.
-         for ( unsigned int j=1; j < _diskPositionZ.size(); j++ ){
-            
-            if ( fabs( pos[2] ) > ( _diskPositionZ[j] + _diskPositionZ[j-1] )/2. ){
-               
-               layer = j;
-            }
-           
-         }
+         cellID.setValue( cellID0 );
+
+         int layer  = cellID[ ILDCellID0::layer ];
+         
+
          
          if ( _isStrip[ layer ]  ){ //only make ghosts for strip detectors
          
-            //find out the petal (= modul)
-            
-            double angle = atan2 ( pos[1] , pos[0] ); // the phi angle
-            if (angle < 0.) angle += 2*M_PI; // to the range of 0-2Pi
-            
-            double angleRel = angle / 2. /M_PI; //the angle in a range from 0 to 1
-            
-            int petal = floor ( angleRel * _nPetalsPerDisk ); //the number of the corresponding petal
-            if ( petal == _nPetalsPerDisk ) petal--; //just in case, the hit really is at the exact boarder of a petal
-            
 
-
-            //find out the sensor
-            
-            double r = sqrt ( pos[0]*pos[0] + pos[1]*pos[1] );
-      
-            // The relative radial position: from 0 to 1. 
-            // 0 means at the inner radius of the petal.
-            // 1 means at the outer radius of the petal.
-            double posRel = (r - _diskInnerRadius[layer]) / ( _diskOuterRadius[layer] - _diskInnerRadius[layer] ); 
-            
-            
-            int sensor = floor ( posRel * _nSensorsPerPetal ); //the number of the sensor
-            if ( sensor == _nSensorsPerPetal ) sensor--; //just in case, the hit really is at the exact boarder
-            
-
-            // Now we have the information where the hit belongs.
-            // So set up the code
-            cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
-            cellid_encoder[ ILDCellID0::side   ] = side ;
-            cellid_encoder[ ILDCellID0::layer  ] = layer ;
-            cellid_encoder[ ILDCellID0::module ] = petal ;
-            cellid_encoder[ ILDCellID0::sensor ] = sensor ;
-            
-            lcio::long64 cellID = cellid_encoder.getValue(); //get the long (64 bit) integer of the code.
             
             std::vector < TrackerHit* > emptyHitVec;
             
             // create the element in the map (if it already exists nothing happens. So anyway after this we have the value in the map)
-            area.insert( pair< lcio::long64 , std::vector < TrackerHit* > >( cellID , emptyHitVec ) ); 
+            area.insert( pair< int , std::vector < TrackerHit* > >( cellID0 , emptyHitVec ) ); 
             
-            area[ cellID ].push_back( hit ); //store the hit in the vector
+            area[ cellID0 ].push_back( hit ); //store the hit in the vector
             
-//             streamlog_out( DEBUG4 ) << "\n Saved real hit from layer " << (layer+1)*side 
-//                            << ", Petal " << petal
-//                            << ", Sensor " << sensor
-//                            << ", Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )"
-//                            << "\n";
+
          }
          
       }
       
+      /**********************************************************************************************/
+      /*     Now have a look at all entries in area and make the ghost hits for every CellID        */
+      /**********************************************************************************************/
       
       
-      //Now have a look at all entries in area and make the ghost hits for every CellID
       
       unsigned int allGhosts=0;         // all ghost hits from all CellIDs
       unsigned int allTrueHits=0;       // all true hits from all CellIDs that are used to create ghost hits (so it's less than the overall true hits!!!)
@@ -235,7 +193,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
       
       for ( it = area.begin(); it != area.end(); it++ ){ //over all entries in the map 
          
-         unsigned int nTrueHits = 0; //all true hits for this CellID
+         unsigned int nTrueHits = 0; //all true hits for this CellID0
          unsigned int nGhosts = 0;
          unsigned int nHits = 0;
 
@@ -256,14 +214,16 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
       
          if ( hits.size() > 1 ){ // there are only ghost hits, when more than 1 hit happens in a sensor
             
-            BitField64 b("subdet:5,side:-2,layer:9,module:8,sensor:8,fill:32" ); //use a BitFiel64 to extract the information again 
-                                                                                 //TODO: there surely is a more elegant and generic way to do this
-            b.setValue ( it->first ); //does that work that way?
-            int petal = b[ "module" ];
-            int sensor = b[ "sensor" ];
-            int layer = b[ "layer" ];
-            int side = b[ "side" ];
+           
             
+            BitField64  cellID( ILDCellID0::encoder_string );
+            
+            cellID.setValue( it->first );
+            
+            int side   = cellID[ ILDCellID0::side   ];
+            int layer  = cellID[ ILDCellID0::layer  ];
+            int module = cellID[ ILDCellID0::module ];
+            int sensor = cellID[ ILDCellID0::sensor ];
 
             // the inner and outer radius of the sensor
             double rSensorMin = _diskInnerRadius[layer] + (_diskOuterRadius[layer] - _diskInnerRadius[layer])/_nSensorsPerPetal*sensor;
@@ -279,11 +239,15 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                const double* pos = hits[j]->getPosition();
                
                streamlog_out( DEBUG2 ) << "\nTrueHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
+               streamlog_out( DEBUG2 ) << " side = " << side 
+               << ", layer = " << layer
+               << ", module = " << module
+               << ", sensor = " << sensor;
                
                double angle = atan2 ( pos[1] , pos[0] ); //the phi angle of the hit in the xy plane
                if (angle < 0.) angle += 2*M_PI; // to the range of 0-2Pi
                
-               double angleRel = ( angle - petal*2.*M_PI/ _nPetalsPerDisk ) * _nPetalsPerDisk / 2. /M_PI; //a value between 0 and 1
+               double angleRel = ( angle - module*2.*M_PI/ _nPetalsPerDisk ) * _nPetalsPerDisk / 2. /M_PI; //a value between 0 and 1
                                           // 0 == at the angle at the begin of the petal
                                           // 1 == at the angle at the end of the petal
                
@@ -345,7 +309,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                      double r = rSensorMin + (rSensorMax - rSensorMin)* ang / (double) _nStripsPerSensor; 
                      
                      // the phi angle in the xy plane
-                     double phi = petal * 2. * M_PI / (double) _nPetalsPerDisk + rad / 
+                     double phi = module * 2. * M_PI / (double) _nPetalsPerDisk + rad / 
                                   (double) _nStripsPerSensor * 2 * M_PI/ (double)_nPetalsPerDisk;
                                   
               
@@ -360,6 +324,10 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                      pos[1] = CLHEP::RandGauss::shoot( pos[1] , _pointReso );
                      
                      streamlog_out( DEBUG2 ) << "\nGhostHit Position: ( " << pos[0] <<" , " << pos[1] << " , " << pos[2] << " )";
+                     streamlog_out( DEBUG2 ) << " side = " << side 
+                                             << ", layer = " << layer
+                                             << ", module = " << module
+                                             << ", sensor = " << sensor;
                      
                      
                      //So now make the Hit
@@ -370,8 +338,8 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                      newCellid[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
                      newCellid[ ILDCellID0::side   ] = side ;
                      newCellid[ ILDCellID0::layer  ] = layer ;
-                     newCellid[ ILDCellID0::module ] = 0 ;
-                     newCellid[ ILDCellID0::sensor ] = 0 ;
+                     newCellid[ ILDCellID0::module ] = module ;
+                     newCellid[ ILDCellID0::sensor ] = sensor ;
                      
                      newCellid.setCellID( ghostHit ) ;
 
@@ -414,8 +382,8 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
             
             
             
-            streamlog_out( DEBUG4 ) << "\n Added ghost hits on layer " << (layer+1)*side 
-                                    << ", Petal " << petal
+            streamlog_out( DEBUG3 ) << "\n Added ghost hits on layer " << (layer+1)*side 
+                                    << ", Petal " << module
                                     << ", Sensor " << sensor
                                     << "\n\t trueHits: " << nTrueHits
                                     << "\n\t GhostHits: " << nGhosts
