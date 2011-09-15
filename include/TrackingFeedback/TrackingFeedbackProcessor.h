@@ -4,10 +4,12 @@
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
+#include "FTDTrackFitter.h"
 
 
 using namespace lcio ;
 using namespace marlin ;
+using namespace FTrack;
 
 
 /**  Example processor for marlin.
@@ -52,15 +54,25 @@ class TrackingFeedbackProcessor : public Processor {
 
    /** Input collection name.
    */
-    std::string _colNameMCTrueTracksRel;
-    std::string _AutTrkCollection;
-    
-    std::string _rootFileName;
-    
-    std::string _treeName;
+   std::string _colNameMCTrueTracksRel;
+   std::string _AutTrkCollection;
 
-  int _nRun ;
-  int _nEvt ;
+   std::string _rootFileName;
+
+   std::string _treeName;
+
+   int _nRun ;
+   int _nEvt ;
+   
+   double _ptMin;
+   double _distToIPMax;
+   int _nHitsMin;
+   
+   //For Fitting
+   FTDTrackFitter _trackFitter;
+
+
+   
 } ;
 
 #endif

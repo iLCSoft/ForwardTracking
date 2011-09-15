@@ -24,9 +24,13 @@
 #include <MarlinCED.h>
 
 
+
+
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace FTrack;
+
 
 std::string intToString (int i){
  
@@ -125,8 +129,20 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               std::string("FTrackFeedback") );
       
       
+   registerProcessorParameter("PtMin",
+                              "The minimum transversal momentum pt above which tracks are of interest in GeV ",
+                              _ptMin,
+                              double (0.2)  );   
    
+   registerProcessorParameter("DistToIPMax",
+                              "The maximum distance from the origin of the MCP to the IP (0,0,0)",
+                              _distToIPMax,
+                              double (250. ) );   
    
+   registerProcessorParameter("NumberOfHitsMin",
+                              "The minimum number of hits a track must have",
+                              _nHitsMin,
+                              int (4)  );   
    
 
 }
@@ -146,6 +162,20 @@ void TrackingFeedbackProcessor::init() {
     _nRun = 0 ;
     _nEvt = 0 ;
     
+    
+    //Initialise the TrackFitter (as the system and the method of fitting will stay the same over the events, we might set it up here,
+    //( otherwise we would have to repeat this over and over again)
+    
+    //First set some bools
+    _trackFitter.setMSOn( true );        // Multiple scattering on
+    _trackFitter.setElossOn( true );     // Energy loss on
+    _trackFitter.setSmoothOn( false );   // Smoothing off
+    
+    //Then initialise
+    _trackFitter.initialise( "KalTest" , marlin::Global::GEAR , "" ); //Use KalTest as Fitter
+
+    
+    
 //      MarlinCED::init(this) ;
 
 }
@@ -164,11 +194,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 //-----------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
 
-//   MarlinCED::newEvent(this , 0) ; 
+  MarlinCED::newEvent(this , 0) ; 
 
-//   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+  CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
 
-//   pHandler.update(evt); 
+  pHandler.update(evt); 
 
 //-----------------------------------------------------------------------
 
@@ -212,10 +242,12 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       //CED begin
 
       
-//       MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
+      MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
 
  
       //CED end
+      
+
       
       //////////////////////////////////////////////////////////////////////////////////
       //If distance from origin is not too high      
@@ -225,7 +257,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       
 
-      if ( dist > 220 ) isOfInterest = false;   // exclude point too far away from the origin. Of course we want them reconstructed too,
+      if ( dist > _distToIPMax ) isOfInterest = false;   // exclude point too far away from the origin. Of course we want them reconstructed too,
                                                 // but at the moment we are only looking at the points that are reconstructed by a simple
                                                 // Cellular Automaton, which uses the point 0 as a point in the track
       //
@@ -236,14 +268,14 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
       
-      if ( pt < 0.2 ) isOfInterest = false;
+      if ( pt < _ptMin ) isOfInterest = false;
       //
       //////////////////////////////////////////////////////////////////////////////////
       
       //////////////////////////////////////////////////////////////////////////////////
       //If there are less than 4 hits in the track
       
-      if ( track->getTrackerHits().size() < 4 ) isOfInterest = false;
+      if ( (int) track->getTrackerHits().size() < _nHitsMin ) isOfInterest = false;
       //
       //////////////////////////////////////////////////////////////////////////////////
       
@@ -397,7 +429,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       ///////////////////////////
       //ouput the data:
       
-      std::cout.precision (8);
+      streamlog_out( DEBUG ).precision (8);
       
       
       for( unsigned int i=0; i < myRelations.size(); i++){
@@ -409,18 +441,33 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          double mcpP= sqrt( mcpPt*mcpPt + mcp->getMomentum()[2]*mcp->getMomentum()[2] );
          
          
-         std::cout << "\n\n\nTrue Track" << i << ": p= " << mcpP << "  pt= " << mcpPt << std::endl;
-         std::cout << "px= " << mcp->getMomentum()[0] << " py= " <<  mcp->getMomentum()[1] << " pz= " <<  mcp->getMomentum()[2] << std::endl;
-         std::cout << "PDG= " << mcp->getPDG() << std::endl;
-         std::cout << "x= " << mcp->getVertex()[0] << " y= " <<  mcp->getVertex()[1] << " z= " <<  mcp->getVertex()[2] << std::endl;
-         std::cout << "/gun/direction " << mcp->getMomentum()[0]/mcpP << " " <<  mcp->getMomentum()[1]/mcpP << " " <<  mcp->getMomentum()[2]/mcpP << std::endl;
+         streamlog_out( DEBUG3 ) << "\n\n\nTrue Track" << i << ": p= " << mcpP << "  pt= " << mcpPt << std::endl;
+         streamlog_out( DEBUG3 ) << "px= " << mcp->getMomentum()[0] << " py= " <<  mcp->getMomentum()[1] << " pz= " <<  mcp->getMomentum()[2] << std::endl;
+         streamlog_out( DEBUG3 ) << "PDG= " << mcp->getPDG() << std::endl;
+         streamlog_out( DEBUG3 ) << "x= " << mcp->getVertex()[0] << " y= " <<  mcp->getVertex()[1] << " z= " <<  mcp->getVertex()[2] << std::endl;
+         streamlog_out( DEBUG3 ) << "/gun/direction " << mcp->getMomentum()[0]/mcpP << " " <<  mcp->getMomentum()[1]/mcpP << " " <<  mcp->getMomentum()[2]/mcpP << std::endl;
+         
+         streamlog_out( DEBUG3 ) << "\n\n";
+         //Fit the track
+         //first: empty the stored tracks (if there are any)
+         _trackFitter.clearTracks();
+         
+         //then: fill in our trackCandidates:
+         _trackFitter.addTrack( cheatTrack );
+         
+         //And get back fitted tracks
+         std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
+         streamlog_out( DEBUG3 ) << "\n\n";
+         
+         
+         
          
          std::vector<TrackerHit*> cheatTrackHits = cheatTrack->getTrackerHits(); // we write it into an own vector so wen can sort it
          sort (cheatTrackHits.begin() , cheatTrackHits.end() , hitComp );
          
-         for (unsigned int j=0; j< cheatTrackHits.size(); j++){
+         for (unsigned int j=0; j< cheatTrackHits.size(); j++){ //over all Hits in the track
                         
-            std::cout  << "\n( "  
+            streamlog_out( DEBUG3 )  << "\n( "  
                   << cheatTrackHits[j]->getPosition()[0] << " , " 
                   << cheatTrackHits[j]->getPosition()[1] << " , " 
                   << cheatTrackHits[j]->getPosition()[2] << " ) "
@@ -439,7 +486,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                TVector3 g = c-b;
                
                double angle = f.Angle( g ) *180. / M_PI;
-               std::cout << "\n angle= " << angle << "°";
+               streamlog_out( DEBUG3 ) << "\n angle= " << angle << "°";
                
                
                double anglePhi= f.Phi()-g.Phi(); //the angle between them in the xy plane 
@@ -447,7 +494,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                if (anglePhi > M_PI) anglePhi -= 2*M_PI;                                   //to the range from -pi to pi
                anglePhi *= 180./M_PI;
                
-               std::cout << "\n anglePhi= " << anglePhi << "°";
+               streamlog_out( DEBUG3 ) << "\n anglePhi= " << anglePhi << "°";
                
                
                //Check R
@@ -479,11 +526,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                }
                
                
-               std::cout << "\n R= " << R;
+               streamlog_out( DEBUG3 ) << "\n R= " << R;
                
                //distance from circle to origin
                double distTo0 = fabs ( R - sqrt( x*x + y*y) );
-               std::cout << "\n Distance to origin = " << distTo0;
+               streamlog_out( DEBUG3 ) << "\n Distance to origin = " << distTo0;
                
                //
                TVector3 u ( -x , -y , 0.);
@@ -492,8 +539,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                
                double zDist = fabs( u.Z() - v.Z() );
                               
-//                std::cout << "  ; Winkelweite " << u.Angle(v);
-               std::cout << "\n Winkelweite/z " << ( u.Phi() - v.Phi() )/zDist;
+//                streamlog_out( DEBUG3 ) << "  ; Winkelweite " << u.Angle(v);
+               streamlog_out( DEBUG3 ) << "\n Winkelweite/z " << ( u.Phi() - v.Phi() )/zDist;
                
                
                 
@@ -551,12 +598,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                double distToPrediction = sqrt ( ( xNext- xTrue )*( xNext- xTrue ) + ( yNext- yTrue )*( yNext- yTrue ) );
                double distNormed = distToPrediction / zDistNextLayer;   
                
-               std::cout << "\n  ; Prediction (x,y)= (" << xNext << " , " << yNext << ")";
-               std::cout << " ; distance normed= " << distNormed;
+               streamlog_out( DEBUG3 ) << "\n  ; Prediction (x,y)= (" << xNext << " , " << yNext << ")";
+               streamlog_out( DEBUG3 ) << " ; distance normed= " << distNormed;
                
             }
             
             //check the ratio of the distance between to points and their z distance (= criteria for building the segments)
+            //also check the exrtrapolation of the vector to the IP
             
             if (j>=0){ 
             
@@ -564,39 +612,52 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                if ( j>0 ) a = TVector3( cheatTrack->getTrackerHits()[j-1]->getPosition() );
                TVector3 b( cheatTrack->getTrackerHits()[j]->getPosition() );
                TVector3 dist = a - b; // vector between the the two hits
+                        
+               double zDistance = fabs ( dist.Z() );     
+                        
+               TVector3 x = a + dist * ( fabs( a.Z() ) / zDistance );
+               
+               streamlog_out( DEBUG3 ) << "\n normed Extrapolation to z=0, dist/z = "<< 100000.* x.Mag()/(zDistance*zDistance);
+                              
+               
+               double rhoA = sqrt ( a.X()*a.X() + a.Y()*a.Y() );
+               double rhoB = sqrt ( b.X()*b.X() + b.Y()*b.Y() );
+               
+               double ratio2 = (rhoA/rhoB)/(a.Z()/b.Z());
+               streamlog_out( DEBUG3 ) <<"\n rhoA = " << rhoA << " , rhoB = " << rhoB;
+               streamlog_out( DEBUG3 )<<"\n (rhoA/rhoB)/(a.Z()/b.Z()) = " << ratio2;
                               
                double distance = dist.Mag(); //the distance between the hits
-               dist.SetX(0.);
-               dist.SetY(0.);
-               double zDistance = dist.Mag(); //the z distance
+               
+               
                double ratio = distance / zDistance;
                
-               std::cout << "\n Dist/xDist= " << ratio << " ";
+               streamlog_out( DEBUG3 ) << "\n Dist/xDist= " << ratio << " ";
                
             }
             
-            std::cout << std::endl;
+            streamlog_out( DEBUG3 ) << std::endl;
             
          }
          
          
-         if (myRelations[i]->isLost == true) std::cout << "LOST" <<std::endl;
-         if (myRelations[i]->isFoundCompletely== false) std::cout << "NOT FOUND COMPLETELY";
+         if (myRelations[i]->isLost == true) streamlog_out( DEBUG3 ) << "LOST" <<std::endl;
+         if (myRelations[i]->isFoundCompletely== false) streamlog_out( DEBUG3 ) << "NOT FOUND COMPLETELY";
                     
          std::map<Track*,TrackType> relTracks = myRelations[i]->relatedTracks;
          for (std::map<Track*,TrackType>::const_iterator it = relTracks.begin(); it != relTracks.end(); ++it)
          {
-            std::cout << TRACK_TYPE_NAMES[it->second] << "\t";
+            streamlog_out( DEBUG3 ) << TRACK_TYPE_NAMES[it->second] << "\t";
             
             for (unsigned int k = 0; k < it->first->getTrackerHits().size(); k++){
                
-               std::cout << "(" << it->first->getTrackerHits()[k]->getPosition()[0] << ","
+               streamlog_out( DEBUG3 ) << "(" << it->first->getTrackerHits()[k]->getPosition()[0] << ","
                      << it->first->getTrackerHits()[k]->getPosition()[1] << ","
                      << it->first->getTrackerHits()[k]->getPosition()[2] << ")";
                
             }
             
-            std::cout<<"\n";
+            streamlog_out( DEBUG3 )<<"\n";
          }
 
       }
@@ -617,25 +678,25 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    
       if (nMCTracks > 0) pFoundCompletely = 100. * nFoundCompletely/nMCTracks;
       
-      std::cout << std::endl;
-      std::cout << std::endl;
-      std::cout << "nMCTracks = " << nMCTracks <<std::endl;
-      std::cout << "nTracks = " << nTracks <<std::endl;
-      std::cout << "nFoundCompletely = " << nFoundCompletely << " , " << pFoundCompletely << "%" <<std::endl;
-      std::cout << "nLost = " << nLost << " , " << pLost << "%" << std::endl;
-      std::cout << "nGhost = " << nGhost << " , " << pGhost << "%" << std::endl;   
+      streamlog_out( DEBUG4 ) << std::endl;
+      streamlog_out( DEBUG4 ) << std::endl;
+      streamlog_out( DEBUG4 ) << "nMCTracks = " << nMCTracks <<std::endl;
+      streamlog_out( DEBUG4 ) << "nTracks = " << nTracks <<std::endl;
+      streamlog_out( DEBUG4 ) << "nFoundCompletely = " << nFoundCompletely << " , " << pFoundCompletely << "%" <<std::endl;
+      streamlog_out( DEBUG4 ) << "nLost = " << nLost << " , " << pLost << "%" << std::endl;
+      streamlog_out( DEBUG4 ) << "nGhost = " << nGhost << " , " << pGhost << "%" << std::endl;   
       
-      std::cout << "nComplete = " << nComplete << " , " << pComplete << "%" <<std::endl;
-      std::cout << "nCompletePlus = " << nCompletePlus <<std::endl;
+      streamlog_out( DEBUG4 ) << "nComplete = " << nComplete << " , " << pComplete << "%" <<std::endl;
+      streamlog_out( DEBUG4 ) << "nCompletePlus = " << nCompletePlus <<std::endl;
       
-      std::cout << "nIncomplete = " << nIncomplete <<std::endl;
-      std::cout << "nIncompletePlus = " << nIncompletePlus <<std::endl;
+      streamlog_out( DEBUG4 ) << "nIncomplete = " << nIncomplete <<std::endl;
+      streamlog_out( DEBUG4 ) << "nIncompletePlus = " << nIncompletePlus <<std::endl;
       
-      std::cout << std::endl;
+      streamlog_out( DEBUG4 ) << std::endl;
       
       
-      std::cout << std::endl;
-      std::cout << std::endl;
+      streamlog_out( DEBUG4 ) << std::endl;
+      streamlog_out( DEBUG4 ) << std::endl;
       
       ////
       
@@ -726,13 +787,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    }
    
    
-    //-- note: this will not be printed if compiled w/o MARLINDEBUG=1 !
+    //-- note: this will not be printed if compiled w/o MARLINDEBUG4=1 !
 
     streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
         << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
-//      MarlinCED::draw(this); //CED
+     MarlinCED::draw(this); //CED
         
     _nEvt ++ ;
 }
@@ -746,7 +807,7 @@ void TrackingFeedbackProcessor::check( LCEvent * evt ) {
 
 void TrackingFeedbackProcessor::end(){ 
 
-    //   std::cout << "MyProcessor::end()  " << name() 
+    //   streamlog_out( DEBUG ) << "MyProcessor::end()  " << name() 
     // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
     // 	    << std::endl ;
 
