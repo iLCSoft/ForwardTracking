@@ -91,11 +91,11 @@ ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
 ADD_DEFINITIONS( "-Wno-long-long" )
 
 # include directories
-INCLUDE_DIRECTORIES( ./include/CellularAutomaton ./include/TrackingFeedback ./include/TrackPicker ./include/NeuronalNetwork ./include/FTDNoise)
+INCLUDE_DIRECTORIES( ./include/FTrack ./include/TrackingFeedback ./include/TrackPicker ./include/NeuronalNetwork ./include/FTDNoise)
 #INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
 
 # add library
-AUX_SOURCE_DIRECTORY( ./src/CellularAutomaton library_sources )  
+AUX_SOURCE_DIRECTORY( ./src/FTrack library_sources )  
 AUX_SOURCE_DIRECTORY( ./src/TrackingFeedback library_sources )
 AUX_SOURCE_DIRECTORY( ./src/TrackPicker library_sources )
 AUX_SOURCE_DIRECTORY( ./src/NeuronalNetwork library_sources )
