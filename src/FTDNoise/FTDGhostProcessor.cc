@@ -5,7 +5,6 @@
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
 
-#include <IMPL/TrackerHitImpl.h>
 #include <IMPL/TrackerHitPlaneImpl.h>
 
 #include <UTIL/ILDConf.h>
@@ -150,7 +149,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
        
          TrackerHit* hit = dynamic_cast <TrackerHit*>( col->getElementAt (i) );
       
-         const int cellID0 = hit->getCellID0();
+         const int cellID1 = hit->getCellID1();
          
         
          
@@ -158,7 +157,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
       
          UTIL::BitField64  cellID( ILDCellID0::encoder_string );
          
-         cellID.setValue( cellID0 );
+         cellID.setValue( cellID1 );
 
          int layer  = cellID[ ILDCellID0::layer ];
          
@@ -171,9 +170,9 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
             std::vector < TrackerHit* > emptyHitVec;
             
             // create the element in the map (if it already exists nothing happens. So anyway after this we have the value in the map)
-            area.insert( pair< int , std::vector < TrackerHit* > >( cellID0 , emptyHitVec ) ); 
+            area.insert( pair< int , std::vector < TrackerHit* > >( cellID1 , emptyHitVec ) ); 
             
-            area[ cellID0 ].push_back( hit ); //store the hit in the vector
+            area[ cellID1 ].push_back( hit ); //store the hit in the vector
             
 
          }
@@ -335,11 +334,25 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                      
                      ghostHit->setType( 201+layer);  // needed for FullLDCTracking et al.
 
-                     newCellid[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
+
+                     
+                     newCellid[ ILDCellID0::subdet ] = ILDDetID::FTD ;
                      newCellid[ ILDCellID0::side   ] = side ;
                      newCellid[ ILDCellID0::layer  ] = layer ;
                      newCellid[ ILDCellID0::module ] = module ;
                      newCellid[ ILDCellID0::sensor ] = sensor ;
+                     
+                     
+                     // This is needed, cause MarlinTrk needs a correct CellID0. Therefore we store our stuff in
+                     // CellID1
+                     newCellid.setValue( lcio::long64(newCellid.lowWord() ) << 32 );
+                     
+                     newCellid[ ILDCellID0::subdet ] = ILDDetID::FTD ;
+                     newCellid[ ILDCellID0::side   ] = side ;
+                     newCellid[ ILDCellID0::layer  ] = layer ;
+                     newCellid[ ILDCellID0::module ] = 0 ;
+                     newCellid[ ILDCellID0::sensor ] = 0 ;
+
                      
                      newCellid.setCellID( ghostHit ) ;
 

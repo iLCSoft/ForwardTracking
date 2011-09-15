@@ -200,6 +200,7 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
             
             trkHit->setType( 201+layer);  // needed for FullLDCTracking et al.
 
+            //TODO: use cellID1 for storing the module and the sensor
             cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
             cellid_encoder[ ILDCellID0::side   ] = side ;
             cellid_encoder[ ILDCellID0::layer  ] = layer ;
