@@ -22,7 +22,7 @@
 
 #include <sstream>
 #include <MarlinCED.h>
-
+#include "FTrackTools.h"
 
 
 
@@ -32,47 +32,7 @@ using namespace marlin ;
 using namespace FTrack;
 
 
-std::string intToString (int i){
- 
-   std::ostringstream sin;
-   sin << i;
-   return sin.str();
-  
-}
 
-void setUpRootFile( std::string fileNamePath, std::string treeName){
-  
-  //std::string fileNamePath = fileNamePath0;
-  
-  ifstream rf ((fileNamePath + ".root").c_str());       //rf for RootFile
-  if (rf) { // The file already exists
-   
-    int i=0;
-    while (rf){         //Try adding a number starting from 1 to the filename until no file with this name exists and use this.
-      
-      rf.close();
-      i++;
-      rf.open((fileNamePath + intToString(i) + ".root").c_str());
-      
-    }
-    rename ( (fileNamePath + ".root").c_str() , (fileNamePath + intToString(i) +".root").c_str());      //renames the file in the way,so that our new file can have it's name
-    //and not ovrewrite it.
-    
-  }
-  
-  
-  
-  TFile* myRootFile = new TFile((fileNamePath + ".root").c_str(), "RECREATE");        //Make new file, if there is an old one
-  TTree* myTree;
-  
-  myTree = new TTree(treeName.c_str(),"My tree"); //make a new tree
-    
-  
-  
-  myTree->Write("",TObject::kOverwrite);
-  myRootFile->Close();
-  
-}
 
 
 bool hitComp (TrackerHit* i, TrackerHit* j) {
@@ -126,7 +86,7 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
    registerProcessorParameter("RootFileName",
                               "Name of the root file for saving the results (without .root) ",
                               _rootFileName,
-                              std::string("FTrackFeedback") );
+                              std::string("FTrackFeedback.root") );
       
       
    registerProcessorParameter("PtMin",
@@ -750,7 +710,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       rootDataDouble.insert ( std::pair < std::string , double> ( "pComplete" , pComplete ) );
       
       
-      TFile*   myRootFile = new TFile( (_rootFileName + ".root" ).c_str(), "UPDATE"); //add values to the root file
+      TFile*   myRootFile = new TFile( _rootFileName.c_str(), "UPDATE"); //add values to the root file
       TTree*   myTree = (TTree*) myRootFile->Get(_treeName.c_str());
       
       

@@ -17,9 +17,6 @@ using namespace FTrack;
 
 
 
-namespace MarlinTrk{
-  class IMarlinTrkSystem ;
-}
 
 
 /**  Standallone Forward Tracking Processor for marlin.

@@ -29,9 +29,9 @@ bool Segment::deleteParent ( Segment* delParent ){
    
    
    
-   for( unsigned int i=0; i < _parents.size(); i++){
+   for( unsigned int i=0; i < _parents.size(); i++){ //over all parents
       
-      if ( _parents[i] == delParent ){
+      if ( _parents[i] == delParent ){ // if this is the parent to delete
          
          _parents.erase( _parents.begin() + i );
          
@@ -42,7 +42,7 @@ bool Segment::deleteParent ( Segment* delParent ){
    }
    
    
-   return false;
+   return false; //when we reached this point nothing got deleted -> return false 
 }
 
 bool Segment::deleteChild ( Segment* delChild ){

@@ -13,6 +13,8 @@ namespace FTrack{
 
    /**An Interface to model the criteria for a number of TrackerHits to be compatible for
     * some sort of hypothesis.
+    * 
+    *
     */   
    class ICriteria{
 
@@ -24,6 +26,8 @@ namespace FTrack{
       
   
       std::map < std::string , float > getMapOfValues() {return _map_name_value; };
+      
+      
      
    protected:
       

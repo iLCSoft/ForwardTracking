@@ -9,7 +9,8 @@
 
 namespace FTrack {
    
-   
+   /** Takes care of the fitting of a track.
+    */
    class FTDTrackFitter{
    
       

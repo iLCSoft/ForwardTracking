@@ -17,13 +17,14 @@ namespace FTrack{
    // or should even be one replaced with the other? 
 
    /**A class representing the FTD.\ In it the 1-segments of the FTD can be stored
-    * and accessed more easy.
+    * and accessed more easy. It is very similar to FTDRepresentation and be they can be combined in a more efficient way.
     */
    class FTDSegRepresentation {
       
    public:
       
       /**
+       * @param autCode the autCode that will be used to encode and decode the autHits.
        */
       FTDSegRepresentation( AutCode* autCode );
       
@@ -42,7 +43,7 @@ namespace FTrack{
       
       std::vector < Segment* > getSegsWithCode ( int code ) { return _map_code_segs[ code ]; };
       
-      /**returns a set of alle the codes that are used.
+      /**returns a set of all the codes that are used.
        */
       std::set < int > getCodes();
       
@@ -56,7 +57,7 @@ namespace FTrack{
       
    private:
       
-      /** A map containing the code as the key and as value a vector of all AutHits* with this code
+      /** A map containing the code as the key and as value a vector of all Segments* with this code
        */
       std::map < int , std::vector < Segment*> > _map_code_segs;
       

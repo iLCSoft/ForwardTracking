@@ -13,19 +13,16 @@
 namespace FTrack{
 
 
-   /**A class representing the FTD.\ In it the hits on the FTD can be stored
-    * and accessed more easy.
+   /**A class representing the FTD.\ In it the autHits on the FTD can be stored
+    * and accessed more easily.
     */
    class FTDRepresentation {
       
    public:
       
       /**
-       * @param nLayers: number of layers
-       * 
-       * @param nModules: the number of modules per layer
-       * 
-       * @param nSensors: number of sensors per module
+       * @param autCode The coding that will be used to store the autHits.
+       *
        */
       FTDRepresentation( AutCode* autCode );
       
@@ -46,10 +43,14 @@ namespace FTrack{
       unsigned int getNModules()  { return _nModules; };
       unsigned int getNSensors()  { return _nSensors; };
       
-      
+      /** 
+       * @return the autCode that is used within the FTDRepresentation.
+       */
       AutCode* getAutCode() { return _autCode; };
 
-      
+      /**
+       * @return all hits that have this code.
+       */
       std::vector < AutHit* > getHitsWithCode ( int code ) { return _map_code_hits[ code ]; };
       std::set <int> getCodes();
       
@@ -67,8 +68,6 @@ namespace FTrack{
       
       AutCode* _autCode;
       
-
-
 
    };
 

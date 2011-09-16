@@ -71,6 +71,8 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child ){
       
          double cosThetaSquared = numerator * numerator / ( uSquared * vSquared );
          
+         _map_name_value.insert( std::pair < std::string , float > ( "cos3DAngleSquared", cosThetaSquared ) );
+         
          if (cosThetaSquared < _cosAngleMin*_cosAngleMin) return false;  
       
       }

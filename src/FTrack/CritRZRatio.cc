@@ -37,7 +37,7 @@ bool CritRZRatio::areCompatible( Segment* parent , Segment* child ){
             
       
       
-      _map_name_value.insert( std::pair < std::string , float > ( "", ratioSquared ) );
+      _map_name_value.insert( std::pair < std::string , float > ( "RZRatioSquared", ratioSquared ) );
       
       if ( ratioSquared > _ratioMax * _ratioMax ) return false;
   

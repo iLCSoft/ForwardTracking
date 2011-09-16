@@ -465,7 +465,7 @@ void Automaton::cleanBadConnections(){
 
 
 
-std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std::vector< TrackerHit*> hits ){
+std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std::vector< TrackerHit*> hits , unsigned minHits ){
 
 
    std::vector <Track*> tracks; //the vector of the tracks to be returned
@@ -489,9 +489,8 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
 
       }
 
-      unsigned nHitMin = 4; //The minimum number of hits --> make this a parameter
-
-      if ( newHits.size() >= nHitMin ){
+      
+      if ( newHits.size() >= minHits ){
 
          //make a new track
          TrackImpl* newTrack = new TrackImpl();
@@ -538,7 +537,7 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
 }
 
 
-std::vector <Track*> Automaton::getTracks(){
+std::vector <Track*> Automaton::getTracks( unsigned minHits ){
 
 
 
@@ -556,7 +555,7 @@ std::vector <Track*> Automaton::getTracks(){
 
 
             // get the tracks from the segment
-            std::vector <Track*> newTracks = getTracksOfSegment( _segments[layer][iSeg] , emptyHitVec );
+            std::vector <Track*> newTracks = getTracksOfSegment( _segments[layer][iSeg] , emptyHitVec , minHits );
 
             // and add them to the vector of all tracks
             tracks.insert( tracks.end() , newTracks.begin() , newTracks.end() );

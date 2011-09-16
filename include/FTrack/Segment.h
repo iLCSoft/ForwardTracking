@@ -1,22 +1,7 @@
 #ifndef Segment_h
 #define Segment_h
 
-/** A segment is a part of a track. This track can be real or not (ghosttacks for example)
- * 
- * It may consist of only one hit or of 2000 hits or whatever number is useful.
- * 
- * What makes it different from a Track, is that it has a 2 vectors: children and parents.
- * Via these vectors it can store which other segments it is connected to.
- * 
- * It has also a vector state, which is used in the cellular automaton approach, but may
- * as well be used for something different.
- * 
- * 
- * 
- * 
- * 
- * 
- */
+
 
 
 #include <vector>
@@ -24,6 +9,39 @@
 
 namespace FTrack{
 
+   
+   /** A segment is a part of a track. This track can be real or not (for example ghosttracks). 
+    * It may consist of only one hit or of 2000 hits or whatever number is useful.
+    * 
+    * What makes it different from a Track, is that it is connected. It has: children and parents.
+    * Children are segments connected to this one on lower layers and parents are segments connected
+    * on higher layers.
+    * 
+    * This is a very useful concept, as it allows to combine them to a track or to compare different possibilities
+    * a track can be formed.
+    * 
+    * Segments are especially used in the Automaton.
+    * 
+    * 
+    * 
+    * I will throughout all documentation use words like 1-segment and 2-segment.
+    * This simply refers to the number of hits stored in it.
+    * 
+    * So a 1-segment simply is a hit ( an AutHit to be more specific ), but with the possibility
+    * to be connected to others.
+    * 
+    * 
+    *   
+    * An important property of the segment is its state.
+    * The state is a concept used in the cellular automaton and is merely an integer. At the beginning this
+    * is 0. When the automaton performs its work it will rate the segments it contains and raise their states
+    * if they a good. So the state is a kind of quality indicator telling how good a segment is.
+    * 
+    * TODO: why are there inner and outer states?
+    * 
+    * 
+    * 
+    */   
    class Segment {
    
    

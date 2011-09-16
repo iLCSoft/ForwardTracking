@@ -5,70 +5,143 @@
 #include "Segment.h"
 #include "ICriteria.h"
 
-//TODO: should I really place the track candiate collector in here. maybe another place was better
 #include "EVENT/Track.h"
 
 namespace FTrack{
    
    
-   
- 
+   /** The class for the cellular automaton.
+    * 
+    * It stores segments ( a number of hits, see the segment header file ) on layers
+    * 
+    * Via the method doAutomaton() it raises the states of the segments, if they have are connected to an inner
+    * segment with the same state which satisfies all criteria. <br>
+    * Criteria are passed to this class via the addCriteria() method. A criteria is an object that takes
+    * two segments and tells, if they are compatible.
+    * For more detailed information see the interface: ICriteria and the different classes derived from it
+    * (they all start with Crit )
+    * 
+    * The raising of the states will be repeated until no more changes happen. 
+    * 
+    * After this the cleanBadStates method can be used to erase all segments, that have a state lower than their layer,
+    * which essentially means, that they are not connected all the way through to layer 0.
+    * 
+    * After this the method cleanBadConnections() can be used, to get rid of all connections of segments, that don't fulfill
+    * the currently loaded criteria.
+    * 
+    * 
+    * If another round of doAutomaton() wants to be used, you should first call the method resetStates, to set all states of
+    * the segments back to 0.
+    * 
+    * 
+    * The method lengthenSegments is used to make the segments 1 hit longer. So if you have 2-segments 
+    * (segments consisting of 2 hits) and performed the automaton on it and now want to proceed with longer 3-segments
+    * (segments consiting of 3 hits) you would call the lengthenSegments() method.
+    * 
+    * After this don't forget, that the criteria you loaded before were for 2-segments, so you should erase them with
+    * clearCriteria() and then add criteria for 3-segments.
+    * 
+    * 
+    * Once you are done with all this, you might want to get back all the possible tracks stored in the automaton.
+    * For this use the getTracks() method. It will return all tracks that are possible given the current stored
+    * segments and their connections.
+    * But be warned: when there are still a lot of hits and connections, there will be a high number of possible tracks,
+    * therefore taking some time.
+    */ 
    class Automaton{
       
       
      
    public:
       
-      std::vector < std::vector < Segment* > > segment() {return _segments;};
       
+      /** Adds a segment to the automaton.\
+       * Take care to set the layer of the segment before adding!
+       */
       void addSegment ( Segment* segment );
       
       /**Lengthens the segments by one via adding the first hit of the next segment it is connected to
        * to it.
-       * And also connects those longer segments with each other.
-       * Segments that don't have connected segments to use to get longer, they will die here. 
-       * TODO: is this the best way. Should there be an alternative? Maybe in another method?
+       * Also connects those longer segments with each other. ( one becomes a parent and one a child )
+       * Segments that don't have connected segments to use to get longer, will die here. 
+       * TODO: is this the best way? Should there be an alternative? Maybe in another method?
        */
       void lengthenSegments();
       
+      /**Adds a criteria to the automaton. So it will be used, when the methods doAutomaton()
+       * or cleanBadConnections() are called.
+       */
       void addCriteria ( ICriteria* criteria ){ _criteria.push_back( criteria ); };
       void clearCriteria() { _criteria.clear(); };
       
-      /** Does the automaton search for neighbors and changes the states. TODO: explain
+      /** Does iteration until the states of the segments don't change anymore.
+       * 
+       * In one iteration all segments are checked, if they have a neighbor.
+       * A neighbor:
+       * - has the same state
+       * - fulfills all the criteria
+       * 
+       * If it has a neighbor its state will be raised by one at the end of the iteration.
+       * (At the end only in theory: in the program it will be during the iteration, but
+       * in a way, that it doesn't affect other segments)
+       * 
+       * When after an iteration the states didn't change, it stops.
        */
       void doAutomaton();
       
       /**
-       * erases all segments that don't have state corresponding to their layer
+       * Erases all segments that don't have a state corresponding to their layer.
+       * 
+       * After the automaton is performed every segment, that has a neighbor, that has a neighbor, that...
+       * ...that reaches layer 0 should have a state equal to its layer. All the others are not connected
+       * to layer 0. All those get deleted by this method.
+       * (Of course all the connections to them are erased as well)
        */
       void cleanBadStates();
       
       /**
-       * erase all connections between segments, that don't satisfy the criteria
+       * Erase alls connections between segments, that don't satisfy the criteria.
        */
       void cleanBadConnections();
       
-      /**Resets all the states to 0
+      /**Resets all the states of the segmens to 0 by calling the resetState() method of the segment
        */
       void resetStates();
       
       
-      /**returns the tracks
+      /** Get all the possible tracks in the automaton.
+       * 
+       * Tracks are built by starting from segments which don't have a parent (and are therefore the begin of a track).
+       * For all children they have a new own track is created. The children themselves have children again, so the 
+       * tracks split up again.
+       * If we have for example a segment with 3 children, which each have 5 children, which each have 7 children,
+       * we will get 1*3*5*7=105 tracks.
+       * 
+       * @return All tracks that are possible with the given segments and their connections
+       * 
+       * @param minHits the minimum number of hits that a track needs to have. All possible tracks,
+       * that have less won't be considered as tracks and won't be returned.
+       * 
        */
-      std::vector <Track*> getTracks();
+      std::vector <Track*> getTracks( unsigned minHits = 3 );
       
-      /**returns all the tracks starting from this segment
+      
+      /**Returns all the tracks starting from this segment.
+       * It is a recursive method and gets invoked by getTracks.
        */
-      std::vector <Track*> getTracksOfSegment ( Segment* segment, std::vector< TrackerHit*> hits );
+      std::vector <Track*> getTracksOfSegment ( Segment* segment, std::vector< TrackerHit*> hits , unsigned minHits = 3 );
       
    private:
       
       /** Here the segments are stored.
        * The first index corresponds to the layer.
-       * The second corresponds to the index of the segment.
+       * The second corresponds to the segments on the layer.
+       * _segments[2][4] is segment 2 on layer 4
        */
       std::vector < std::vector < Segment* > > _segments;
       
+      /** A vector containing all the criteria, that are used in the Automaton
+       */
       std::vector < ICriteria* > _criteria;
       
       

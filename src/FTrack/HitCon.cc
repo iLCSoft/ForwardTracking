@@ -23,10 +23,10 @@ std::set< int > HitCon::getTargetCode ( int code ){
       
    int side = _autCode->getSide( code );
    unsigned layer = _autCode->getLayer( code );
-   unsigned module = _autCode->getModule( code );
-   unsigned sensor = _autCode->getSensor( code );
+//    unsigned module = _autCode->getModule( code );
+//    unsigned sensor = _autCode->getSensor( code );
    
-   unsigned nLayers = _autCode->getNLayers();
+//    unsigned nLayers = _autCode->getNLayers();
    unsigned nModules = _autCode->getNModules();
    unsigned nSensors = _autCode->getNSensors();
    

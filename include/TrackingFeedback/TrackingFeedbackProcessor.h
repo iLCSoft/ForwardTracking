@@ -58,7 +58,6 @@ class TrackingFeedbackProcessor : public Processor {
    std::string _AutTrkCollection;
 
    std::string _rootFileName;
-
    std::string _treeName;
 
    int _nRun ;

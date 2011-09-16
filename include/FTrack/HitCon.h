@@ -10,10 +10,13 @@
 
 namespace FTrack{
    
-   /**
-    * TODO: document this! 
+   /** Used to connect two hits.
     * 
-    * Gets a code and returns a vector of them too. All the returned ones represent possible connections
+    * Allows:
+    * 
+    * - Jumping to layer 0 from layer 4 or less
+    * - going to next layer
+    * 
     */   
    class HitCon : public IHitConnector{
       
