@@ -27,7 +27,7 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child ){
    
    
    
-   if (( parent->getAutHits().size() == 2 )&&( child->getAutHits().size() == 2 )){ //this is a criteria for 2-segments
+   if (( parent->getAutHits().size() == 2 )&&( child->getAutHits().size() == 2 )){ //this is a criterion for 2-segments
       
 
 

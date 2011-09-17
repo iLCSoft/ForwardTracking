@@ -2,11 +2,13 @@
 #define Crit2_StraightTrack_h
 
 
-#include "ICriteria.h"
+#include "ICriterion.h"
 
 namespace FTrack{
 
-   class Crit2_StraightTrack : public ICriteria{
+   /** Criterion: for straight tracks, if line between two hits point towards IP
+    */
+   class Crit2_StraightTrack : public ICriterion{
 
 
 

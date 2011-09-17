@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "Segment.h"
-#include "ICriteria.h"
+#include "ICriterion.h"
 
 #include "EVENT/Track.h"
 
@@ -16,9 +16,9 @@ namespace FTrack{
     * 
     * Via the method doAutomaton() it raises the states of the segments, if they have are connected to an inner
     * segment with the same state which satisfies all criteria. <br>
-    * Criteria are passed to this class via the addCriteria() method. A criteria is an object that takes
+    * Criteria are passed to this class via the addCriterion() method. A criterion is an object that takes
     * two segments and tells, if they are compatible.
-    * For more detailed information see the interface: ICriteria and the different classes derived from it
+    * For more detailed information see the interface: ICriterion and the different classes derived from it
     * (they all start with Crit )
     * 
     * The raising of the states will be repeated until no more changes happen. 
@@ -71,7 +71,7 @@ namespace FTrack{
       /**Adds a criteria to the automaton. So it will be used, when the methods doAutomaton()
        * or cleanBadConnections() are called.
        */
-      void addCriteria ( ICriteria* criteria ){ _criteria.push_back( criteria ); };
+      void addCriterion ( ICriterion* criterion ){ _criteria.push_back( criterion ); };
       void clearCriteria() { _criteria.clear(); };
       
       /** Does iteration until the states of the segments don't change anymore.
@@ -142,7 +142,7 @@ namespace FTrack{
       
       /** A vector containing all the criteria, that are used in the Automaton
        */
-      std::vector < ICriteria* > _criteria;
+      std::vector < ICriterion* > _criteria;
       
       
       

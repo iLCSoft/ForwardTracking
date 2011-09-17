@@ -2,11 +2,13 @@
 #define CritRZRatio_h
 
 
-#include "ICriteria.h"
+#include "ICriterion.h"
 
 namespace FTrack{
 
-   class CritRZRatio : public ICriteria{
+   /** Cirterion: distance of two hits divided by their z-distance
+    */
+   class CritRZRatio : public ICriterion{
 
 
 

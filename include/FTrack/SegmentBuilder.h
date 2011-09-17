@@ -23,9 +23,9 @@ namespace FTrack{
     * all the codes we might connect to. So there we get the information like: "this segment can be connected
     * to layer 3 and 4, module 7,8,9 inf forward direction".
     * 
-    * - the criteria take two segments and return whether they are compatible. A criteria could check for anything
+    * - the criteria take two segments and return whether they are compatible. A criterion could check for anything
     * that is stored in the segments. For example: if the line formed from two 1-segments passes close by the IP might
-    * be a criteria for very stiff tracks.
+    * be a criterion for very stiff tracks.
     * 
     * So the hitConnectors tell us were to look and the criteria whether to connect. If two 1-segments are found,
     * that compatible, they will be connected. Connected means: The inner 1-segment will save the outer one as a parent
@@ -48,7 +48,7 @@ namespace FTrack{
       
       /** Adds a criterium. //TODO: check LEO: should this be criterium in singular?????
        */
-      void addCriteria ( ICriteria* criteria ){ _criteria.push_back( criteria );};
+      void addCriterion ( ICriterion* criterion ){ _criteria.push_back( criterion );};
       
       /** Adds a hitConnector
        */
@@ -65,7 +65,7 @@ namespace FTrack{
    private:
       
       
-      std::vector <ICriteria* > _criteria;
+      std::vector <ICriterion* > _criteria;
       std::vector <IHitConnector* > _hitConnectors;
       
       FTDRepresentation* _FTDRep;

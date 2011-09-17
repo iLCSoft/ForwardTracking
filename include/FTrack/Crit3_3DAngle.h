@@ -2,11 +2,13 @@
 #define Crit3_3DAngle_h
 
 
-#include "ICriteria.h"
+#include "ICriterion.h"
 
 namespace FTrack{
 
-   class Crit3_3DAngle : public ICriteria{
+   /** Criterion: the angle between two 2-segments
+    */
+   class Crit3_3DAngle : public ICriterion{
 
 
 

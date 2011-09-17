@@ -18,7 +18,7 @@ bool CritRZRatio::areCompatible( Segment* parent , Segment* child ){
    
    
    
-   if (( parent->getAutHits().size() == 1 )&&( child->getAutHits().size() == 1 )){ //a criteria for 1-segments
+   if (( parent->getAutHits().size() == 1 )&&( child->getAutHits().size() == 1 )){ //a criterion for 1-segments
       
       
       AutHit* a = parent->getAutHits()[0];

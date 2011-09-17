@@ -251,7 +251,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       SegmentBuilder segBuilder( &ftdRep );
       
       //Load in some criteria
-      segBuilder.addCriteria ( new Crit2_StraightTrack(1.001) ); 
+      segBuilder.addCriterion ( new Crit2_StraightTrack(1.001) ); 
       
       //Also load hit connectors
       segBuilder.addHitConnector ( new HitCon( &autCode ) );
@@ -276,7 +276,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       // So now we have 2-segments and are ready to perform the cellular automaton.
       // Load some criteria for the automaton:
-      automaton.addCriteria ( new Crit3_3DAngle( 6. ) );
+      automaton.addCriterion ( new Crit3_3DAngle( 6. ) );
       
       // Perform the automaton
       automaton.doAutomaton();
@@ -285,7 +285,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Clean segments with bad states
       automaton.cleanBadStates();
       
-      //Clean connections of segments (this uses the same criteria again as before
+      //Clean connections of segments (this uses the same criteria again as before)
       automaton.cleanBadConnections();
       
       //Reset the states of all segments
