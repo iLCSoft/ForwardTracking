@@ -3,7 +3,7 @@
 
 #include "FTDRepresentation.h"
 #include "FTDSegRepresentation.h"
-#include "ICriteria.h"
+#include "ICriterion.h"
 #include "IHitConnector.h"
 #include "Automaton.h"
 
