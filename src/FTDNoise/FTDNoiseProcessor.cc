@@ -200,8 +200,19 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
             
             trkHit->setType( 201+layer);  // needed for FullLDCTracking et al.
 
-            //TODO: use cellID1 for storing the module and the sensor
+            
             cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
+            cellid_encoder[ ILDCellID0::side   ] = side ;
+            cellid_encoder[ ILDCellID0::layer  ] = layer ;
+            cellid_encoder[ ILDCellID0::module ] = 0 ;
+            cellid_encoder[ ILDCellID0::sensor ] = 0 ;
+            
+            // This is needed, cause MarlinTrk needs a correct CellID0. Therefore we store our stuff in
+            // CellID1
+            //TODO: use cellID1 for storing the module and the sensor
+            cellid_encoder.setValue( lcio::long64(cellid_encoder.lowWord() ) << 32 );
+            
+            cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD ;
             cellid_encoder[ ILDCellID0::side   ] = side ;
             cellid_encoder[ ILDCellID0::layer  ] = layer ;
             cellid_encoder[ ILDCellID0::module ] = 0 ;

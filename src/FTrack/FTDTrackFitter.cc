@@ -4,21 +4,15 @@
 #include <algorithm>
 #include "marlin/VerbosityLevels.h"
 #include "IMPL/TrackImpl.h"
+#include "FTrackTools.h"
+
 
 using namespace lcio;
 using namespace FTrack;
 using namespace MarlinTrk;
 
 
-/** method that compares two TrackerHits.
- * 
- * @return true if |a.z| < |b.z| , i.e. true if a is nearer to z=0 than b is
- */
-bool compare_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b ){
-   
-   return ( fabs(a->getPosition()[2]) < fabs( b->getPosition()[2]) ); //compare their z values
-   
-}    
+ 
 
 
 
