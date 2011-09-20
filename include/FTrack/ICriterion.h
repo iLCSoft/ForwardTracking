@@ -5,6 +5,8 @@
 #include "Segment.h"
 #include "lcio.h"
 
+#include "marlin/VerbosityLevels.h"
+
 using namespace lcio;
 
 
@@ -41,5 +43,7 @@ namespace FTrack{
 
 
 #endif
+
+
 
 

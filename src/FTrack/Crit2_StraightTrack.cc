@@ -38,8 +38,8 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
       double rhoBSquared = bx*bx + by*by;
       
       //first check, if the distance to (0,0) rises --> such a combo could not reach the IP
-      _map_name_value.insert( std::pair < std::string , float > ( "rhoParentSquared", rhoASquared ) );
-      _map_name_value.insert( std::pair < std::string , float > ( "rhoChildSquared",  rhoBSquared ) );
+      _map_name_value["rhoParentSquared"] = rhoASquared;
+      _map_name_value["rhoChildSquared"]  = rhoBSquared;
       
 
       if (rhoBSquared > rhoASquared ) return false;
@@ -50,7 +50,7 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
          // the square is used, because it is faster to calculate with the squares than with sqrt, which takes some time!
          double ratioSquared = ( ( rhoASquared * ( bz*bz )  ) / ( rhoBSquared * ( az*az )  ) );
                
-         _map_name_value.insert( std::pair < std::string , float > ( "StraightTrackRatioSuqared", ratioSquared ) );
+         _map_name_value["StraightTrackRatioSuqared"] = ratioSquared;
          
          
          if ( ratioSquared > _ratioMax * _ratioMax ) return false;
@@ -67,3 +67,5 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
    
    
 }
+
+

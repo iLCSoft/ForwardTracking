@@ -576,3 +576,27 @@ std::vector <Track*> Automaton::getTracks( unsigned minHits ){
 }
 
 
+std::vector <Segment*> Automaton::getSegments(){
+   
+   
+   
+   std::vector <Segment*> segments;
+   
+   for( unsigned layer=0; layer < _segments.size(); layer++ ){
+      
+      
+      segments.insert( segments.end() , _segments[layer].begin() , _segments[layer].end() );
+      
+   }
+   
+   
+   
+   return segments; 
+         
+         
+   
+   
+}
+
+
+

@@ -131,6 +131,12 @@ namespace FTrack{
        */
       std::vector <Track*> getTracksOfSegment ( Segment* segment, std::vector< TrackerHit*> hits , unsigned minHits = 3 );
       
+      
+      /**
+       * @return All the segments currently saved in the automaton
+       */
+      std::vector <Segment*> getSegments();
+      
    private:
       
       /** Here the segments are stored.
@@ -155,6 +161,8 @@ namespace FTrack{
    
    
 }
+
+
 
 
 

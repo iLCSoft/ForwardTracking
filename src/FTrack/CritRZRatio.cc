@@ -1,4 +1,5 @@
 #include "CritRZRatio.h"
+#include "marlin/VerbosityLevels.h"
 
 
 using namespace FTrack;
@@ -33,11 +34,13 @@ bool CritRZRatio::areCompatible( Segment* parent , Segment* child ){
       float bz = b->getZ();
       
       // the square is used, because it is faster to calculate with the squares than with sqrt, which takes some time!
-      double ratioSquared = ( (ax-bx)*(ax-bx) + (ay-by)*(ay-by) + (az-bz)*(az-bz) ) / ( (az-bz) * ( az-bz ) );
-            
+      double ratioSquared = 0.; 
+      if ( az-bz  != 0. ) ratioSquared = ( (ax-bx)*(ax-bx) + (ay-by)*(ay-by) + (az-bz)*(az-bz) ) / ( (az-bz) * ( az-bz ) );
       
       
-      _map_name_value.insert( std::pair < std::string , float > ( "RZRatioSquared", ratioSquared ) );
+      _map_name_value[ "RZRatioSquared"] = ratioSquared;
+      
+
       
       if ( ratioSquared > _ratioMax * _ratioMax ) return false;
   
@@ -51,3 +54,7 @@ bool CritRZRatio::areCompatible( Segment* parent , Segment* child ){
    
    
 }
+
+
+
+

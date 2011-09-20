@@ -200,3 +200,7 @@ bool SegmentBuilder::connectSegments ( Segment* parent , Segment* child ){
    return false;
 
 }
+
+
+
+
