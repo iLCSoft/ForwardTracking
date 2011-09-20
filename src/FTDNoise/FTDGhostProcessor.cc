@@ -316,7 +316,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                      double pos[3] = {0. , 0. , 0.};
                      pos[0] = r * cos(phi);     //x
                      pos[1] = r * sin(phi);     //y
-                     pos[2] = _diskPositionZ[ layer ]; // the z postion is exact
+                     pos[2] = _diskPositionZ[ layer ]*side; // the z postion is exact
                      
                      // smear the hit position
                      pos[0] = CLHEP::RandGauss::shoot( pos[0] , _pointReso );
