@@ -54,7 +54,7 @@ std::set< int > HitCon::getTargetCode ( int code ){
    if ( ( layer > 1 )&& ( layer <= 4 ) ){
       
       
-      unsigned layerTarget = 0; //The next layer
+      unsigned layerTarget = 0;
       
       for ( unsigned iModule=0; iModule < nModules ; iModule++){ //over all modules
 

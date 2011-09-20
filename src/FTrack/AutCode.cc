@@ -1,4 +1,5 @@
 #include "AutCode.h"
+#include "FTrackTools.h"
 
 #include "marlin/VerbosityLevels.h"
 
@@ -16,7 +17,37 @@ AutCode::AutCode (  unsigned nLayers , unsigned nModules , unsigned nSensors ){
    
 }
 
-int AutCode::getCode( int side, unsigned layer , unsigned module , unsigned sensor ){
+int AutCode::getCode( int side, unsigned layer , unsigned module , unsigned sensor )throw( FTrack::OutOfRange ){
+   
+   //check if the values passed are okay:
+   if ( ( side!= 1 )&&( side != -1 ) ){
+      
+    
+      std::string s = "Side has to be either +1 or -1 and not " + intToString( side );
+      throw OutOfRange( s );
+      
+   }
+   
+   if ( layer >= _nLayers ){
+      
+      std::string s = "Layer " + intToString( layer ) +" is too big, the outermost layer is layer " + intToString( _nLayers - 1 );
+      throw OutOfRange( s );
+      
+   }
+   
+   if ( module >= _nModules ){
+      
+      std::string s = "Module " + intToString( module ) +" is too big, the highest module is module " + intToString( _nModules - 1 );
+      throw OutOfRange( s );
+      
+   }
+   
+   if ( sensor >= _nSensors ){
+      
+      std::string s = "Sensor " + intToString( sensor ) +" is too big, the highest sensor is sensor " + intToString( _nSensors - 1 );
+      throw OutOfRange( s );
+      
+   }   
    
    unsigned multiplicator=1;
    

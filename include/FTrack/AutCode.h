@@ -2,6 +2,9 @@
 #ifndef AutCode_h
 #define AutCode_h
 
+
+#include "FTrackExceptions.h"
+
 namespace FTrack{
    
    
@@ -27,11 +30,11 @@ namespace FTrack{
       
       //TODO: the numbers should be checked--> there should be an exception for wrong numbers (like layer 9, when layer 7 is max)
       
-      int getCode( int side, unsigned layer , unsigned module , unsigned sensor );
+      int getCode( int side, unsigned layer , unsigned module , unsigned sensor ) throw( OutOfRange );
       
       int getSide( int code );
       unsigned getLayer( int code );
-      unsigned getModule( int code );
+      unsigned getModule( int code ); 
       unsigned getSensor( int code );
 
       unsigned getNLayers(){ return _nLayers; };
