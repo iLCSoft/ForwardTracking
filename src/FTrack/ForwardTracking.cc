@@ -156,30 +156,33 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
   pHandler.update(evt); 
 
 //-----------------------------------------------------------------------
-
+  
+  //get FTD geometry info
+   const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
+   drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
 
 
    _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
   
 
-  LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
+   LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
 
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //                                                                                                              //
-  //                                                                                                              //
-  //                            Track Reconstruction in the FTDs                                                  //
-  //                                                                                                              //
-  //                                                                                                              //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   //                                                                                                              //
+   //                                                                                                              //
+   //                            Track Reconstruction in the FTDs                                                  //
+   //                                                                                                              //
+   //                                                                                                              //
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 
 
-  //First: collect all the hits and store them
-  if( col != NULL ){
+   //First: collect all the hits and store them
+   if( col != NULL ){
 
      
-     std::vector <Track*> trackCandidates;
+      std::vector <Track*> trackCandidates;
      
       int nHits = col->getNumberOfElements()  ;
 
@@ -252,6 +255,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       //Load in some criteria
       segBuilder.addCriterion ( new Crit2_StraightTrack(1.001) ); 
+      segBuilder.addCriterion ( new CritRZRatio(1.05) );
       
       //Also load hit connectors
       segBuilder.addHitConnector ( new HitCon( &autCode ) );
@@ -260,7 +264,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // And get out the 1-segments
       Automaton automaton = segBuilder.get1SegAutomaton();
       
-      
+            
       /**********************************************************************************************/
       /*                Automaton                                                                   */
       /**********************************************************************************************/
@@ -268,6 +272,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       streamlog_out( MESSAGE0 ) << "\n--Automaton--" ;
+      
+//       automaton.drawSegments();
       
       // Let the automaton lengthen its 1-segments to 2-segments
       // Because for 1-segments (== single hits) and automaton isn't very useful. TODO: verify this hyphothesis
@@ -281,6 +287,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // Perform the automaton
       automaton.doAutomaton();
       
+//       automaton.drawSegments();
       
       //Clean segments with bad states
       automaton.cleanBadStates();
@@ -392,6 +399,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 
 
+   MarlinCED::draw(this);
 
         
     _nEvt ++ ;
@@ -405,6 +413,76 @@ void ForwardTracking::check( LCEvent * evt ) {}
 
 
 void ForwardTracking::end(){}
+
+void ForwardTracking::drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal){
+   
+
+   
+   std::vector <double> diskPositionZ = paramFTD.getDoubleVals( "FTDZCoordinate" ) ;
+   std::vector <double> diskInnerRadius = paramFTD.getDoubleVals( "FTDInnerRadius" ) ;
+   std::vector <double> diskOuterRadius = paramFTD.getDoubleVals( "FTDOuterRadius" ) ; 
+   
+   unsigned int color = 0x9999ff;
+   
+   
+   for ( int side = -1; side <= 1; side +=2){ //for backward and forward
+
+      for ( unsigned int disk=0; disk < diskPositionZ.size(); disk++ ){ //over all disks
+
+
+         double rMin = diskInnerRadius[ disk ];
+         double rMax = diskOuterRadius[ disk ];
+         double z      = side * diskPositionZ[ disk ];            
+         
+         //draw the radial boarders (i.e. straight lines)
+         for (unsigned int petal=0; petal < nPetalsPerDisk; petal++){ //over all petals
+
+            double phi = 2 * M_PI / (float) nPetalsPerDisk * (float) petal; //the phi angle of the first boarder of the petal
+            
+            
+            double xStart = rMin * cos( phi );
+            double yStart = rMin * sin( phi );
+            double xEnd   = rMax * cos( phi );
+            double yEnd   = rMax * sin( phi );
+            
+            
+            ced_line_ID( xStart, yStart, z , xEnd , yEnd , z , 2 , 2, color, 2);
+            
+            
+         }
+         
+         //draw the angular boarders (i.e. circles)
+         for (unsigned int i=0; i <= nSensorsPerPetal; i++){
+            
+            unsigned nLines = 360;
+            
+            double r = rMin + ( rMax - rMin ) / (float) nSensorsPerPetal * (float) i; //the radius of the circle
+            
+            for (unsigned int j=0; j<nLines; j++){
+               
+               double phiStart = 2.*M_PI / nLines * j;
+               double phiEnd   = 2.*M_PI / nLines * (j +1);
+               
+               double xStart = r * cos(phiStart);
+               double yStart = r * sin(phiStart);
+               double xEnd   = r * cos(phiEnd);
+               double yEnd   = r * sin(phiEnd);
+               
+               ced_line_ID( xStart, yStart, z , xEnd , yEnd , z , 2 , 2, color, 2);
+               
+            }
+            
+         }
+         
+      }
+      
+   }
+   
+   
+   
+   
+   
+}
 
 
 

@@ -105,6 +105,11 @@ class ForwardTracking : public Processor {
    bool _MSOn ;
    bool _ElossOn ;
    bool _SmoothOn ;
+   
+   
+   /** Draws the FTD sensors in CED
+    */
+   void drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal);
 
     
 } ;
