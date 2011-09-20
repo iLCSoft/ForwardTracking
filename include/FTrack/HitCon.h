@@ -27,6 +27,7 @@ namespace FTrack{
       
       virtual std::set <int>  getTargetCode ( int code );
       
+      virtual ~HitCon(){};
       
    private:
       

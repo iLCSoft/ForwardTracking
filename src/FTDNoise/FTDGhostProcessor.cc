@@ -250,7 +250,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                                           // 0 == at the angle at the begin of the petal
                                           // 1 == at the angle at the end of the petal
                
-               int radialStrip = floor ( angleRel * _nStripsPerSensor ); //the number of the radial strip that's activated by this hit
+               int radialStrip = int (  angleRel * _nStripsPerSensor  ); //the number of the radial strip that's activated by this hit
                if (radialStrip == _nStripsPerSensor) radialStrip--;
                
                
@@ -261,7 +261,7 @@ void FTDGhostProcessor::processEvent( LCEvent * evt ) {
                                  // 0 == at the inner radius of the sensor
                                  // 1 == at the outer radius of the sensor
                
-               int angularStrip = floor (rRel * _nStripsPerSensor); //number of the activated angular strip
+               int angularStrip = int (rRel * _nStripsPerSensor); //number of the activated angular strip
                if (angularStrip == _nStripsPerSensor) angularStrip--;
                
                

@@ -18,6 +18,7 @@ namespace FTrack{
       
       virtual bool areCompatible( Segment* parent , Segment* child );
 
+      virtual ~Crit2_StraightTrack(){};
 
     
    private:

@@ -33,6 +33,7 @@ namespace FTrack{
       
       virtual std::set <int> getTargetCode ( int ) = 0;
       
+      virtual ~IHitConnector(){};
 
    };
    
@@ -43,5 +44,6 @@ namespace FTrack{
 
 
 #endif
+
 
 

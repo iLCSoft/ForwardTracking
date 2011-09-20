@@ -21,7 +21,7 @@ namespace FTrack{
       
       virtual bool areCompatible( Segment* parent , Segment* child );
 
-
+      virtual ~Crit3_3DAngle(){};
     
    private:
       

@@ -29,6 +29,7 @@ namespace FTrack{
   
       std::map < std::string , float > getMapOfValues() {return _map_name_value; };
       
+      virtual ~ICriterion(){};
       
      
    protected:

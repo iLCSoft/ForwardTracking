@@ -173,7 +173,7 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
          //therefor: first calculate the area of the disk:
          double area = M_PI* ( _diskOuterRadius[layer]*_diskOuterRadius[layer] - _diskInnerRadius[layer]*_diskInnerRadius[layer] ) / 100.; //the division through 100 is for converting to cm
 
-         unsigned int nHits = round( fabs( area*density ) ) ; // hit = density * area
+         unsigned nHits = unsigned  ( round( fabs( area*density ) ) ); // hit = density * area
          
          
          //So now we have the number of hits --> distribute them on the disk

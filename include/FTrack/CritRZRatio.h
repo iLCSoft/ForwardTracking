@@ -18,7 +18,7 @@ namespace FTrack{
       
       virtual bool areCompatible( Segment* parent , Segment* child );
 
-
+      virtual ~CritRZRatio(){};
     
    private:
       
@@ -30,3 +30,4 @@ namespace FTrack{
 }
 
 #endif
+
