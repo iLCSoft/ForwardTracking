@@ -136,6 +136,14 @@ namespace FTrack{
        * @return All the segments currently saved in the automaton
        */
       std::vector <Segment*> getSegments();
+
+      /**
+       * Draws the segments stored in the automaton in CED.
+       * Segments will be colored according to their state.
+       * Also the higher the state, the higher the thickness of the lines.
+       */
+      void drawSegments();
+      
       
    private:
       
@@ -150,7 +158,7 @@ namespace FTrack{
        */
       std::vector < ICriterion* > _criteria;
       
-      
+
       
       
       
@@ -170,4 +178,3 @@ namespace FTrack{
 
 
 #endif
-
