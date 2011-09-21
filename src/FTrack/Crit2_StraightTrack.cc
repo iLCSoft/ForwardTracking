@@ -42,6 +42,8 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
       _map_name_value["rhoChildSquared"]  = rhoBSquared;
       
 
+      _map_name_value["StraightTrackRatioSquared"]= 0.;
+
       if (rhoBSquared > rhoASquared ) return false;
       
       
@@ -50,7 +52,7 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
          // the square is used, because it is faster to calculate with the squares than with sqrt, which takes some time!
          double ratioSquared = ( ( rhoASquared * ( bz*bz )  ) / ( rhoBSquared * ( az*az )  ) );
                
-         _map_name_value["StraightTrackRatioSuqared"] = ratioSquared;
+         _map_name_value["StraightTrackRatioSquared"] = ratioSquared;
          
          
          if ( ratioSquared > _ratioMax * _ratioMax ) return false;

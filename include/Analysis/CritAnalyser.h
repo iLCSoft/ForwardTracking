@@ -7,6 +7,7 @@
 #include <EVENT/TrackerHit.h>
 #include <EVENT/Track.h>
 #include "Segment.h"
+#include <EVENT/LCRelation.h>
 
 #include "ICriterion.h"
 #include <string>
@@ -91,6 +92,9 @@ protected:
    std::string _colNameMCTrueTracksRel;
    
    std::vector <ICriterion*> _crits;
+   std::vector <LCRelation*> _relations;
+   
+   LCRelation* getRelation( Segment* parent , Segment* child );
    
 } ;
 

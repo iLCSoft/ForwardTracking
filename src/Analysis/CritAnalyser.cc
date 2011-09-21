@@ -7,7 +7,7 @@
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
-#include <EVENT/LCRelation.h>
+
 #include <EVENT/Track.h>
 #include <EVENT/MCParticle.h>
 #include <cmath>
@@ -94,8 +94,9 @@ void CritAnalyser::init() {
    
    //Add the criteria that will be checked
    _crits.push_back ( new CritRZRatio( 1.01 ) );
+   _crits.push_back ( new Crit2_StraightTrack( 1.1 ) );
    
-   std::set < std::string > critNames;
+   std::set < std::string > branchNames;
    
    
    // Set up the root file
@@ -123,15 +124,18 @@ void CritAnalyser::init() {
       for ( it = newMap.begin() ; it != newMap.end() ; it++ ){ //over all values in the map
 
          
-         critNames.insert( it->first ); //store the names of the values in the set critNames
+         branchNames.insert( it->first ); //store the names of the values in the set critNames
          
       }
       
    }
    
+   // Also insert branches for additional information
+   branchNames.insert( "pt" ); //transversal momentum
+   
    // Set up the root file with the tree and the branches
    _treeName = "values";
-   setUpRootFile( _rootFileName, _treeName, critNames );      //prepare the root file.
+   setUpRootFile( _rootFileName, _treeName, branchNames );      //prepare the root file.
    
    
    
@@ -167,22 +171,21 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
    
    int nMCTracks = col->getNumberOfElements();
 
-   std::vector <Track*> trueTracks;
+   _relations.clear();
    
-   // fill the vector with the true tracks
+   // fill the vector with the relations
    for( int i=0; i < nMCTracks; i++){
       
-      // get the monte carlo particel and the true track
+     
       LCRelation* rel = dynamic_cast <LCRelation*> (col->getElementAt(i) );
-//       MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );
-      Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
+
       
-      trueTracks.push_back( track );
+      _relations.push_back( rel );
   
       
    }
       
-   streamlog_out( DEBUG3 ) << "\nTrue tracks: " << trueTracks.size() ;
+   streamlog_out( DEBUG3 ) << "\nRelations: " << _relations.size() ;
  
  
 
@@ -269,7 +272,8 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
          
          for( unsigned j=0; j<children.size(); j++){ // over all children
             
-            
+               
+
             Segment* child = children[j];
             
             // the data that will get stored
@@ -285,6 +289,26 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
 
                
                rootData.insert( newMap.begin() , newMap.end() );
+               
+            }
+                        
+            // Get the mcp of the track (or NULL, if the hits don't belong to a track
+            LCRelation* rel = getRelation( segment , child );
+            
+            if ( rel != NULL){ // the segments belong to a track
+               
+               
+               MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );
+               
+               const double* p = mcp->getMomentum();
+               
+               float pt=  sqrt( p[0]*p[0]+p[1]*p[1] );
+               std::map < std::string , float > newMap;
+               newMap.insert ( std::pair< std::string , float >( "pt" , pt ) );
+               
+               rootData.insert( newMap.begin() , newMap.end() );
+               
+               
                
             }
             
@@ -326,6 +350,41 @@ void CritAnalyser::end(){
    
 }
 
+
+
+LCRelation* CritAnalyser::getRelation( Segment* parent , Segment* child ){
+   
+   
+   TrackerHit* childTrackerHit = child->getAutHits()[0]->getTrackerHit();
+   TrackerHit* parentTrackerHit = parent->getAutHits()[0]->getTrackerHit();
+   
+   for ( unsigned i=0; i < _relations.size(); i++ ){ //over all relations (tracks)
+      
+      Track* track = dynamic_cast <Track*>( _relations[i]->getFrom() );
+      
+      std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
+      
+      bool childOnTrack = false;
+      bool parentOnTrack = false;
+      
+      for ( unsigned j=0; j < trackerHits.size() ; j++){ // over all hits on the true track
+         
+         
+         if ( trackerHits[j] == childTrackerHit ) childOnTrack = true;
+         if ( trackerHits[j] == parentTrackerHit ) parentOnTrack = true;
+         
+      }
+      
+      // now check if they are both on the track
+      if ( childOnTrack && parentOnTrack ) return _relations[i];
+      
+   }
+   
+   return NULL;
+   
+   
+   
+}
 
 
 
