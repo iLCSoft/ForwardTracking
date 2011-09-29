@@ -159,7 +159,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
   
   //get FTD geometry info
    const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
-   drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
+//    drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
 
 
    _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
@@ -199,6 +199,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       streamlog_out( MESSAGE0 ) << "\n--FTDRepresentation--" ;
       
       FTDRepresentation ftdRep ( &autCode );
+      std::vector< AutHit* > autHitsTBD; //AutHits to be deleted
       
       for(int i=0; i< nHits ; i++){
 
@@ -207,7 +208,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          //Make an AutHit from the TrackerHit 
          AutHit* autHit = new AutHit ( trkHit );
-         
+         autHitsTBD.push_back(autHit);
        
          ftdRep.addHit( autHit );
          
@@ -230,6 +231,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          // create the AutHit and set its parameters
          AutHit* virtualIPAutHit = new AutHit ( virtualIPHit );
+         autHitsTBD.push_back( virtualIPAutHit);
          virtualIPAutHit->setIsVirtual ( true );
          virtualIPAutHit->setSide( side );
          virtualIPAutHit->setLayer(0);
@@ -254,11 +256,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       SegmentBuilder segBuilder( &ftdRep );
       
       //Load in some criteria
-      segBuilder.addCriterion ( new Crit2_StraightTrack(1.001) ); 
-      segBuilder.addCriterion ( new CritRZRatio(1.05) );
+      Crit2_StraightTrack       crit2_StraightTrack( 1.001 );
+      CritRZRatio               critRZRatio(1.05);
+      
+      segBuilder.addCriterion ( & crit2_StraightTrack ); 
+      segBuilder.addCriterion ( & critRZRatio );
       
       //Also load hit connectors
-      segBuilder.addHitConnector ( new HitCon( &autCode ) );
+      HitCon hitCon( &autCode );
+      
+      segBuilder.addHitConnector ( & hitCon );
       
       
       // And get out the 1-segments
@@ -282,7 +289,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       // So now we have 2-segments and are ready to perform the cellular automaton.
       // Load some criteria for the automaton:
-      automaton.addCriterion ( new Crit3_3DAngle( 6. ) );
+      Crit3_3DAngle     crit3_3DAngle( 6. );
+      
+      automaton.addCriterion ( & crit3_3DAngle );
       
       // Perform the automaton
       automaton.doAutomaton();
@@ -392,6 +401,18 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
 
       
+      
+      
+      /**********************************************************************************************/
+      /*                Clean up                                                                    */
+      /**********************************************************************************************/
+      
+      // delete all the created AutHits
+      for ( unsigned i=0; i<autHitsTBD.size(); i++ ){
+         
+         delete autHitsTBD[i];
+                
+      }
       
       
   }

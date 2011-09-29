@@ -356,6 +356,7 @@ void Automaton::cleanBadStates(){
             }
 
             //erase from the automaton
+            delete _segments[layer][iSeg];
             _segments[layer].erase( _segments[layer].begin() + iSeg );
 
             //set iSeg back by one. Why: because we changed the vector: if we checked entry number 4 and now deleted it,
@@ -660,6 +661,23 @@ void Automaton::drawSegments(){
    
 }
 
+
+Automaton::~Automaton(){
+   
+   
+   //delete the segments
+   
+   for( unsigned layer=0; layer < _segments.size(); layer++){ //over all layers
+      
+      for( unsigned iSeg=0; iSeg < _segments[layer].size() ; iSeg++ ){ //over all segments
+         
+         delete _segments[layer][iSeg];
+         
+      }
+      
+   }
+   
+}
 
 
 

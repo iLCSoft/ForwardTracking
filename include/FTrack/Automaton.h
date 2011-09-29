@@ -54,6 +54,11 @@ namespace FTrack{
      
    public:
       
+      /**
+       * delete all the segments
+       */
+      ~Automaton();
+      
       
       /** Adds a segment to the automaton.\
        * Take care to set the layer of the segment before adding!
@@ -151,6 +156,8 @@ namespace FTrack{
        * The first index corresponds to the layer.
        * The second corresponds to the segments on the layer.
        * _segments[2][4] is segment 2 on layer 4
+       * 
+       * The segments will be deleted by the Automaton in the destructor
        */
       std::vector < std::vector < Segment* > > _segments;
       
