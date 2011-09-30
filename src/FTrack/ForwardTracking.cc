@@ -310,12 +310,12 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Get the track candidates
       std::vector <Track*> autTrackCandidates = automaton.getTracks();
       
-      trackCandidates = autTrackCandidates;
+//       trackCandidates = autTrackCandidates;
            
       /**********************************************************************************************/
       /*                Fitting                                                                     */
       /**********************************************************************************************/
- /*
+ 
       streamlog_out( MESSAGE0 ) << "\n--Fitting--\n" ;
       
       //first: empty the stored tracks (if there are any)
@@ -326,12 +326,12 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       //And get back fitted tracks
       std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
-  */
+  
       
       /**********************************************************************************************/
       /*                Store the good tracks, delete the bad ones                                  */
       /**********************************************************************************************/
- /*     
+      
       
       
       unsigned nTracksRejected = 0;
@@ -351,15 +351,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                                  << "( chi2=" << chi2 <<", Ndf=" << Ndf << " )";
 
       
-         if ( chi2Prob > 0.01 ){
+         if ( chi2Prob > 0.01 ){ //chi2 prob is okay, TODO: make this a tunable parameter
             
-            trackCandidates.push_back( track );
+            trackCandidates.push_back( track );         
             nTracksKept++;
             
          }
          else{
             
             nTracksRejected++;
+            delete track; //Not needed anymore --> therefore delete it
             
          }
                                  
@@ -372,25 +373,25 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
                              
-      for ( unsigned i=0; i< trackCandidates.size(); i++ ){
-         
-         std::vector < TrackerHit* > trackerHits = trackCandidates[i]->getTrackerHits();
-         
-         streamlog_out(MESSAGE0) << "\n\nTrack " << i << ":";
-         
-         for ( unsigned j=0; j < trackerHits.size(); j++ ){
-            
-            const double* pos = trackerHits[j]->getPosition();
-            
-            streamlog_out(MESSAGE0) << "\n( " << pos[0] << " , " << pos[1] << " , " << pos[2] << " )";
-         
-         }
-         
-      }
+//       for ( unsigned i=0; i< trackCandidates.size(); i++ ){
+//          
+//          std::vector < TrackerHit* > trackerHits = trackCandidates[i]->getTrackerHits();
+//          
+//          streamlog_out(MESSAGE0) << "\n\nTrack " << i << ":";
+//          
+//          for ( unsigned j=0; j < trackerHits.size(); j++ ){
+//             
+//             const double* pos = trackerHits[j]->getPosition();
+//             
+//             streamlog_out(MESSAGE0) << "\n( " << pos[0] << " , " << pos[1] << " , " << pos[2] << " )";
+//          
+//          }
+//          
+//       }
       
       
       
-      */
+      
       
       
       //finally: save the tracks
@@ -420,7 +421,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 
 
-   MarlinCED::draw(this);
+//    MarlinCED::draw(this);
 
         
     _nEvt ++ ;
