@@ -15,6 +15,7 @@ NeuralNet::NeuralNet( std::vector < std::vector <bool> > G , std::vector < doubl
    _States.resize( nNeurons );
    _w0.resize( nNeurons );
    _W.resize( nNeurons );
+   _order.resize( nNeurons);
    
    for ( unsigned int i =0; i < nNeurons; i++){
       
