@@ -1,9 +1,10 @@
-#include "NeuronNet.h"
+#include "NeuralNet.h"
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 
-NeuronNet::NeuronNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega){
+NeuralNet::NeuralNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega){
 
    unsigned int nNeurons = G.size();
 
@@ -14,19 +15,34 @@ NeuronNet::NeuronNet( std::vector < std::vector <bool> > G , std::vector < doubl
    _States.resize( nNeurons );
    _w0.resize( nNeurons );
    _W.resize( nNeurons );
-   for ( unsigned int i =0; i < nNeurons; i++) _W[i].resize( nNeurons );
+   
+   for ( unsigned int i =0; i < nNeurons; i++){
+      
+      // resize the vectors of the matrix W
+      _W[i].resize( nNeurons );
+      
+      
+      // initialise the order vector
+      _order[i]=i;                      //the order now is 0,1,2,3... (will be changed to a random sequence in the iteration)
+      
+   }
+   
    
    //calculate _w0
    for (unsigned int i=0; i < QI.size(); i++) _w0[i] = omega * QI[i];
    
-   //calculate _W
+   
+   
+   // Build the W matrix. (the matrix of the influences including their force)
    
    double comp = (1. - omega) / double (nNeurons);
    
-   for (unsigned int i=0; i< nNeurons ; i++)
+
+   for (unsigned int i=0; i< nNeurons ; i++){ 
+
       for (unsigned int j=0; j< nNeurons ; j++){
        
-      if (i == j) _W[i][j] = 0.; //diagonal elements are 0
+      if (i == j) _W[i][j] = 0.; //diagonal elements are 0 --> whatever the matrix G says here is ignored.
       
       else  
          if ( G[i][j] == 1 ) _W[i][j] = -1;   //Neurons are incompatible
@@ -36,6 +52,7 @@ NeuronNet::NeuronNet( std::vector < std::vector <bool> > G , std::vector < doubl
       
       }
    
+   }
    
 
    
@@ -57,7 +74,7 @@ NeuronNet::NeuronNet( std::vector < std::vector <bool> > G , std::vector < doubl
 
 
 
-double NeuronNet::activationFunction ( double state , double T ){
+double NeuralNet::activationFunction ( double state , double T ){
    
        
     double y = 1;
@@ -73,25 +90,36 @@ double NeuronNet::activationFunction ( double state , double T ){
 
 
 
-bool NeuronNet::doIteration(){
+bool NeuralNet::doIteration(){
       
    _isStable = true;
       
    
+   random_shuffle ( _order.begin() , _order.end() ); //shuffle the order
+   
    for (unsigned int i=0; i<_States.size() ; i++){ //for all entries of the vector
        
+      unsigned iNeuron = _order[i];
+//       if ( j > _States.size() ) throw...TODO: implement this
+
       double y;
       
-      y = _w0[i];
-        
-      for (unsigned int j=0; j< _W[i].size(); j++) y 
-               += _W[i][j] * _States[j]; //matrix vector multiplication (or one line of it to be precise)
+      y = _w0[iNeuron];
       
-       y = activationFunction ( y , _T );
+      //matrix vector multiplication (or one line of it to be precise)  
+      for (unsigned int j=0; j< _W[iNeuron].size(); j++){ 
        
-       if ( fabs( _States[i] - y ) > _limitForStable ) _isStable = false;
+         y  += _W[iNeuron][j] * _States[j]; 
+      
+      }
+      
+      y = activationFunction ( y , _T );
        
-       _States[i] = y;
+      // check if the change was big enough that the Network is not stable
+      if ( fabs( _States[i] - y ) > _limitForStable ) _isStable = false;
+       
+      // update the state
+      _States[iNeuron] = y;
       
    }
    
@@ -107,7 +135,7 @@ bool NeuronNet::doIteration(){
 }
 
 
-void NeuronNet::showStateInfo(){
+void NeuralNet::showStateInfo(){
    
    
    std::cout<< std::endl;

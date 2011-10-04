@@ -4,19 +4,31 @@
  * Author: Robin Glattauer
  */
  
-#ifndef NeuronNet_h
-#define NeuronNet_h
+#ifndef NeuralNet_h
+#define NeuralNet_h
  
  
 #include <vector>
 
 
-class NeuronNet {
+class NeuralNet {
 
 
    public:
       
-      NeuronNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega);
+      /**
+       * @param G a matrix of the correlations. True means two neurons are incompatible. False means, they are
+       * compatible. (the diagonal elements are 0 by definition) 
+       * 
+       * @param QI a vector containing the qualtity indicators of the neurons (i.e. their power to amplify or
+       * weaken other neurons)
+       * 
+       * @param states the states of the neurons. Should be between 0 and 1. TODO: check this, or use different method
+       * 
+       * @param omega controls the influence of the quality indicator on the  activation of the neuron
+       */
+      NeuralNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega);
+              
               
       /** Does one iteration of the neuronal network.
        * 
@@ -28,10 +40,27 @@ class NeuronNet {
        */
       bool doIteration();      
          
-
+      /**
+       * sets the temperature of the Neural Network
+       */
       void setT    (double T)    { _T = T;};
+      
+      /**
+       * Sets the temperature at infinity. The temperature will converge to this
+       * value.
+       */
       void setTInf (double TInf) {_TInf = TInf;};
+      
+      /**
+       * Sets the value that changes of the states of the neurons must exceed in order to be counted as
+       * "changed". When no state of a neuron changes more than this value, the Network is considered as stable.
+       */
       void setLimitForStable (double limit) { _limitForStable = limit; };
+      
+      
+      /** @return the vector of the states
+       */
+      std::vector <double> getStates(){ return _States; };
       
       
       void showStateInfo();
@@ -64,10 +93,14 @@ class NeuronNet {
       /** The upper limit for change of a neuron if it should be considered stabel.*/
       double _limitForStable;
       
-      /** Omega controls the influence of the quality indicator on the  activation of the neuron.
+      /** Omega controls the influence of the quality indicator on the activation of the neuron.
        */
       double _omega;
 
+      /** the order of the neurons to be updated. So it should of course reach from 0 to the number of neurons -1.
+       * (4 , 2, 0  1, 3) will for example mean: update first the neuron 4, then the neuron 2, then 0 and so on
+       */
+      std::vector <unsigned> _order;
       
       
       /** Calculates the activation function

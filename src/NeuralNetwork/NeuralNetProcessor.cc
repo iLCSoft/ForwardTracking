@@ -1,5 +1,5 @@
-#include "NeuronNetProcessor.h"
-#include "NeuronNet.h"
+#include "NeuralNetProcessor.h"
+#include "NeuralNet.h"
 #include <iostream>
 
 
@@ -16,13 +16,13 @@ using namespace marlin ;
 
 
 
-NeuronNetProcessor aNeuronNetProcessor ;
+NeuralNetProcessor aNeuralNetProcessor ;
 
 
-NeuronNetProcessor::NeuronNetProcessor() : Processor("NeuronNetProcessor") {
+NeuralNetProcessor::NeuralNetProcessor() : Processor("NeuralNetProcessor") {
 
     // modify processor description
-   _description = "NeuronNetProcessor" ;
+   _description = "NeuralNetProcessor" ;
 
 
     // register steering parameters: name, description, class-variable, default value
@@ -35,7 +35,7 @@ NeuronNetProcessor::NeuronNetProcessor() : Processor("NeuronNetProcessor") {
 
 
 
-void NeuronNetProcessor::init() { 
+void NeuralNetProcessor::init() { 
 
     streamlog_out(DEBUG) << "   init called  " << std::endl ;
 
@@ -48,14 +48,14 @@ void NeuronNetProcessor::init() {
 }
 
 
-void NeuronNetProcessor::processRunHeader( LCRunHeader* run) { 
+void NeuralNetProcessor::processRunHeader( LCRunHeader* run) { 
 
     _nRun++ ;
 } 
 
 
 
-void NeuronNetProcessor::processEvent( LCEvent * evt ) { 
+void NeuralNetProcessor::processEvent( LCEvent * evt ) { 
 
 
    std::vector < std::vector <bool> > G;
@@ -97,7 +97,7 @@ void NeuronNetProcessor::processEvent( LCEvent * evt ) {
    
    
    
-   NeuronNet Net( G , QI , states , omega);
+   NeuralNet Net( G , QI , states , omega);
    
    Net.setT (2.1);
    Net.setTInf(0.1);
@@ -125,16 +125,16 @@ void NeuronNetProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void NeuronNetProcessor::check( LCEvent * evt ) { 
+void NeuralNetProcessor::check( LCEvent * evt ) { 
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
 
-void NeuronNetProcessor::end(){ 
+void NeuralNetProcessor::end(){ 
 
-    //   std::cout << "MyProcessor::end()  " << name() 
-    // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-    // 	    << std::endl ;
+//       std::cout << "MyProcessor::end()  " << name() 
+//     	    << " processed " << _nEvt << " events in " << _nRun << " runs "
+//     	    << std::endl ;
 
 }
 

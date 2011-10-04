@@ -1,5 +1,5 @@
-#ifndef NeuronNetProcessor_h
-#define NeuronNetProcessor_h 1
+#ifndef NeuralNetProcessor_h
+#define NeuralNetProcessor_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -17,14 +17,14 @@ using namespace marlin ;
  * 
  */
 
-class NeuronNetProcessor : public Processor {
+class NeuralNetProcessor : public Processor {
   
  public:
   
-    virtual Processor*  newProcessor() { return new NeuronNetProcessor ; }
+    virtual Processor*  newProcessor() { return new NeuralNetProcessor ; }
   
   
-    NeuronNetProcessor() ;
+    NeuralNetProcessor() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
