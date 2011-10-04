@@ -117,7 +117,7 @@ bool NeuralNet::doIteration(){
       y = activationFunction ( y , _T );
        
       // check if the change was big enough that the Network is not stable
-      if ( fabs( _States[i] - y ) > _limitForStable ) _isStable = false;
+      if ( fabs( _States[iNeuron] - y ) > _limitForStable ) _isStable = false;
        
       // update the state
       _States[iNeuron] = y;
@@ -136,39 +136,7 @@ bool NeuralNet::doIteration(){
 }
 
 
-void NeuralNet::showStateInfo(){
-   
-   
-   std::cout<< std::endl;
-         
-   std::cout << "( ";      
-   
-   for ( unsigned int i=0; i<_States.size(); i++) std::cout << _States[i] << " "; 
-   
-   std::cout << ")";
-   
-   std::cout<< std::endl;  
-   
-   
-   std::cout<< std::endl;
-         
-   std::cout << "( ";      
-   
-   for ( unsigned int i=0; i<_W.size(); i++){
-      
-      for (unsigned int j=0; j<_W[i].size(); j++) 
-         std::cout << _W[i][j] << " "; 
-      
-      std::cout << std::endl;
-      
-   }
-   
-   std::cout << ")";
-   
-   std::cout<< std::endl; 
-   
-   
-}
+
 
 
 

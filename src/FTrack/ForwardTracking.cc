@@ -25,6 +25,7 @@
 //--------------------------------------------------------------
 //My own classes begin
 
+#include "TrackSubset.h"
 #include "FTDRepresentation.h"
 #include "AutCode.h"
 
@@ -372,36 +373,57 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
+      // Output of the tracks                       
+      for ( unsigned i=0; i< trackCandidates.size(); i++ ){
+         
+         std::vector < TrackerHit* > trackerHits = trackCandidates[i]->getTrackerHits();
+         
+         streamlog_out(DEBUG2) << "\n\nTrack " << i << ":";
+         
+         for ( unsigned j=0; j < trackerHits.size(); j++ ){
+            
+            const double* pos = trackerHits[j]->getPosition();
+            
+            streamlog_out(DEBUG2) << "\n( " << pos[0] << " , " << pos[1] << " , " << pos[2] << " )";
+         
+         }
+         
+      }
+
                              
-//       for ( unsigned i=0; i< trackCandidates.size(); i++ ){
-//          
-//          std::vector < TrackerHit* > trackerHits = trackCandidates[i]->getTrackerHits();
-//          
-//          streamlog_out(MESSAGE0) << "\n\nTrack " << i << ":";
-//          
-//          for ( unsigned j=0; j < trackerHits.size(); j++ ){
-//             
-//             const double* pos = trackerHits[j]->getPosition();
-//             
-//             streamlog_out(MESSAGE0) << "\n( " << pos[0] << " , " << pos[1] << " , " << pos[2] << " )";
-//          
-//          }
-//          
-//       }
+                             
+                             
+      /**********************************************************************************************/
+      /*               Get the best subset of tracks                                               */
+      /**********************************************************************************************/
+                             
+                              
+      // Make a TrackSubset
+      TrackSubset subset;
+      subset.addTracks( trackCandidates ); 
       
+      //Calculate the best subset:
+      subset.calculateBestSet();
       
-      
-      
+      std::vector< Track* > tracks = subset.getBestTrackSubset();
+      std::vector< Track* > rejectedTracks = subset.getRejectedTracks();
+
+      // immediately delete the rejected ones
+      for ( unsigned i=0; i<rejectedTracks.size(); i++){
+         
+         delete rejectedTracks[i];
+         
+      }
       
       
       //finally: save the tracks
 
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
-      for (unsigned int i=0; i < trackCandidates.size(); i++) trkCol->addElement( trackCandidates[i] );
+      for (unsigned int i=0; i < tracks.size(); i++) trkCol->addElement( tracks[i] );
       evt->addCollection(trkCol,_AutTrkCollection.c_str());
       
 
-      
+      streamlog_out (MESSAGE0) << "\n\n Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
       
       
       /**********************************************************************************************/
@@ -415,6 +437,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                 
       }
       
+
+      
       
   }
 
@@ -423,7 +447,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 //    MarlinCED::draw(this);
 
-        
+       
+       
     _nEvt ++ ;
 }
 

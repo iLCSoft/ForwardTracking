@@ -62,8 +62,7 @@ class NeuralNet {
        */
       std::vector <double> getStates(){ return _States; };
       
-      
-      void showStateInfo();
+
       
    protected:
       

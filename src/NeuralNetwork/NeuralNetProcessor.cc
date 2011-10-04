@@ -103,11 +103,20 @@ void NeuralNetProcessor::processEvent( LCEvent * evt ) {
    Net.setTInf(0.1);
    Net.setLimitForStable(0.01);
          
-   Net.showStateInfo();
+
    
-   while ( !Net.doIteration() ) Net.showStateInfo();
-   
-   Net.showStateInfo();
+   while ( !Net.doIteration() ) {
+      
+      
+      std::vector <double> newStates = Net.getStates();
+      
+      streamlog_out(DEBUG0) << "( ";      
+      
+      for ( unsigned int i=0; i< newStates.size(); i++) streamlog_out(DEBUG0) << newStates[i] << " "; 
+      
+      streamlog_out(DEBUG0) << ")";
+      
+   }
    
    
    
