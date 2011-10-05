@@ -35,7 +35,7 @@
 #include "AutHit.h"
 
 // the criteria
-#include "CritRZRatio.h"
+#include "Crit2_RZRatio.h"
 #include "Crit3_3DAngle.h"
 #include "Crit2_StraightTrack.h"
 
@@ -258,10 +258,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       //Load in some criteria
       Crit2_StraightTrack       crit2_StraightTrack( 1.001 );
-      CritRZRatio               critRZRatio(1.05);
+      Crit2_RZRatio             crit2_RZRatio(1.05);
       
       segBuilder.addCriterion ( & crit2_StraightTrack ); 
-      segBuilder.addCriterion ( & critRZRatio );
+      segBuilder.addCriterion ( & crit2_RZRatio );
       
       //Also load hit connectors
       HitCon hitCon( &autCode );
