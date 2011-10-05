@@ -24,7 +24,7 @@
 #include <IMPL/TrackerHitPlaneImpl.h>
 
 // the criteria
-#include "CritRZRatio.h"
+#include "Crit2_RZRatio.h"
 #include "Crit3_3DAngle.h"
 #include "Crit2_StraightTrack.h"
 
@@ -93,7 +93,7 @@ void CritAnalyser::init() {
    
    
    //Add the criteria that will be checked
-   _crits.push_back ( new CritRZRatio( 1.01 ) );
+   _crits.push_back ( new Crit2_RZRatio( 1.01 ) ); //TODO: delete them (or put them on the stack!)
    _crits.push_back ( new Crit2_StraightTrack( 1.1 ) );
    
    std::set < std::string > branchNames;

@@ -1,10 +1,10 @@
-#include "CritRZRatio.h"
+#include "Crit2_RZRatio.h"
 #include "marlin/VerbosityLevels.h"
 
 
 using namespace FTrack;
 
-CritRZRatio::CritRZRatio ( double ratioMax ){
+Crit2_RZRatio::Crit2_RZRatio ( double ratioMax ){
    
    
    _ratioMax = ratioMax;  
@@ -15,7 +15,7 @@ CritRZRatio::CritRZRatio ( double ratioMax ){
 
 
       
-bool CritRZRatio::areCompatible( Segment* parent , Segment* child ){
+bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child ){
    
    
    
