@@ -38,7 +38,7 @@ void FTDRepresentation::addHit(  AutHit* hit ){
    _map_code_hits [ code ].push_back( hit );
       
    
-   streamlog_out(DEBUG2) << "\nAdded an AutHit with code " << code <<" to the FTDRepresentation.";
+   streamlog_out(DEBUG0) << "\nAdded an AutHit with code " << code <<" to the FTDRepresentation.";
    
    
 }

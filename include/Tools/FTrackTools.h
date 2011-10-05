@@ -38,6 +38,9 @@ namespace FTrack{
     */
    void saveToRoot( std::string fileNamePath, std::string treeName , std::map < std::string , float > map_name_data );
    
+   void saveToRoot( std::string rootFileName, std::string treeName , std::vector < std::map < std::string , float > > rootDataVec );
+      
+   
    /** Converts an int to a string
     */
    std::string intToString (int i);

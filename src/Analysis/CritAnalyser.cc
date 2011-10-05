@@ -93,8 +93,11 @@ void CritAnalyser::init() {
    
    
    //Add the criteria that will be checked
-   _crits.push_back ( new Crit2_RZRatio( 1.01 ) ); //TODO: delete them (or put them on the stack!)
-   _crits.push_back ( new Crit2_StraightTrack( 1.1 ) );
+   Crit2_RZRatio* crit2_RZRatio = new Crit2_RZRatio( 1.01 );
+   Crit2_StraightTrack* crit2_StraightTrack = new Crit2_StraightTrack( 1.1 );
+   
+   _crits.push_back ( crit2_RZRatio ); 
+   _crits.push_back ( crit2_StraightTrack );
    
    std::set < std::string > branchNames;
    
@@ -139,7 +142,7 @@ void CritAnalyser::init() {
    
    
    
-   
+  
    
    
  
@@ -219,6 +222,8 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
       streamlog_out( DEBUG2 ) << "\nFTDRepresentation created.";
       
       
+      std::vector< AutHit* > autHitsTBD; //AutHits to be deleted
+      
       for(int i=0; i< nHits ; i++){ // for every hit
          
          
@@ -229,6 +234,7 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
          
          
          ftdRep.addHit( autHit );
+         autHitsTBD.push_back( autHit );
          
          
       }
@@ -243,7 +249,8 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
       // We load no criteria, as we want to check all connections
       
       // But a hitConnector is needed
-      segBuilder.addHitConnector ( new HitCon( &autCode ) );
+      HitCon* hitCon = new HitCon( &autCode );
+      segBuilder.addHitConnector ( hitCon );
       
       streamlog_out( DEBUG3 ) << "\nCode added.";
       
@@ -258,6 +265,7 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
       /*                                                                                            */
       /**********************************************************************************************/
       
+      std::vector < std::map < std::string , float > > rootDataVec;
       
       std::vector <Segment*> segments = automaton.getSegments();
  
@@ -266,13 +274,14 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
       
       for( unsigned i=0; i<segments.size(); i++ ){ // over all segments
          
+         streamlog_out( DEBUG0 ) << "\n segment " << i;
 
          Segment* segment = segments[i];
          std::vector <Segment*> children = segment->getChildren();
          
          for( unsigned j=0; j<children.size(); j++){ // over all children
             
-               
+            
 
             Segment* child = children[j];
             
@@ -295,6 +304,8 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
             // Get the mcp of the track (or NULL, if the hits don't belong to a track
             LCRelation* rel = getRelation( segment , child );
             
+            float pt = 0.;
+            
             if ( rel != NULL){ // the segments belong to a track
                
                
@@ -302,23 +313,28 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
                
                const double* p = mcp->getMomentum();
                
-               float pt=  sqrt( p[0]*p[0]+p[1]*p[1] );
-               std::map < std::string , float > newMap;
-               newMap.insert ( std::pair< std::string , float >( "pt" , pt ) );
+               pt=  sqrt( p[0]*p[0]+p[1]*p[1] );
                
-               rootData.insert( newMap.begin() , newMap.end() );
                
                
                
             }
             
+            rootData["pt"] = pt;
             
+            rootDataVec.push_back( rootData );
             //Save it to a root file
-            saveToRoot( _rootFileName, _treeName , rootData );  
+            
+//             saveToRoot( _rootFileName, _treeName , rootData );  
       
          }
          
       }
+      
+      
+      saveToRoot( _rootFileName, _treeName, rootDataVec );
+      
+      delete hitCon;
  
    }
  

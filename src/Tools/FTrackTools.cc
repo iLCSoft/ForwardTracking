@@ -103,6 +103,42 @@ void FTrack::saveToRoot( std::string rootFileName, std::string treeName , std::m
 
 }
 
+void FTrack::saveToRoot( std::string rootFileName, std::string treeName , std::vector < std::map < std::string , float > > rootDataVec ){
+   
+   
+   
+   std::map < std::string , float >::iterator it;
+   
+   
+   TFile*   myRootFile = new TFile( rootFileName.c_str(), "UPDATE"); //add values to the root file
+   TTree*   myTree = dynamic_cast <TTree*>( myRootFile->Get( treeName.c_str()) );
+   
+   
+   for( unsigned i=0; i<rootDataVec.size(); i++ ){ //for all entries
+   
+      
+      std::map < std::string , float > map_name_data = rootDataVec[i];
+
+      for( it = map_name_data.begin() ; it != map_name_data.end() ; it++){ // for all data in the entrie
+         
+         
+         
+         myTree->SetBranchAddress( it->first.c_str(), & it->second );   
+         
+         
+         
+      }
+      
+      
+      myTree->Fill();
+      
+      
+   }
+   myTree->Write("",TObject::kOverwrite);   
+   myRootFile->Close();
+   
+}
+
 
 bool FTrack::compare_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b ){
    

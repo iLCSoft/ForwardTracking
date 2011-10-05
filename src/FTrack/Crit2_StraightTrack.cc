@@ -43,6 +43,8 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
       
 
       _map_name_value["StraightTrackRatioSquared"]= 0.;
+      
+      _map_name_value["isRhoChild_Bigger_RhoParent"] = float( rhoBSquared > rhoASquared ); 
 
       if (rhoBSquared > rhoASquared ) return false;
       
