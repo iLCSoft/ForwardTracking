@@ -23,8 +23,10 @@ namespace FTrack{
     * The one with the number 1 appended is the oldest, 2 is newer than 1, 3 is newer than 2 and so on.
     * 
     * @param branchNames A set of all the branchnames that should be created in the tree
+    * 
+    * @param createNew Whether to create a new root file or create the tree and branches in an existing one
     */
-   void setUpRootFile( std::string fileNamePath, std::string treeName , std::set<std::string> branchNames = std::set<std::string>() );
+   void setUpRootFile( std::string fileNamePath, std::string treeName , std::set<std::string> branchNames = std::set<std::string>() , bool createNew=true );
 
    // TODO: find a nice way to overload this for different datatypes (int, double, bool)
    /** Saves values to a tree in a rootfile.

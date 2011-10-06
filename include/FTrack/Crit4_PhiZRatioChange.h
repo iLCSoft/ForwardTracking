@@ -1,14 +1,14 @@
-#ifndef Crit4_PhiZRatio_h
-#define Crit4_PhiZRatio_h
+#ifndef Crit4_PhiZRatioChange_h
+#define Crit4_PhiZRatioChange_h
 
 
 #include "ICriterion.h"
 
 namespace FTrack{
    
-   /** Criterion: check for the change of the 2D angle
+   /** Criterion: check for the change of Phi / Z. (Phi = angle in the circle between two hits)
     */
-   class Crit4_PhiZRatio : public ICriterion{
+   class Crit4_PhiZRatioChange : public ICriterion{
       
       
       
@@ -17,11 +17,11 @@ namespace FTrack{
       /**
        * @param changeMax 
        */
-      Crit4_PhiZRatio ( double changeMax );
+      Crit4_PhiZRatioChange ( double changeMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child );
       
-      virtual ~Crit4_PhiZRatio(){};
+      virtual ~Crit4_PhiZRatioChange(){};
       
    private:
       

@@ -21,8 +21,20 @@
 
 // the criteria
 #include "Crit2_RZRatio.h"
-#include "Crit3_3DAngle.h"
 #include "Crit2_StraightTrack.h"
+
+#include "Crit3_ChangeRZRatio.h"  
+#include "Crit3_PTMin.h"
+#include "Crit3_3DAngle.h"
+#include "Crit3_IPCircleDist.h"  
+
+#include "Crit4_2DAngleChange.h"        
+#include "Crit4_distToExtrapolation.h"  
+#include "Crit4_PhiZRatioChange.h"
+#include "Crit4_distOfCircleCenters.h"
+#include "Crit4_NoZigZag.h"
+#include "Crit4_RChange.h"
+
 
 
 #include "AutCode.h"
@@ -85,11 +97,23 @@ void TrueTrackCritAnalyser::init() {
    
    
    //Add the criteria that will be checked
-   Crit2_RZRatio* crit2_RZRatio = new Crit2_RZRatio( 1.01 );
-   Crit2_StraightTrack* crit2_StraightTrack = new Crit2_StraightTrack( 1.1 );
+   _crits2.push_back( new Crit2_RZRatio( 1.01 ) ); 
+   _crits2.push_back( new Crit2_StraightTrack( 1.1 ) );
    
-   _crits.push_back ( crit2_RZRatio ); 
-   _crits.push_back ( crit2_StraightTrack );
+   _crits3.push_back( new Crit3_ChangeRZRatio( 1.) );
+   _crits3.push_back( new Crit3_PTMin (0.1) );
+   _crits3.push_back( new Crit3_3DAngle (10) );
+   _crits3.push_back( new Crit3_IPCircleDist (10) );
+   
+   _crits4.push_back( new  Crit4_2DAngleChange ( 1. ) );
+   _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. ) );
+   _crits4.push_back( new  Crit4_distToExtrapolation ( 1. ) );
+   _crits4.push_back( new  Crit4_distOfCircleCenters ( 1. ) );
+   _crits4.push_back( new  Crit4_NoZigZag ( 1. ) );
+   _crits4.push_back( new  Crit4_RChange ( 1. ) );
+   
+
+   
    
    std::set < std::string > branchNames;
    
@@ -107,13 +131,13 @@ void TrueTrackCritAnalyser::init() {
    Segment virtualSegment( &virtualAutHit );
    
    
-   for ( unsigned int i=0; i < _crits.size() ; i++ ){ //for all criteria
+   for ( unsigned int i=0; i < _crits2 .size() ; i++ ){ //for all criteria
 
       //get the map
-      _crits[i]->areCompatible( &virtualSegment , &virtualSegment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
+      _crits2 [i]->areCompatible( &virtualSegment , &virtualSegment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
                                                                    // names of the values ( and of course values that are useless, but we don't use them here anyway)
       
-      std::map < std::string , float > newMap = _crits[i]->getMapOfValues();
+      std::map < std::string , float > newMap = _crits2 [i]->getMapOfValues();
       std::map < std::string , float > ::iterator it;
       
       for ( it = newMap.begin() ; it != newMap.end() ; it++ ){ //over all values in the map
@@ -242,13 +266,13 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             Segment* parent = segments[j+1];
             
             
-            for( unsigned iCrit=0; iCrit < _crits.size(); iCrit++){ // over all criteria
+            for( unsigned iCrit=0; iCrit < _crits2 .size(); iCrit++){ // over all criteria
 
                
                //get the map
-               _crits[iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               _crits2 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
                
-               std::map < std::string , float > newMap = _crits[iCrit]->getMapOfValues(); //get the values that were calculated
+               std::map < std::string , float > newMap = _crits2 [iCrit]->getMapOfValues(); //get the values that were calculated
                
                rootData.insert( newMap.begin() , newMap.end() );
                
@@ -302,9 +326,9 @@ void TrueTrackCritAnalyser::end(){
    //      << " processed " << _nEvt << " events in " << _nRun << " runs "
    //      << std::endl ;
    
-   for (unsigned i=0; i<_crits.size(); i++){
+   for (unsigned i=0; i<_crits2 .size(); i++){
       
-      delete _crits[i];
+      delete _crits2 [i];
       
    }
    

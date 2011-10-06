@@ -91,9 +91,9 @@ protected:
 
    std::string _colNameMCTrueTracksRel;
    
-   std::vector <ICriterion*> _crits;
-
-   
+   std::vector <ICriterion*> _crits2;
+   std::vector <ICriterion*> _crits3;
+   std::vector <ICriterion*> _crits4;
 
    
 } ;

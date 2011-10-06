@@ -1,4 +1,4 @@
-#include "Crit4_PhiZRatio.h"
+#include "Crit4_PhiZRatioChange.h"
 
 #include <cmath>
 #include "SimpleCircle.h"
@@ -8,7 +8,7 @@
 
 using namespace FTrack;
 
-Crit4_PhiZRatio::Crit4_PhiZRatio ( double changeMax ){
+Crit4_PhiZRatioChange::Crit4_PhiZRatioChange ( double changeMax ){
    
    
    _changeMax = changeMax;
@@ -19,7 +19,7 @@ Crit4_PhiZRatio::Crit4_PhiZRatio ( double changeMax ){
 
 
 
-bool Crit4_PhiZRatio::areCompatible( Segment* parent , Segment* child ){
+bool Crit4_PhiZRatioChange::areCompatible( Segment* parent , Segment* child ){
     
    
    
