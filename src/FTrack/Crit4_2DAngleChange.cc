@@ -18,7 +18,7 @@ Crit4_2DAngleChange::Crit4_2DAngleChange ( double changeMax ){
 
 bool Crit4_2DAngleChange::areCompatible( Segment* parent , Segment* child ){
     
-   
+   _map_name_value["ratioOf2DAngles"] = 0.;
    
    if (( parent->getAutHits().size() == 3 )&&( child->getAutHits().size() == 3 )){ //this is a criterion for 3-segments
       

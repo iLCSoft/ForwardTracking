@@ -48,41 +48,46 @@ bool Crit4_distToExtrapolation::areCompatible( Segment* parent , Segment* child 
       float dy = d->getY();
       float dz = d->getZ();
       
+      try{
       
-      SimpleCircle circle ( ax , ay , bx , by , cx , cy );
+         SimpleCircle circle ( ax , ay , bx , by , cx , cy );
 
+         
+         double centerX = circle.getCenterX();
+         double centerY = circle.getCenterY();
+         double R = circle.getRadius();
+         
+         TVector3 u ( bx - centerX , by - centerY , bz );
+         TVector3 v ( cx - centerX , cy - centerY , cz );
+         
+         
+         double deltaPhiParent = v.Phi() - u.Phi(); //angle in xy plane from center of circle, between point 2 and 3
+         
+         // use this angle and the distance to the next layer to extrapolate
+         double zDistParent = fabs( cz - bz );
+         double zDistChild  = fabs( dz - cz );
+         
+         double deltaPhiChild = deltaPhiParent * zDistChild / zDistParent ;
+         
+         double phiChild = v.Phi() + deltaPhiChild;
+         
+         double xChildPred = centerX + R* cos(phiChild);
+         double yChildPred = centerY + R* sin(phiChild);
+         
+         
+         double distToPrediction = sqrt ( ( xChildPred- dx )*( xChildPred- dx ) + ( yChildPred- dy )*( yChildPred- dy ) );
+         double distNormed = distToPrediction / zDistChild;   
+         
+         _map_name_value["distToExtrapolationNormed"] = distNormed;
+         
+         if ( distNormed > _distMax ) return false;
+         
+      }
+      catch ( InvalidParameter ){
+         
+         _map_name_value["distToExtrapolationNormed"] = -1.;
       
-      double centerX = circle.getCenterX();
-      double centerY = circle.getCenterY();
-      double R = circle.getRadius();
-      
-      TVector3 u ( bx - centerX , by - centerY , bz );
-      TVector3 v ( cx - centerX , cy - centerY , cz );
-      
-      
-      double deltaPhiParent = v.Phi() - u.Phi(); //angle in xy plane from center of circle, between point 2 and 3
-      
-      // use this angle and the distance to the next layer to extrapolate
-      double zDistParent = fabs( cz - bz );
-      double zDistChild  = fabs( dz - cz );
-      
-      double deltaPhiChild = deltaPhiParent * zDistChild / zDistParent ;
-      
-      double phiChild = v.Phi() + deltaPhiChild;
-      
-      double xChildPred = centerX + R* cos(phiChild);
-      double yChildPred = centerY + R* sin(phiChild);
-      
-      
-      double distToPrediction = sqrt ( ( xChildPred- dx )*( xChildPred- dx ) + ( yChildPred- dy )*( yChildPred- dy ) );
-      double distNormed = distToPrediction / zDistChild;   
-      
-      _map_name_value["distToExtrapolationNormed"] = distNormed;
-      
-      if ( distNormed > _distMax ) return false;
-      
-      
-      
+      }
       
    }
    

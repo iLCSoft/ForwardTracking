@@ -115,7 +115,9 @@ void TrueTrackCritAnalyser::init() {
 
    
    
-   std::set < std::string > branchNames;
+   std::set < std::string > branchNames2; //branch names of the 2-hit criteria
+   std::set < std::string > branchNames3;
+   std::set < std::string > branchNames4;
    
    
    // Set up the root file
@@ -126,15 +128,24 @@ void TrueTrackCritAnalyser::init() {
    double pos[] = {0. , 0. , 0.};
    virtualHit.setPosition(  pos  ) ;
     // create the AutHit and set its parameters
-   AutHit virtualAutHit( &virtualHit );
-   virtualAutHit.setIsVirtual ( true );
-   Segment virtualSegment( &virtualAutHit );
+   AutHit* virtualAutHit = new AutHit( &virtualHit );
+   virtualAutHit->setIsVirtual ( true );
+   
+   std::vector <AutHit*> autHitVec;
+   autHitVec.push_back( virtualAutHit );
+   
+   
+   /**********************************************************************************************/
+   /*                Set up the tree for the 1-segments (2 hit criteria)                         */
+   /**********************************************************************************************/
+   
+   Segment virtual1Segment( autHitVec );
    
    
    for ( unsigned int i=0; i < _crits2 .size() ; i++ ){ //for all criteria
 
       //get the map
-      _crits2 [i]->areCompatible( &virtualSegment , &virtualSegment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
+      _crits2 [i]->areCompatible( &virtual1Segment , &virtual1Segment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
                                                                    // names of the values ( and of course values that are useless, but we don't use them here anyway)
       
       std::map < std::string , float > newMap = _crits2 [i]->getMapOfValues();
@@ -143,28 +154,100 @@ void TrueTrackCritAnalyser::init() {
       for ( it = newMap.begin() ; it != newMap.end() ; it++ ){ //over all values in the map
 
          
-         branchNames.insert( it->first ); //store the names of the values in the set critNames
+         branchNames2.insert( it->first ); //store the names of the values in the set critNames
          
       }
       
    }
    
-
    
    // Also insert branches for additional information
-   branchNames.insert( "pt" ); //transversal momentum
-   branchNames.insert( "distToIP" ); //the distance of the origin of the partivle to the IP
+   branchNames2.insert( "MCP_pt" ); //transversal momentum
+   branchNames2.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    
    // Set up the root file with the tree and the branches
-   _treeName = "values";
-   setUpRootFile( _rootFileName, _treeName, branchNames );      //prepare the root file.
+   _treeName2 = "2Hit_Criteria";
+   setUpRootFile( _rootFileName, _treeName2, branchNames2 );      //prepare the root file.
    
    
    
+   
+   /**********************************************************************************************/
+   /*                Set up the tree for the 2-segments (3 hit criteria)                         */
+   /**********************************************************************************************/
+   
+   autHitVec.push_back( virtualAutHit );
+   Segment virtual2Segment( autHitVec );
+   
+   
+   for ( unsigned int i=0; i < _crits3 .size() ; i++ ){ //for all criteria
+
+      //get the map
+      _crits3 [i]->areCompatible( &virtual2Segment , &virtual2Segment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
+      // names of the values ( and of course values that are useless, but we don't use them here anyway)
+      
+      std::map < std::string , float > newMap = _crits3 [i]->getMapOfValues();
+      std::map < std::string , float > ::iterator it;
+      
+      for ( it = newMap.begin() ; it != newMap.end() ; it++ ){ //over all values in the map
+
+         
+         branchNames3.insert( it->first ); //store the names of the values in the set critNames
+         
+      }
+      
+   }
+   
+   
+   // Also insert branches for additional information
+   branchNames3.insert( "MCP_pt" ); //transversal momentum
+   branchNames3.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   
+   // Set up the root file with the tree and the branches
+   _treeName3 = "3Hit_Criteria"; 
+   bool createNewFile = false;
+   setUpRootFile( _rootFileName, _treeName3, branchNames3 , createNewFile );      //prepare the root file.
   
    
    
+   /**********************************************************************************************/
+   /*                Set up the tree for the 3-segments (4 hit criteria)                         */
+   /**********************************************************************************************/
+   
+   autHitVec.push_back( virtualAutHit );
+   Segment virtual3Segment( autHitVec );
+   
+   
+   for ( unsigned int i=0; i < _crits4 .size() ; i++ ){ //for all criteria
+
+      //get the map
+      _crits4 [i]->areCompatible( &virtual3Segment , &virtual3Segment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
+      // names of the values ( and of course values that are useless, but we don't use them here anyway)
+      
+      std::map < std::string , float > newMap = _crits4 [i]->getMapOfValues();
+      std::map < std::string , float > ::iterator it;
+      
+      for ( it = newMap.begin() ; it != newMap.end() ; it++ ){ //over all values in the map
+
+         
+         branchNames4.insert( it->first ); //store the names of the values in the set critNames
+         
+      }
+      
+   }
+   
+   
+   // Also insert branches for additional information
+   branchNames4.insert( "MCP_pt" ); //transversal momentum
+   branchNames4.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   
+   // Set up the root file with the tree and the branches
+   _treeName4 = "4Hit_Criteria"; 
+   
+   setUpRootFile( _rootFileName, _treeName4, branchNames4 , createNewFile );      //prepare the root file.
+   
  
+   delete virtualAutHit;
    
 }
 
@@ -180,7 +263,9 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
    
    
    
-   std::vector < std::map < std::string , float > > rootDataVec;
+   std::vector < std::map < std::string , float > > rootDataVec2;
+   std::vector < std::map < std::string , float > > rootDataVec3;
+   std::vector < std::map < std::string , float > > rootDataVec4;
   
    // get the true tracks 
    LCCollection* col = evt->getCollection( _colNameMCTrueTracksRel ) ;
@@ -240,7 +325,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          // Now we have a vector of autHits starting with the IP followed by all the hits from the track.
          // So we now are able to build segments from them
          
-         std::vector <Segment*> segments;
+         std::vector <Segment*> segments1;
          
          for ( unsigned j=0; j < autHits.size()-1; j++ ){
             
@@ -248,22 +333,46 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             std::vector <AutHit*> segAutHits;
             segAutHits.insert( segAutHits.begin() , autHits.begin()+j , autHits.begin()+j+1 );
             
-            segments.push_back( new Segment( segAutHits ) );
+            segments1.push_back( new Segment( segAutHits ) );
             
          }
          
-         // Now we have the segments of the track (in order) in the vector
+         std::vector <Segment*> segments2;
+         
+         for ( unsigned j=0; j < autHits.size()-2; j++ ){
+            
+            
+            std::vector <AutHit*> segAutHits;
+            segAutHits.insert( segAutHits.begin() , autHits.begin()+j , autHits.begin()+j+2 );
+            
+            segments2.push_back( new Segment( segAutHits ) );
+            
+         }
+         
+         std::vector <Segment*> segments3;
+         
+         for ( unsigned j=0; j < autHits.size()-3; j++ ){
+            
+            
+            std::vector <AutHit*> segAutHits;
+            segAutHits.insert( segAutHits.begin() , autHits.begin()+j , autHits.begin()+j+3 );
+            
+            segments3.push_back( new Segment( segAutHits ) );
+            
+         }
+         
+         // Now we have the segments of the track ( ordered) in the vector
          
          // Perform the checks on them:
          
-         for ( unsigned j=0; j < segments.size()-1; j++ ){
+         for ( unsigned j=0; j < segments1.size()-1; j++ ){
             
             // the data that will get stored
             std::map < std::string , float > rootData;
             
             //make the check on the segments, store it in the the map...
-            Segment* child = segments[j];
-            Segment* parent = segments[j+1];
+            Segment* child = segments1[j+1];
+            Segment* parent = segments1[j];
             
             
             for( unsigned iCrit=0; iCrit < _crits2 .size(); iCrit++){ // over all criteria
@@ -278,23 +387,90 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
             }
             
+            rootData["MCP_pt"] = pt;
+            rootData["MCP_distToIP"] = distToIP;
             
-            
-            
-            
-            rootData["pt"] = pt;
-            rootData["distToIP"] = distToIP;
-            
-            rootDataVec.push_back( rootData );
-            
+            rootDataVec2.push_back( rootData );
             
          }
+         
+         
+         for ( unsigned j=0; j < segments2.size()-1; j++ ){
+            
+            // the data that will get stored
+            std::map < std::string , float > rootData;
+            
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments2[j+1];
+            Segment* parent = segments2[j];
+            
+            
+            for( unsigned iCrit=0; iCrit < _crits3 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits3 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits3 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               rootData.insert( newMap.begin() , newMap.end() );
+               
+            }
+            
+            rootData["MCP_pt"] = pt;
+            rootData["MCP_distToIP"] = distToIP;
+            
+            rootDataVec3.push_back( rootData );
+            
+         }
+         
+         
+         for ( unsigned j=0; j < segments3.size()-1; j++ ){
+            
+            // the data that will get stored
+            std::map < std::string , float > rootData;
+            
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments3[j+1];
+            Segment* parent = segments3[j];
+            
+            
+            for( unsigned iCrit=0; iCrit < _crits4 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits4 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits4 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               rootData.insert( newMap.begin() , newMap.end() );
+               
+            }
+            
+            rootData["MCP_pt"] = pt;
+            rootData["MCP_distToIP"] = distToIP;
+            
+            rootDataVec4.push_back( rootData );
+            
+         }
+         
+         
+         
+         for (unsigned i=0; i<segments1.size(); i++) delete segments1[i];
+         for (unsigned i=0; i<segments2.size(); i++) delete segments2[i];
+         for (unsigned i=0; i<segments3.size(); i++) delete segments3[i];
+         for (unsigned i=0; i<autHits.size(); i++) delete autHits[i];
+         
+         delete virtualIPHit;
          
       }
          
             
 
-      saveToRoot( _rootFileName, _treeName, rootDataVec );
+      saveToRoot( _rootFileName, _treeName2, rootDataVec2 );
+      saveToRoot( _rootFileName, _treeName3, rootDataVec3 );
+      saveToRoot( _rootFileName, _treeName4, rootDataVec4 );
+      
          
       
     
@@ -326,11 +502,11 @@ void TrueTrackCritAnalyser::end(){
    //      << " processed " << _nEvt << " events in " << _nRun << " runs "
    //      << std::endl ;
    
-   for (unsigned i=0; i<_crits2 .size(); i++){
+   for (unsigned i=0; i<_crits2 .size(); i++) delete _crits2 [i];
+   for (unsigned i=0; i<_crits3 .size(); i++) delete _crits3 [i];
+   for (unsigned i=0; i<_crits4 .size(); i++) delete _crits4 [i];
       
-      delete _crits2 [i];
-      
-   }
+   
    
 }
 

@@ -37,30 +37,36 @@ bool Crit3_PTMin::areCompatible( Segment* parent , Segment* child ){
       float cy = c->getY();
 
 
-
-      SimpleCircle circle ( ax , ay , bx , by , cx , cy );
+      try{
+      
+         SimpleCircle circle ( ax , ay , bx , by , cx , cy );
       
 
-      double R = circle.getRadius();
-      
-      
-      // check if pt is bigger than _ptMin
-      //
-      // |omega| = K*Bz/pt
-      // R = pt / (K*Bz)
-      // pt = R * K *Bz
-      //
+         double R = circle.getRadius();
+         
+         
+         // check if pt is bigger than _ptMin
+         //
+         // |omega| = K*Bz/pt
+         // R = pt / (K*Bz)
+         // pt = R * K *Bz
+         //
+               
+         const double K= 0.00029979; //K depends on the used units
+         
+         double pt = R * K * _Bz;
             
-      const double K= 0.00029979; //K depends on the used units
-      
-      double pt = R * K * _Bz;
-          
-      _map_name_value["pt"] =  pt;
-            
-      if ( pt < _ptMin ) return false;
+         _map_name_value["pt"] =  pt;
+               
+         if ( pt < _ptMin ) return false;
 
-
-
+         
+      }
+      catch ( InvalidParameter ){
+         
+         _map_name_value["pt"] =  0.;
+         
+      }
 
 
 

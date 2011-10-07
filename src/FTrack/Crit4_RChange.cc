@@ -43,22 +43,29 @@ bool Crit4_RChange::areCompatible( Segment* parent , Segment* child ){
       float dx = d->getX();
       float dy = d->getY();
       
-      SimpleCircle circle1 ( ax , ay , bx , by , cx , cy );
-      SimpleCircle circle2 ( bx , by , cx , cy , dx , dy );
+      try{
       
-      float R1 = circle1.getRadius();
-      float R2 = circle2.getRadius();
-      
-      float ratioOfR = R1/R2;
-      
-      _map_name_value["ratioOfR"] = ratioOfR;
-      
-      
-          
-      if ( ratioOfR > _changeMax ) return false;    
-      if ( 1./ratioOfR > _changeMax ) return false;
-      
+         SimpleCircle circle1 ( ax , ay , bx , by , cx , cy );
+         SimpleCircle circle2 ( bx , by , cx , cy , dx , dy );
          
+         float R1 = circle1.getRadius();
+         float R2 = circle2.getRadius();
+         
+         float ratioOfR = R1/R2;
+         
+         _map_name_value["ratioOfR"] = ratioOfR;
+         
+         
+            
+         if ( ratioOfR > _changeMax ) return false;    
+         if ( 1./ratioOfR > _changeMax ) return false;
+         
+      }
+      catch ( InvalidParameter ){
+         
+         _map_name_value["ratioOfR"] = 0.;
+         
+      }
       
    }
    

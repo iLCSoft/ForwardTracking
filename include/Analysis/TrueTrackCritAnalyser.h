@@ -87,7 +87,9 @@ protected:
    double _Bz; //B field in z direction
    
    std::string _rootFileName;
-   std::string _treeName;
+   std::string _treeName2;
+   std::string _treeName3;
+   std::string _treeName4;
 
    std::string _colNameMCTrueTracksRel;
    

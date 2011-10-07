@@ -17,6 +17,7 @@ Crit3_IPCircleDist::Crit3_IPCircleDist( double distToCircleMax ){
 
 bool Crit3_IPCircleDist::areCompatible( Segment* parent , Segment* child ){
    
+
    
    
    if (( parent->getAutHits().size() == 2 )&&( child->getAutHits().size() == 2 )){ //a criterion for 2-segments
@@ -36,21 +37,27 @@ bool Crit3_IPCircleDist::areCompatible( Segment* parent , Segment* child ){
       float cy = c->getY();
 
 
+      try{
 
-      SimpleCircle circle ( ax , ay , bx , by , cx , cy );
-      
-      double x = circle.getCenterX();
-      double y = circle.getCenterY();
-      double R = circle.getRadius();
-      
-      double circleDistToIP = fabs( R - sqrt (x*x+y*y) );
-      
-      _map_name_value["circleDistToIP"] =  circleDistToIP;
-            
-      if ( circleDistToIP  > _distToCircleMax ) return false;
+         SimpleCircle circle ( ax , ay , bx , by , cx , cy );
+         
+         double x = circle.getCenterX();
+         double y = circle.getCenterY();
+         double R = circle.getRadius();
+         
+         double circleDistToIP = fabs( R - sqrt (x*x+y*y) );
+         
+         _map_name_value["circleDistToIP"] =  circleDistToIP;
+               
+         if ( circleDistToIP  > _distToCircleMax ) return false;
 
-
-
+      }
+      catch ( InvalidParameter ){
+         
+         
+         _map_name_value["circleDistToIP"] =  -1.;
+         
+      }
 
 
 

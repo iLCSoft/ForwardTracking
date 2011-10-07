@@ -67,6 +67,8 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child ){
       
       double denomSquared = uSquared * vSquared;
       
+      _map_name_value["cos3DAngleSquared"] =  -1;
+      
       if ( denomSquared > 0.){ //don't divide by 0
       
          double cosThetaSquared = numerator * numerator / ( uSquared * vSquared );
