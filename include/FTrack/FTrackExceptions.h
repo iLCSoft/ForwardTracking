@@ -48,6 +48,22 @@ namespace FTrack {
       message = "FTrack::OutOfRange: " + text ;
     }
   }; 
+  
+  
+  /**Invalid Parameter exception.
+   * @author R. Glattauer, HEPHY
+   */
+  class InvalidParameter : public FTrackException{
+     
+  protected:
+     InvalidParameter() {  /*no_op*/ ; } 
+  public: 
+     virtual ~InvalidParameter() throw() { /*no_op*/; } 
+     
+     InvalidParameter( std::string text ){
+        message = "FTrack::InvalidParameter: " + text ;
+     }
+  }; 
 
 
 } 

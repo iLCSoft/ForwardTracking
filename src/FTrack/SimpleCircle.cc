@@ -1,14 +1,36 @@
 #include "SimpleCircle.h"
+
+#include "FTrackTools.h"
+
+
+
 #include <cmath>
+
+
 
 using namespace FTrack;
 
-SimpleCircle::SimpleCircle( double x1 , double y1 , double x2 , double y2 , double x3, double y3 ){
+SimpleCircle::SimpleCircle( double x1 , double y1 , double x2 , double y2 , double x3, double y3 ) throw( InvalidParameter ){
   
   
-  //1. check if they are not in a line, i.e. the slopes are parallel
+   
+  // 1. check if they are not in a line, i.e. the slopes are parallel (or two or more points are identical)
   
-//   if ( (x2 -x1)*(y3 - y2) == (x3 - x2)*(y2 - y1) ) ;
+  if ( (x2 -x1)*(y3 - y2) == (x3 - x2)*(y2 - y1) ){
+     
+     
+     std::string s = "SimpleCircle::The 3 points are on one line in xy-space: x1 = "
+                               +  intToString( x1 ) +
+                     ", y1 = " +  intToString( y1 ) +
+                     ", x2 = " +  intToString( x2 ) +
+                     ", y2 = " +  intToString( y2 ) +
+                     ", x3 = " +  intToString( x3 ) +
+                     ", y3 = " +  intToString( y3 );
+                     
+     throw InvalidParameter( s );
+     
+     
+  }
   
 
    _R = 0;
