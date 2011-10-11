@@ -343,7 +343,9 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             
             std::vector <AutHit*> segAutHits;
-            segAutHits.insert( segAutHits.begin() , autHits.begin()+j , autHits.begin()+j+2 );
+            
+            segAutHits.push_back( autHits[j+1] );
+            segAutHits.push_back( autHits[j] );
             
             segments2.push_back( new Segment( segAutHits ) );
             
@@ -355,7 +357,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             
             std::vector <AutHit*> segAutHits;
-            segAutHits.insert( segAutHits.begin() , autHits.begin()+j , autHits.begin()+j+3 );
+            
+            segAutHits.push_back( autHits[j+2] );
+            segAutHits.push_back( autHits[j+1] );
+            segAutHits.push_back( autHits[j] );
             
             segments3.push_back( new Segment( segAutHits ) );
             
@@ -371,8 +376,8 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             std::map < std::string , float > rootData;
             
             //make the check on the segments, store it in the the map...
-            Segment* child = segments1[j+1];
-            Segment* parent = segments1[j];
+            Segment* child = segments1[j];
+            Segment* parent = segments1[j+1];
             
             
             for( unsigned iCrit=0; iCrit < _crits2 .size(); iCrit++){ // over all criteria
@@ -401,8 +406,8 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             std::map < std::string , float > rootData;
             
             //make the check on the segments, store it in the the map...
-            Segment* child = segments2[j+1];
-            Segment* parent = segments2[j];
+            Segment* child = segments2[j];
+            Segment* parent = segments2[j+1];
             
             
             for( unsigned iCrit=0; iCrit < _crits3 .size(); iCrit++){ // over all criteria
@@ -431,8 +436,8 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             std::map < std::string , float > rootData;
             
             //make the check on the segments, store it in the the map...
-            Segment* child = segments3[j+1];
-            Segment* parent = segments3[j];
+            Segment* child = segments3[j];
+            Segment* parent = segments3[j+1];
             
             
             for( unsigned iCrit=0; iCrit < _crits4 .size(); iCrit++){ // over all criteria

@@ -5,6 +5,7 @@
 #include "lcio.h"
 #include <string>
 #include "FTDTrackFitter.h"
+#include "ICriterion.h"
 
 
 using namespace lcio ;
@@ -70,6 +71,9 @@ class TrackingFeedbackProcessor : public Processor {
    //For Fitting
    FTDTrackFitter _trackFitter;
 
+   std::vector <ICriterion*> _crits2;
+   std::vector <ICriterion*> _crits3;
+   std::vector <ICriterion*> _crits4;
 
    
 } ;

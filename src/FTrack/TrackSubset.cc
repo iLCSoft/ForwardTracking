@@ -114,7 +114,7 @@ void TrackSubset::calculateBestSet(){
     
       streamlog_out(DEBUG1) << "\nstates: ( ";      
       
-      for ( unsigned int i=0; i< newStates.size(); i++) streamlog_out(MESSAGE0) << newStates[i] << " "; 
+      for ( unsigned int i=0; i< newStates.size(); i++) streamlog_out(DEBUG1) << newStates[i] << " "; 
                      
       streamlog_out(DEBUG1) << ")";
       

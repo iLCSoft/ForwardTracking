@@ -170,7 +170,7 @@ std::vector < EVENT::Track* > FTDTrackFitter::getFittedTracks(){
    }
 
 
-   streamlog_out (MESSAGE) << "\n Fitted " << nSuccess << " tracks. There also were:\n "
+   streamlog_out (DEBUG3) << "\n Fitted " << nSuccess << " tracks. There also were:\n "
                           << nInitFailed << " failed initialisations, " << nFitFailed << " failed fits and " 
                           << nPropagationFailed << " failed propagations.\n";
    

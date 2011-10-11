@@ -34,10 +34,22 @@
 
 #include "AutHit.h"
 
+
 // the criteria
 #include "Crit2_RZRatio.h"
-#include "Crit3_3DAngle.h"
 #include "Crit2_StraightTrack.h"
+
+#include "Crit3_ChangeRZRatio.h"  
+#include "Crit3_PTMin.h"
+#include "Crit3_3DAngle.h"
+#include "Crit3_IPCircleDist.h"  
+
+#include "Crit4_2DAngleChange.h"        
+#include "Crit4_distToExtrapolation.h"  
+#include "Crit4_PhiZRatioChange.h"
+#include "Crit4_distOfCircleCenters.h"
+#include "Crit4_NoZigZag.h"
+#include "Crit4_RChange.h"
 
 
 // the hit connectors
@@ -257,10 +269,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       SegmentBuilder segBuilder( &ftdRep );
       
       //Load in some criteria
-      Crit2_StraightTrack       crit2_StraightTrack( 1.001 );
-      Crit2_RZRatio             crit2_RZRatio(1.05);
+//       Crit2_StraightTrack       crit2_StraightTrack( 1.001 );
+      Crit2_RZRatio             crit2_RZRatio(1.1);
       
-      segBuilder.addCriterion ( & crit2_StraightTrack ); 
+//       segBuilder.addCriterion ( & crit2_StraightTrack ); 
       segBuilder.addCriterion ( & crit2_RZRatio );
       
       //Also load hit connectors
@@ -290,9 +302,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       // So now we have 2-segments and are ready to perform the cellular automaton.
       // Load some criteria for the automaton:
-      Crit3_3DAngle     crit3_3DAngle( 6. );
+      std::vector <ICriterion*> crit3Vec;
       
-      automaton.addCriterion ( & crit3_3DAngle );
+      crit3Vec.push_back( new Crit3_3DAngle( 5.75 ) );
+      crit3Vec.push_back( new Crit3_ChangeRZRatio( 1.001) );
+      crit3Vec.push_back( new Crit3_PTMin (0.2) );
+      crit3Vec.push_back( new Crit3_IPCircleDist (4) );
+      
+      
+      
+      for ( unsigned i=0; i< crit3Vec.size(); i++) automaton.addCriterion ( crit3Vec[i] );
       
       // Perform the automaton
       automaton.doAutomaton();
@@ -372,7 +391,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                              << " tracks with good chi2Prob, and rejected " << nTracksRejected << "\n";
       
       
-      
+      /*
       // Output of the tracks                       
       for ( unsigned i=0; i< trackCandidates.size(); i++ ){
          
@@ -388,7 +407,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          }
          
-      }
+      }*/
 
                              
                              
@@ -397,7 +416,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*               Get the best subset of tracks                                               */
       /**********************************************************************************************/
                              
-                              
+                      
       // Make a TrackSubset
       TrackSubset subset;
       subset.addTracks( trackCandidates ); 
@@ -423,7 +442,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       evt->addCollection(trkCol,_AutTrkCollection.c_str());
       
 
-      streamlog_out (MESSAGE0) << "\n\n Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
+//       streamlog_out (MESSAGE0) << "\n\n Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
       
       
       /**********************************************************************************************/
@@ -436,6 +455,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          delete autHitsTBD[i];
                 
       }
+      
+      for ( unsigned i=0; i< crit3Vec.size(); i++) delete crit3Vec[i];
       
 
       

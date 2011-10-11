@@ -19,11 +19,33 @@
 #include "TROOT.h"
 #include "TTree.h"
 #include "TFile.h"
+// for calculating the chi2 probability. 
+#include "Math/ProbFunc.h"
 
 #include <sstream>
 #include <MarlinCED.h>
 #include "FTrackTools.h"
 
+
+#include <IMPL/TrackerHitPlaneImpl.h>
+
+
+
+// the criteria
+#include "Crit2_RZRatio.h"
+#include "Crit2_StraightTrack.h"
+
+#include "Crit3_ChangeRZRatio.h"  
+#include "Crit3_PTMin.h"
+#include "Crit3_3DAngle.h"
+#include "Crit3_IPCircleDist.h"  
+
+#include "Crit4_2DAngleChange.h"        
+#include "Crit4_distToExtrapolation.h"  
+#include "Crit4_PhiZRatioChange.h"
+#include "Crit4_distOfCircleCenters.h"
+#include "Crit4_NoZigZag.h"
+#include "Crit4_RChange.h"
 
 
 
@@ -134,6 +156,24 @@ void TrackingFeedbackProcessor::init() {
     //Then initialise
     _trackFitter.initialise( "KalTest" , marlin::Global::GEAR , "" ); //Use KalTest as Fitter
 
+    
+    
+    //Add the criteria that will be checked
+    _crits2.push_back( new Crit2_RZRatio( 1.01 ) ); 
+    _crits2.push_back( new Crit2_StraightTrack( 1.1 ) );
+    
+    _crits3.push_back( new Crit3_ChangeRZRatio( 1.) );
+    _crits3.push_back( new Crit3_PTMin (0.1) );
+    _crits3.push_back( new Crit3_3DAngle (10) );
+    _crits3.push_back( new Crit3_IPCircleDist (10) );
+    
+    _crits4.push_back( new  Crit4_2DAngleChange ( 1. ) );
+    _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. ) );
+    _crits4.push_back( new  Crit4_distToExtrapolation ( 1. ) );
+    _crits4.push_back( new  Crit4_distOfCircleCenters ( 1. ) );
+    _crits4.push_back( new  Crit4_NoZigZag ( 1. ) );
+    _crits4.push_back( new  Crit4_RChange ( 1. ) );
+    
     
     
 //      MarlinCED::init(this) ;
@@ -386,13 +426,14 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                   
       
       
-      ///////////////////////////
-      //ouput the data:
+      /**********************************************************************************************/
+      /*              Output the data                                                               */
+      /**********************************************************************************************/
       
       streamlog_out( DEBUG ).precision (8);
       
       
-      for( unsigned int i=0; i < myRelations.size(); i++){
+      for( unsigned int i=0; i < myRelations.size(); i++){ // for all relations
          
          MCParticle* mcp = dynamic_cast <MCParticle*> (myRelations[i]->lcRelation->getTo());
          Track* cheatTrack = dynamic_cast<Track*>  (myRelations[i]->lcRelation->getFrom());      
@@ -401,13 +442,12 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          double mcpP= sqrt( mcpPt*mcpPt + mcp->getMomentum()[2]*mcp->getMomentum()[2] );
          
          
-         streamlog_out( DEBUG3 ) << "\n\n\nTrue Track" << i << ": p= " << mcpP << "  pt= " << mcpPt << std::endl;
-         streamlog_out( DEBUG3 ) << "px= " << mcp->getMomentum()[0] << " py= " <<  mcp->getMomentum()[1] << " pz= " <<  mcp->getMomentum()[2] << std::endl;
-         streamlog_out( DEBUG3 ) << "PDG= " << mcp->getPDG() << std::endl;
-         streamlog_out( DEBUG3 ) << "x= " << mcp->getVertex()[0] << " y= " <<  mcp->getVertex()[1] << " z= " <<  mcp->getVertex()[2] << std::endl;
-         streamlog_out( DEBUG3 ) << "/gun/direction " << mcp->getMomentum()[0]/mcpP << " " <<  mcp->getMomentum()[1]/mcpP << " " <<  mcp->getMomentum()[2]/mcpP << std::endl;
-         
-         streamlog_out( DEBUG3 ) << "\n\n";
+         streamlog_out( MESSAGE0 ) << "\n\n\nTrue Track" << i << ": p= " << mcpP << "  pt= " << mcpPt << std::endl;
+         streamlog_out( MESSAGE0 ) << "px= " << mcp->getMomentum()[0] << " py= " <<  mcp->getMomentum()[1] << " pz= " <<  mcp->getMomentum()[2] << std::endl;
+         streamlog_out( MESSAGE0 ) << "PDG= " << mcp->getPDG() << std::endl;
+         streamlog_out( MESSAGE0 ) << "x= " << mcp->getVertex()[0] << " y= " <<  mcp->getVertex()[1] << " z= " <<  mcp->getVertex()[2] << std::endl;
+         streamlog_out( MESSAGE0 ) << "/gun/direction " << mcp->getMomentum()[0]/mcpP << " " <<  mcp->getMomentum()[1]/mcpP << " " <<  mcp->getMomentum()[2]/mcpP << std::endl;
+
          //Fit the track
          //first: empty the stored tracks (if there are any)
          _trackFitter.clearTracks();
@@ -417,193 +457,272 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          //And get back fitted tracks
          std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
-         streamlog_out( DEBUG3 ) << "\n\n";
+
+         double chi2 = fittedTracks[0]->getChi2();
+         double ndf = fittedTracks[0]->getNdf();
          
-         
+         double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
+                  
+         streamlog_out( MESSAGE0 )  << "chi2Prob = " << chi2Prob 
+                                    << "( chi2=" << chi2 <<", Ndf=" << ndf << " )\n";
          
          
          std::vector<TrackerHit*> cheatTrackHits = cheatTrack->getTrackerHits(); // we write it into an own vector so wen can sort it
-         sort (cheatTrackHits.begin() , cheatTrackHits.end() , hitComp );
+         sort (cheatTrackHits.begin() , cheatTrackHits.end() , compare_z );
+         // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
+         // So the direction of the hits when following the index from 0 on is:
+         // from inside out: from the IP into the distance.
+         
          
          for (unsigned int j=0; j< cheatTrackHits.size(); j++){ //over all Hits in the track
                         
-            streamlog_out( DEBUG3 )  << "\n( "  
+            streamlog_out( MESSAGE0 )  << "\n( "  
                   << cheatTrackHits[j]->getPosition()[0] << " , " 
                   << cheatTrackHits[j]->getPosition()[1] << " , " 
                   << cheatTrackHits[j]->getPosition()[2] << " ) "
                   << cheatTrackHits[j]->getType() ;
-            
-            // check the angle between the segments
-            if ( j < cheatTrackHits.size()-1 ){ //if there is a hit after
-               
-               TVector3 a( 0.,0.,0. );
-               
-               if ( j>0 ) a = TVector3( cheatTrackHits[j-1]->getPosition() );
-               TVector3 b( cheatTrackHits[j]->getPosition() );
-               TVector3 c( cheatTrackHits[j+1]->getPosition() );
-               
-               TVector3 f = b-a;
-               TVector3 g = c-b;
-               
-               double angle = f.Angle( g ) *180. / M_PI;
-               streamlog_out( DEBUG3 ) << "\n angle= " << angle << "°";
-               
-               
-               double anglePhi= f.Phi()-g.Phi(); //the angle between them in the xy plane 
-               anglePhi -= 2*M_PI*floor( anglePhi /2. /M_PI );    //to the range from 0 to 2pi 
-               if (anglePhi > M_PI) anglePhi -= 2*M_PI;                                   //to the range from -pi to pi
-               anglePhi *= 180./M_PI;
-               
-               streamlog_out( DEBUG3 ) << "\n anglePhi= " << anglePhi << "°";
-               
-               
-               //Check R
-               double x=0.;
-               double y=0.;
-               
-               double x1 = a.X();
-               double y1 = a.Y();
-               double x2 = b.X();
-               double y2 = b.Y();
-               double x3 = c.X();
-               double y3 = c.Y();
-               
-               //TODO vertikal abfrage: ob x2 == x1. wenn ja dann punkte vertauschen
-               
-               double ma = (y2-y1)/(x2-x1);
-               double mb = (y3-y2)/(x3-x2);
-               
-               double R=0.;
-               
-               if ( fabs(mb - ma) > 0.0000001){ 
-               
-                  x = ( ma*mb*(y1-y3) + mb*(x1+x2) - ma*(x2+x3) )/( 2.*(mb-ma));
-                  y = (-1./ma) * ( x - (x1+x2)/2. ) + (y1+y2)/2;
-               
-                  R = sqrt (( x1 - x )*( x1 - x ) + ( y1 - y )*( y1 - y ));
-                  
-                  
-               }
-               
-               
-               streamlog_out( DEBUG3 ) << "\n R= " << R;
-               
-               //distance from circle to origin
-               double distTo0 = fabs ( R - sqrt( x*x + y*y) );
-               streamlog_out( DEBUG3 ) << "\n Distance to origin = " << distTo0;
-               
-               //
-               TVector3 u ( -x , -y , 0.);
-               TVector3 v ( cheatTrackHits[j]->getPosition()[0] - x, cheatTrackHits[j]->getPosition()[1] - y , cheatTrackHits[j]->getPosition()[2]);
-               if ( j>0 ) u = TVector3 ( cheatTrackHits[j-1]->getPosition()[0] - x, cheatTrackHits[j-1]->getPosition()[1] - y , cheatTrackHits[j-1]->getPosition()[2]);
-               
-               double zDist = fabs( u.Z() - v.Z() );
-                              
-//                streamlog_out( DEBUG3 ) << "  ; Winkelweite " << u.Angle(v);
-               streamlog_out( DEBUG3 ) << "\n Winkelweite/z " << ( u.Phi() - v.Phi() )/zDist;
-               
-               
                 
-            }
+         }
+         
+         
+         // Add the IP as a hit
+         TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
+         
+         double pos[] = {0. , 0. , 0.};
+         virtualIPHit->setPosition(  pos  ) ;
+         
+         cheatTrackHits.insert( cheatTrackHits.begin() , virtualIPHit );
+         
+         // Make authits from the trackerHits
+         std::vector <AutHit*> autHits;
+         
+         for ( unsigned j=0; j< cheatTrackHits.size(); j++ ){
+            
+            autHits.push_back( new AutHit( cheatTrackHits[j] ) );
+            
+         }
+         
+         // Now we have a vector of autHits starting with the IP followed by all the hits from the track.
+         // So we now are able to build segments from them
+         
+         
+         
+         std::vector <Segment*> segments1;
+         
+         for ( unsigned j=0; j < autHits.size(); j++ ){
             
             
-            if ( j >= 2 ){ //if there are 3 points before
-               
-               double x1 = 0.;
-               double y1 = 0.;
-               double z1 = 0.;
-               
-               if ( j > 2){ //we don't need point 0
-               
-                  x1 = cheatTrackHits[j-3]->getPosition()[0];
-                  y1 = cheatTrackHits[j-3]->getPosition()[1];
-                  z1 = cheatTrackHits[j-3]->getPosition()[2];
-               
-               }
-               
-               double x2 = cheatTrackHits[j-2]->getPosition()[0];
-               double y2 = cheatTrackHits[j-2]->getPosition()[1];
-               double z2 = cheatTrackHits[j-2]->getPosition()[2];
-               
-               double x3 = cheatTrackHits[j-1]->getPosition()[0];
-               double y3 = cheatTrackHits[j-1]->getPosition()[1];
-               double z3 = cheatTrackHits[j-1]->getPosition()[2];
-               
-               SimpleCircle circle ( x1 , y1 , x2 , y2 , x3 , y3 );
-               
-               double centerX = circle.getCenterX();
-               double centerY = circle.getCenterY();
-               double R = circle.getRadius();
-               
-               TVector3 v ( x2 - centerX , y2 - centerY , z2 );
-               TVector3 w ( x3 - centerX , y3 - centerY , z3 );
-               
-                  
-               double deltaPhiPrev = w.Phi() - v.Phi(); //angle in xy plane from center of circle, between point 2 and 3
-                  
-                  // use this angle and the distance to the next layer to extrapolate
-               double zDistPrevLayer = fabs( z3 - z2 );
-               double zDistNextLayer = fabs( cheatTrackHits[j]->getPosition()[2] - z3 );
-                  
-               double deltaPhiNext = deltaPhiPrev * zDistNextLayer / zDistPrevLayer;
-                  
-               double phiNext = w.Phi() + deltaPhiNext;
-                  
-               double xNext = centerX + R* cos(phiNext);
-               double yNext = centerY + R* sin(phiNext);
-               
-               double xTrue = cheatTrackHits[j]->getPosition()[0];
-               double yTrue = cheatTrackHits[j]->getPosition()[1];
-               
-               double distToPrediction = sqrt ( ( xNext- xTrue )*( xNext- xTrue ) + ( yNext- yTrue )*( yNext- yTrue ) );
-               double distNormed = distToPrediction / zDistNextLayer;   
-               
-               streamlog_out( DEBUG3 ) << "\n  ; Prediction (x,y)= (" << xNext << " , " << yNext << ")";
-               streamlog_out( DEBUG3 ) << " ; distance normed= " << distNormed;
-               
-            }
+            std::vector <AutHit*> segAutHits;
             
-            //check the ratio of the distance between to points and their z distance (= criteria for building the segments)
-            //also check the exrtrapolation of the vector to the IP
             
-            if (j>=0){ 
+            segAutHits.push_back( autHits[j] ) ;
             
-               TVector3 a( 0.,0.,0. );
-               if ( j>0 ) a = TVector3( cheatTrack->getTrackerHits()[j-1]->getPosition() );
-               TVector3 b( cheatTrack->getTrackerHits()[j]->getPosition() );
-               TVector3 dist = a - b; // vector between the the two hits
-                        
-               double zDistance = fabs ( dist.Z() );     
-                        
-               TVector3 x = a + dist * ( fabs( a.Z() ) / zDistance );
-               
-               streamlog_out( DEBUG3 ) << "\n normed Extrapolation to z=0, dist/z = "<< 100000.* x.Mag()/(zDistance*zDistance);
-                              
-               
-               double rhoA = sqrt ( a.X()*a.X() + a.Y()*a.Y() );
-               double rhoB = sqrt ( b.X()*b.X() + b.Y()*b.Y() );
-               
-               double ratio2 = (rhoA/rhoB)/(a.Z()/b.Z());
-               streamlog_out( DEBUG3 ) <<"\n rhoA = " << rhoA << " , rhoB = " << rhoB;
-               streamlog_out( DEBUG3 )<<"\n (rhoA/rhoB)/(a.Z()/b.Z()) = " << ratio2;
-                              
-               double distance = dist.Mag(); //the distance between the hits
-               
-               
-               double ratio = distance / zDistance;
-               
-               streamlog_out( DEBUG3 ) << "\n Dist/xDist= " << ratio << " ";
-               
-            }
-            
-            streamlog_out( DEBUG3 ) << std::endl;
+            segments1.push_back( new Segment( segAutHits ) );
             
          }
          
          
-         if (myRelations[i]->isLost == true) streamlog_out( DEBUG3 ) << "LOST" <<std::endl;
-         if (myRelations[i]->isFoundCompletely== false) streamlog_out( DEBUG3 ) << "NOT FOUND COMPLETELY";
-                    
+         std::vector <Segment*> segments2;
+         
+         for ( unsigned j=0; j < autHits.size()-1; j++ ){
+            
+            
+            std::vector <AutHit*> segAutHits;
+            
+            segAutHits.push_back( autHits[j+1] );
+            segAutHits.push_back( autHits[j] );
+            
+            
+            
+            segments2.push_back( new Segment( segAutHits ) );
+            
+         }
+         
+         
+         std::vector <Segment*> segments3;
+         
+         for ( unsigned j=0; j < autHits.size()-2; j++ ){
+            
+            
+            std::vector <AutHit*> segAutHits;
+            
+            segAutHits.push_back( autHits[j+2] );
+            segAutHits.push_back( autHits[j+1] );
+            segAutHits.push_back( autHits[j] );
+            
+            segments3.push_back( new Segment( segAutHits ) );
+            
+         }
+         
+         
+         // Now we have the segments of the track ( ordered) in the vector
+         
+         // Perform the checks on them:
+         
+         // the data that will get printed
+         std::map < std::string , std::vector<float> > crit2Data;
+         
+         for ( unsigned j=0; j < segments1.size()-1; j++ ){
+            
+
+            
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments1[j];
+            Segment* parent = segments1[j+1];
+            
+            
+            for( unsigned iCrit=0; iCrit < _crits2 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits2 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits2 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               std::map < std::string , float >::iterator it;
+               
+               for ( it = newMap.begin() ; it != newMap.end(); it++) crit2Data[it->first].push_back( it->second );
+                  
+                              
+               
+            }
+            
+         }
+         
+         //print it
+         std::map < std::string , std::vector<float> >::iterator it;
+         
+         streamlog_out( MESSAGE0 ) << "\n  Crit2:";
+         
+         for ( it = crit2Data.begin() ; it != crit2Data.end() ; it++ ){
+            
+            streamlog_out( MESSAGE0 ) << "\n" << it->first;
+            
+            
+            std::vector<float> critValues = it->second;
+            
+            for ( unsigned j=0; j<critValues.size(); j++ ){
+               
+               streamlog_out( MESSAGE0 ) << "\t" << critValues[j];
+               
+            }
+            
+         }
+            
+         // the data that will get printed
+         std::map < std::string , std::vector<float> > crit3Data;
+         
+         for ( unsigned j=0; j < segments2.size()-1; j++ ){
+            
+   
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments2[j];
+            Segment* parent = segments2[j+1];
+            
+            
+            for( unsigned iCrit=0; iCrit < _crits3 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits3 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits3 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               std::map < std::string , float >::iterator it;
+               for ( it = newMap.begin() ; it != newMap.end(); it++) crit3Data[it->first].push_back( it->second );
+               
+            }
+            
+            
+         }
+         
+         //print it
+                  
+         streamlog_out( MESSAGE0 ) << "\n  Crit3:";
+         
+         for ( it = crit3Data.begin() ; it != crit3Data.end() ; it++ ){
+            
+            streamlog_out( MESSAGE0 ) << "\n" << it->first;
+            
+            
+            std::vector<float> critValues = it->second;
+            
+            for ( unsigned j=0; j<critValues.size(); j++ ){
+               
+               streamlog_out( MESSAGE0 ) << "\t" << critValues[j];
+               
+            }
+            
+         }
+         
+         // the data that will get printed
+         std::map < std::string , std::vector<float> > crit4Data;
+         
+         for ( unsigned j=0; j < segments3.size()-1; j++ ){
+            
+           
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments3[j];
+            Segment* parent = segments3[j+1];
+            
+            
+            for( unsigned iCrit=0; iCrit < _crits4 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits4 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits4 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               std::map < std::string , float >::iterator it;
+               for ( it = newMap.begin() ; it != newMap.end(); it++) crit4Data[it->first].push_back( it->second );
+               
+            }
+            
+           
+         }
+         
+         
+         //print it
+         
+         streamlog_out( MESSAGE0 ) << "\n  Crit4:";
+         
+         for ( it = crit4Data.begin() ; it != crit4Data.end() ; it++ ){
+            
+            streamlog_out( MESSAGE0 ) << "\n" << it->first;
+            
+            
+            std::vector<float> critValues = it->second;
+            
+            for ( unsigned j=0; j<critValues.size(); j++ ){
+               
+               streamlog_out( MESSAGE0 ) << "\t" << critValues[j];
+               
+            }
+            
+         }
+         
+         streamlog_out( MESSAGE0 ) << "\n";
+         
+         for (unsigned j=0; j<segments1.size(); j++) delete segments1[j];
+         for (unsigned j=0; j<segments2.size(); j++) delete segments2[j];
+         for (unsigned j=0; j<segments3.size(); j++) delete segments3[j];
+         for (unsigned j=0; j<autHits.size(); j++) delete autHits[j];
+         
+         delete virtualIPHit;
+         
+         
+         
+         
+         // Print out, if this track is lost or not found completely
+         
+         if (myRelations[i]->isLost == true) streamlog_out( MESSAGE0 ) << "LOST" <<std::endl;
+         if (myRelations[i]->isFoundCompletely== false) streamlog_out( MESSAGE0 ) << "NOT FOUND COMPLETELY";
+         
+         
+         
+         // Print out all the tracks associated to the true one:
+         
          std::map<Track*,TrackType> relTracks = myRelations[i]->relatedTracks;
          for (std::map<Track*,TrackType>::const_iterator it = relTracks.begin(); it != relTracks.end(); ++it)
          {
@@ -619,6 +738,9 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             
             streamlog_out( DEBUG3 )<<"\n";
          }
+         
+         
+         streamlog_out( MESSAGE0 )  << "\n\n";
 
       }
       
@@ -638,25 +760,25 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    
       if (nMCTracks > 0) pFoundCompletely = 100. * nFoundCompletely/nMCTracks;
       
-      streamlog_out( DEBUG4 ) << std::endl;
-      streamlog_out( DEBUG4 ) << std::endl;
-      streamlog_out( DEBUG4 ) << "nMCTracks = " << nMCTracks <<std::endl;
-      streamlog_out( DEBUG4 ) << "nTracks = " << nTracks <<std::endl;
-      streamlog_out( DEBUG4 ) << "nFoundCompletely = " << nFoundCompletely << " , " << pFoundCompletely << "%" <<std::endl;
-      streamlog_out( DEBUG4 ) << "nLost = " << nLost << " , " << pLost << "%" << std::endl;
-      streamlog_out( DEBUG4 ) << "nGhost = " << nGhost << " , " << pGhost << "%" << std::endl;   
+      streamlog_out( MESSAGE0 ) << std::endl;
+      streamlog_out( MESSAGE0 ) << std::endl;
+      streamlog_out( MESSAGE0 ) << "nMCTracks = " << nMCTracks <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nTracks = " << nTracks <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nFoundCompletely = " << nFoundCompletely << " , " << pFoundCompletely << "%" <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nLost = " << nLost << " , " << pLost << "%" << std::endl;
+      streamlog_out( MESSAGE0 ) << "nGhost = " << nGhost << " , " << pGhost << "%" << std::endl;   
       
-      streamlog_out( DEBUG4 ) << "nComplete = " << nComplete << " , " << pComplete << "%" <<std::endl;
-      streamlog_out( DEBUG4 ) << "nCompletePlus = " << nCompletePlus <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nComplete = " << nComplete << " , " << pComplete << "%" <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nCompletePlus = " << nCompletePlus <<std::endl;
       
-      streamlog_out( DEBUG4 ) << "nIncomplete = " << nIncomplete <<std::endl;
-      streamlog_out( DEBUG4 ) << "nIncompletePlus = " << nIncompletePlus <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nIncomplete = " << nIncomplete <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nIncompletePlus = " << nIncompletePlus <<std::endl;
       
-      streamlog_out( DEBUG4 ) << std::endl;
+      streamlog_out( MESSAGE0 ) << std::endl;
       
       
-      streamlog_out( DEBUG4 ) << std::endl;
-      streamlog_out( DEBUG4 ) << std::endl;
+      streamlog_out( MESSAGE0 ) << std::endl;
+      streamlog_out( MESSAGE0 ) << std::endl;
       
       ////
       
@@ -747,7 +869,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    }
    
    
-    //-- note: this will not be printed if compiled w/o MARLINDEBUG4=1 !
+    //-- note: this will not be printed if compiled w/o MARLINMESSAGE0=1 !
 
     streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
         << "   in run:  " << evt->getRunNumber() << std::endl ;
@@ -770,6 +892,10 @@ void TrackingFeedbackProcessor::end(){
     //   streamlog_out( DEBUG ) << "MyProcessor::end()  " << name() 
     // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
     // 	    << std::endl ;
+    
+    for (unsigned i=0; i<_crits2 .size(); i++) delete _crits2 [i];
+    for (unsigned i=0; i<_crits3 .size(); i++) delete _crits3 [i];
+    for (unsigned i=0; i<_crits4 .size(); i++) delete _crits4 [i];
 
 }
 
