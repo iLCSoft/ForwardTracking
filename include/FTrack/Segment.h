@@ -5,6 +5,7 @@
 
 
 #include <vector>
+#include <list>
 #include "AutHit.h"
 
 namespace FTrack{
@@ -51,12 +52,12 @@ namespace FTrack{
          Segment( AutHit* autHit);
          
          
-         bool deleteParent ( Segment* delParent );
-         bool deleteChild ( Segment* delChild );
+         void deleteParent ( Segment* delParent ){ _parents.remove( delParent );};
+         void deleteChild ( Segment* delChild ){ _children.remove( delChild );};
          
    
-         std::vector <Segment*> getChildren() { return _children;};
-         std::vector <Segment*> getParents()  { return _parents;};
+         std::list <Segment*> getChildren() { return _children;};
+         std::list <Segment*> getParents()  { return _parents;};
          std::vector <AutHit*> getAutHits() {return _autHits;};
          
          void addChild( Segment* child ){ _children.push_back(child); };
@@ -77,8 +78,8 @@ namespace FTrack{
      
    private:
          
-         std::vector <Segment*> _children; 
-         std::vector <Segment*> _parents;
+         std::list <Segment*> _children; 
+         std::list <Segment*> _parents;
          
          
    

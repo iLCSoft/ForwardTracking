@@ -153,13 +153,13 @@ namespace FTrack{
    private:
       
       /** Here the segments are stored.
-       * The first index corresponds to the layer.
-       * The second corresponds to the segments on the layer.
-       * _segments[2][4] is segment 2 on layer 4
+       * The vector corresponds to the layer.
+       * The list corresponds to the segments on the layer.
+       * _segments[2] is a list with all segments on layer 2.
        * 
        * The segments will be deleted by the Automaton in the destructor
        */
-      std::vector < std::vector < Segment* > > _segments;
+      std::vector < std::list < Segment* > > _segments;
       
       /** A vector containing all the criteria, that are used in the Automaton
        */

@@ -277,13 +277,13 @@ void CritAnalyser::processEvent( LCEvent * evt ) {
          streamlog_out( DEBUG0 ) << "\n segment " << i;
 
          Segment* segment = segments[i];
-         std::vector <Segment*> children = segment->getChildren();
+         std::list <Segment*> children = segment->getChildren();
          
-         for( unsigned j=0; j<children.size(); j++){ // over all children
+         for( std::list<Segment*>::iterator iChild= children.begin(); iChild!= children.end(); iChild++ ){ // over all children
             
             
 
-            Segment* child = children[j];
+            Segment* child = *iChild;
             
             // the data that will get stored
             std::map < std::string , float > rootData;

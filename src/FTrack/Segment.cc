@@ -25,48 +25,7 @@ Segment::Segment( AutHit* autHit){
 
 }
 
-bool Segment::deleteParent ( Segment* delParent ){
-   
-   
-   
-   for( unsigned int i=0; i < _parents.size(); i++){ //over all parents
-      
-      if ( _parents[i] == delParent ){ // if this is the parent to delete
-         
-         _parents.erase( _parents.begin() + i );
-         
-         return true;
-         
-      }
-      
-   }
-   
-   
-   return false; //when we reached this point nothing got deleted -> return false 
-}
 
-bool Segment::deleteChild ( Segment* delChild ){
-   
-   
-
-   
-   for( unsigned int i=0; i < _children.size(); i++){
-      
-      if ( _children[i] == delChild ){
-         
-         _children.erase( _children.begin() + i );
-        
-         return true;
-         
-      }
-      
-   }
-   
-   
-   return false;
-   
-   
-}
 
 void Segment::resetState(){
    

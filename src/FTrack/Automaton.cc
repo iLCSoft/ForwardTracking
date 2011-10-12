@@ -86,11 +86,12 @@ void Automaton::lengthenSegments(){
 
    //----------------------------------------------------------------------------------------------//
    //                                                                                              //
-   // first: we create a new vector[][] to have somewhere we can put the longer segments           //
+   // first: we create a new vector of a list of segments                                          //
+   //   to have somewhere we can put the longer segments                                           //
    //                                                                                              //
    //----------------------------------------------------------------------------------------------//
 
-   std::vector < std::vector < Segment* > > longerSegments;
+   std::vector < std::list < Segment* > > longerSegments;
    longerSegments.resize ( _segments.size() -1 ); //This will have one layer less
 
    //----------------------------------------------------------------------------------------------//
@@ -104,17 +105,19 @@ void Automaton::lengthenSegments(){
 
    for (unsigned layer = 1; layer < _segments.size(); layer++){ //over all layer where there still can be something below
 
-      for ( unsigned iSeg=0; iSeg < _segments[ layer ].size(); iSeg++){ //over all segments in this layer
+      std::list<Segment*> segments = _segments[layer];
+
+      for ( std::list<Segment*>::iterator iSeg=segments.begin(); iSeg != segments.end(); iSeg++){ //over all segments in this layer
 
          nShorterSegments++;
 
-         Segment* segment = _segments[layer][iSeg];
+         Segment* segment = *iSeg;
 
-         std::vector <Segment*> children = segment->getChildren();
+         std::list <Segment*> children = segment->getChildren();
 
-         for ( unsigned iChild=0; iChild < children.size(); iChild++){ //over all children of this segment
+         for ( std::list<Segment*>::iterator iChild=children.begin(); iChild !=children.end(); iChild++){ //over all children of this segment
 
-            Segment* child = children[ iChild ];
+            Segment* child = *iChild;
 
             //Combine the segment and the child to form a new longer segment
 
@@ -173,20 +176,26 @@ void Automaton::lengthenSegments(){
 
    for ( unsigned layer = 1; layer < _segments.size()-1; layer++ ){ // over all layers (of course the first and the last ones are spared out because there is nothing more above or below
 
-      for ( unsigned iSeg = 0; iSeg < _segments[layer].size(); iSeg++ ){ //over all (short) segments in this layer
+
+      std::list<Segment*> segments = _segments[layer];
+
+      for ( std::list<Segment*>::iterator iSeg=segments.begin(); iSeg != segments.end(); iSeg++ ){ //over all (short) segments in this layer
 
 
-         Segment* segment = _segments[layer][iSeg];
+         Segment* segment = *iSeg;
+         
+         std::list<Segment*> parents = segment->getParents();
+         std::list<Segment*> children = segment->getChildren();
 
-         for ( unsigned iParent=0; iParent < segment->getParents().size(); iParent++ ){ // over all parents of the segment
-
-
-            Segment* parent = segment->getParents()[iParent];
-
-            for ( unsigned iChild=0; iChild < segment->getChildren().size(); iChild++ ){ // over all children of the segment
+         for ( std::list<Segment*>::iterator iParent = parents.begin(); iParent != parents.end(); iParent++ ){ // over all parents of the segment
 
 
-               Segment* child = segment->getChildren()[iChild];
+            Segment* parent = *iParent;
+
+            for ( std::list<Segment*>::iterator iChild = children.begin(); iChild != children.end(); iChild++ ){ // over all children of the segment
+
+
+               Segment* child = *iChild;
 
                //connect parent and child (i.e. connect the longer segments we previously created)
                child->addParent( parent );
@@ -228,12 +237,18 @@ void Automaton::doAutomaton(){
       hasChanged = false;
       nIterations++;
 
+      unsigned nConnectionsChecked = 0;
+      
+      
       for ( int layer = _segments.size()-1; layer >= 0; layer--){ //for all layers from outside in
 
-         for ( unsigned iSeg = 0; iSeg < _segments[layer].size(); iSeg++ ){ //for all segments in the layer
+
+         std::list <Segment*> segments = _segments[layer];
+
+         for ( std::list<Segment*>::iterator iSeg=segments.begin(); iSeg!= segments.end(); iSeg++ ){ //for all segments in the layer
 
 
-            Segment* parent= _segments[layer][iSeg];
+            Segment* parent= *iSeg;
 
 
 
@@ -255,16 +270,17 @@ void Automaton::doAutomaton(){
 
 
             //Check if there is a neighbor
-            std::vector <Segment*> children = parent->getChildren();
-            for (unsigned iChild=0; iChild < children.size(); iChild++ ){// over all children
+            std::list <Segment*> children = parent->getChildren();
+            for ( std::list<Segment*>::iterator iChild=children.begin(); iChild != children.end(); iChild++ ){// for all children
 
+               
 
-
-               Segment* child = children[iChild];
+               Segment* child = *iChild;
 
                if ( child->getOuterState() == parent->getInnerState() ){  //Only if they have the same state
 
-
+                  nConnectionsChecked++;
+                  
                   bool areCompatible = true;
 
                   //check all criteria (or at least until one returns false
@@ -285,7 +301,7 @@ void Automaton::doAutomaton(){
 
                      hasChanged = true; //something changed
 
-                     break; //It has a neighbor, we raised the state, so we must not check again in this iteration
+                     break; //It has a neighbor, we raised the state, so we need not check again in this iteration
 
 
                   }
@@ -300,6 +316,8 @@ void Automaton::doAutomaton(){
          }
 
       }
+      
+      streamlog_out(DEBUG3) << "\n Checked" << nConnectionsChecked << " connections in iteration " << nIterations;
 
    }
 
@@ -322,12 +340,15 @@ void Automaton::cleanBadStates(){
 
    for( unsigned layer=0; layer < _segments.size(); layer++ ){//for every layer
 
-      for( unsigned iSeg=0; iSeg < _segments[layer].size(); iSeg++){//over every segment
+   
+      std::list <Segment*> & segments = _segments[layer]; // We want to change things in the original list! Therefore the reference operator
+
+      for( std::list<Segment*>::iterator iSeg= segments.begin(); iSeg != segments.end(); iSeg++ ){//over every segment
 
 
-            Segment* segment = _segments[layer][iSeg];
+         Segment* segment = *iSeg;
 
-            if( segment->getInnerState() == (int) layer ){ //the state is alright (equals the layer), this segment is good
+         if( segment->getInnerState() == (int) layer ){ //the state is alright (equals the layer), this segment is good
 
             nKeptSegments++;
 
@@ -338,31 +359,28 @@ void Automaton::cleanBadStates(){
             nErasedSegments++;
 
             //erase it from all its children
-            std::vector <Segment*> children = segment->getChildren();
+            std::list <Segment*> children = segment->getChildren();
 
-            for (unsigned int i=0; i < children.size(); i++){
+            for (std::list<Segment*>::iterator iChild = children.begin(); iChild != children.end(); iChild++ ){
 
-               children[i]->deleteParent ( segment );
+              (*iChild)->deleteParent ( segment );
 
             }
 
             //erase it from all its parents
-            std::vector <Segment*> parents = segment->getParents();
+            std::list <Segment*> parents = segment->getParents();
 
-            for (unsigned int i=0; i < parents.size(); i++){
+            for (std::list<Segment*>::iterator iParent = parents.begin(); iParent!= parents.end(); iParent++){
 
-               parents[i]->deleteChild ( segment );
+               (*iParent)->deleteChild ( segment );
 
             }
 
             //erase from the automaton
-            delete _segments[layer][iSeg];
-            _segments[layer].erase( _segments[layer].begin() + iSeg );
-
-            //set iSeg back by one. Why: because we changed the vector: if we checked entry number 4 and now deleted it,
-            //the former entry number 5 will now be on place number 4. So if we just continue (as usual) with iSeg = 5,
-            //we skip this one! That's why iSeg needs to be decremented.
-            iSeg--;
+            delete *iSeg;
+            iSeg = segments.erase( iSeg ); // erase the segment and update the iterator (updating is important!!!)
+            
+            
 
          }
 
@@ -386,9 +404,12 @@ void Automaton::resetStates(){
 
    for ( unsigned layer = 0; layer < _segments.size(); layer++ ){ //over all layers
 
-      for (unsigned iSeg = 0; iSeg < _segments[layer].size(); iSeg++ ){ //over all segments in the layer
+      
+      std::list<Segment*> segments = _segments[layer];
 
-         _segments[layer][iSeg]->resetState();
+      for ( std::list<Segment*>::iterator iSeg = segments.begin(); iSeg != segments.end(); iSeg++ ){ //over all segments in the layer
+
+         (*iSeg)->resetState();
 
       }
 
@@ -408,15 +429,18 @@ void Automaton::cleanBadConnections(){
 
    for ( int layer = _segments.size()-1 ; layer >= 1 ; layer-- ){ //over all layers from outside in. And there's no need to check layer 0, as it has no children.
 
-      for ( unsigned iSeg=0; iSeg < _segments[layer].size(); iSeg++ ){ // over all segments in the layer
 
-         Segment* parent = _segments[layer][iSeg];
-         std::vector < Segment* > children = parent->getChildren();
+      std::list<Segment*> segments = _segments[layer];
 
-         for ( unsigned iChild=0; iChild < children.size(); iChild++ ){ //over all children the segment has got
+      for ( std::list<Segment*>::iterator iSeg = segments.begin(); iSeg!=segments.end(); iSeg++ ){ // over all segments in the layer
+
+         Segment* parent = *iSeg;
+         std::list < Segment* > children = parent->getChildren();
+
+         for ( std::list<Segment*>::iterator iChild = children.begin(); iChild != children.end(); iChild++ ){ //over all children the segment has got
 
 
-            Segment* child = children[iChild];
+            Segment* child = *iChild;
 
             bool areCompatible = true; //whether segment and child are compatible
 
@@ -484,9 +508,9 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
    if ( autHits[0]->isVirtual() == false ) newHits.push_back ( autHits[0]->getTrackerHit() );  //Of course add only real hits to the track
 
 
-   std::vector <Segment*> children = segment->getChildren();
+   std::list <Segment*> children = segment->getChildren();
 
-   if ( children.size() == 0){ //No more children --> we are at the bottom --> start a new Track here
+   if ( children.empty() ){ //No more children --> we are at the bottom --> start a new Track here
 
       //add the rest of the hits to the vector
       for ( unsigned int i = 1 ; i < autHits.size(); i++){
@@ -519,10 +543,10 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
 
 
 
-      for (unsigned int i=0; i < children.size(); i++){ //for all children
+      for ( std::list<Segment*>::iterator iChild=children.begin(); iChild!= children.end(); iChild++){ //for all children
 
 
-         std::vector <Track*> newTracks = getTracksOfSegment( children[i] , newHits );
+         std::vector <Track*> newTracks = getTracksOfSegment( *iChild , newHits );
 
          for (unsigned int j=0; j < newTracks.size(); j++){//for all the tracks of the child
 
@@ -554,14 +578,19 @@ std::vector <Track*> Automaton::getTracks( unsigned minHits ){
 
    for ( unsigned layer = 0 ; layer < _segments.size() ; layer++ ){ //over all layers
 
-      for ( unsigned iSeg = 0; iSeg < _segments[layer].size() ; iSeg++ ){ //over all segments
+
+      std::list<Segment*> segments = _segments[layer];
+
+      for ( std::list<Segment*>::iterator iSeg = segments.begin(); iSeg != segments.end(); iSeg++ ){ //over all segments
 
 
-         if ( _segments[layer][iSeg]->getParents().size() == 0 ){ // if it has no parents it is the end of a possible track
+         Segment* segment = *iSeg;
+
+         if ( segment->getParents().size() == 0 ){ // if it has no parents it is the end of a possible track
 
 
             // get the tracks from the segment
-            std::vector <Track*> newTracks = getTracksOfSegment( _segments[layer][iSeg] , emptyHitVec , minHits );
+            std::vector <Track*> newTracks = getTracksOfSegment( segment , emptyHitVec , minHits );
 
             // and add them to the vector of all tracks
             tracks.insert( tracks.end() , newTracks.begin() , newTracks.end() );
@@ -612,10 +641,11 @@ void Automaton::drawSegments(){
    for( unsigned int layer=0 ; layer < _segments.size(); layer++ ){ //over all layers
       
 
+      std::list<Segment*> segments = _segments[layer];
 
-      for( unsigned int iSeg=0; iSeg < _segments[layer].size(); iSeg++ ){ //over all segments in the layer
+      for( std::list<Segment*>::iterator iSeg = segments.begin(); iSeg != segments.end(); iSeg++ ){ //over all segments in the layer
          
-         Segment* segment = _segments[layer][iSeg];
+         Segment* segment = *iSeg;
          std::vector <AutHit*> autHits = segment->getAutHits();         
          
          if ( autHits.size() == 1){ //exactly one hit, so draw a point
@@ -669,9 +699,12 @@ Automaton::~Automaton(){
    
    for( unsigned layer=0; layer < _segments.size(); layer++){ //over all layers
       
-      for( unsigned iSeg=0; iSeg < _segments[layer].size() ; iSeg++ ){ //over all segments
+
+      std::list<Segment*> segments = _segments[layer];
+
+      for( std::list<Segment*>::iterator iSeg = segments.begin(); iSeg!=segments.end(); iSeg++ ){ //over all segments
          
-         delete _segments[layer][iSeg];
+         delete *iSeg;
          
       }
       
