@@ -110,8 +110,10 @@ namespace FTrack{
       void cleanBadConnections();
       
       /**Resets all the states of the segmens to 0 by calling the resetState() method of the segment
+       * Also sets all segments back to active.
        */
       void resetStates();
+      
       
       
       /** Get all the possible tracks in the automaton.

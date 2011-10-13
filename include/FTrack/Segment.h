@@ -75,6 +75,9 @@ namespace FTrack{
          void resetState();
          
          void setSkippedLayers( int skippedLayers );
+         
+         bool isActive(){ return _active;}
+         void setActive( bool active ){ _active = active; }
      
    private:
          
@@ -88,6 +91,7 @@ namespace FTrack{
          std::vector<int> _state;
          
          unsigned _layer;
+         bool _active;
       
    };
 

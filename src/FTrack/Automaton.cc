@@ -173,6 +173,7 @@ void Automaton::lengthenSegments(){
    //----------------------------------------------------------------------------------------------//
 
    unsigned nConnections=0;
+   unsigned nPossibleConnections=0;
 
    for ( unsigned layer = 1; layer < _segments.size()-1; layer++ ){ // over all layers (of course the first and the last ones are spared out because there is nothing more above or below
 
@@ -197,11 +198,35 @@ void Automaton::lengthenSegments(){
 
                Segment* child = *iChild;
 
-               //connect parent and child (i.e. connect the longer segments we previously created)
-               child->addParent( parent );
-               parent->addChild( child );
+               
+               // Check if they are compatible
+               
+               bool areCompatible = true;
+               
+               //check all criteria (or at least until one returns false)
+               for ( unsigned iCrit = 0; iCrit < _criteria.size(); iCrit++ ){
+                  
+                  
+                  if ( _criteria[iCrit]->areCompatible ( parent , child ) == false ){
+                     
+                     areCompatible = false;
+                     break;
+                  
+                  }
+                  
+               }
+               
+               if ( areCompatible ){
+                  
+                  //connect parent and child (i.e. connect the longer segments we previously created)
+                  child->addParent( parent );
+                  parent->addChild( child );
+                
+                  nConnections++;
+               }
 
-               nConnections++;
+               
+               nPossibleConnections++;
 
             }
 
@@ -211,7 +236,8 @@ void Automaton::lengthenSegments(){
 
    }
 
-   streamlog_out (DEBUG4) << "\n Made Connections of Segments: " << nConnections << "\n";
+   streamlog_out (DEBUG4) << "\n Made " << nConnections << " of " << nPossibleConnections
+                          << " possible connections \n";
 
 
    //----------------------------------------------------------------------------------------------//
@@ -237,7 +263,7 @@ void Automaton::doAutomaton(){
       hasChanged = false;
       nIterations++;
 
-      unsigned nConnectionsChecked = 0;
+      
       
       
       for ( int layer = _segments.size()-1; layer >= 0; layer--){ //for all layers from outside in
@@ -250,9 +276,8 @@ void Automaton::doAutomaton(){
 
             Segment* parent= *iSeg;
 
-
-
-            //Simulate skipped layers
+            
+            //Simulate skipped layers TODO: don't use set and get state, this is not well encapsulated!
             std::vector < int > state = parent->getState();
 
             for ( int j= state.size()-1; j>=1; j--){
@@ -267,39 +292,30 @@ void Automaton::doAutomaton(){
 
             parent->setState( state );
 
-
-
-            //Check if there is a neighbor
-            std::list <Segment*> children = parent->getChildren();
-            for ( std::list<Segment*>::iterator iChild=children.begin(); iChild != children.end(); iChild++ ){// for all children
-
+            
+            if ( parent->isActive() ){
                
+      
+               bool isActive = false; //whether the segment is active (i.e. still changing). This will be changed in the for loop, if it is active
 
-               Segment* child = *iChild;
+               //Check if there is a neighbor
+               std::list <Segment*> children = parent->getChildren();
+               
+               
+               for ( std::list<Segment*>::iterator iChild=children.begin(); iChild != children.end(); iChild++ ){// for all children
 
-               if ( child->getOuterState() == parent->getInnerState() ){  //Only if they have the same state
-
-                  nConnectionsChecked++;
                   
-                  bool areCompatible = true;
 
-                  //check all criteria (or at least until one returns false
-                  for ( unsigned iCrit = 0; iCrit < _criteria.size(); iCrit++ ){
+                  Segment* child = *iChild;
 
-                     if ( _criteria[iCrit]->areCompatible ( parent , child ) == false ){
+                  if ( child->getOuterState() == parent->getInnerState() ){  //Only if they have the same state
 
-                        areCompatible = false;
-                        break;
-                     }
-
-                  }
-
-
-                  if (  areCompatible ){ //they are compatible
-
+                     
+                  
                      parent->raiseState(); //So it has a neighbor --> raise the state
 
                      hasChanged = true; //something changed
+                     isActive = true;
 
                      break; //It has a neighbor, we raised the state, so we need not check again in this iteration
 
@@ -307,17 +323,17 @@ void Automaton::doAutomaton(){
                   }
 
                }
+               
+               parent->setActive( isActive );
 
             }
-
-
 
 
          }
 
       }
       
-      streamlog_out(DEBUG3) << "\n Checked" << nConnectionsChecked << " connections in iteration " << nIterations;
+      
 
    }
 
@@ -410,6 +426,7 @@ void Automaton::resetStates(){
       for ( std::list<Segment*>::iterator iSeg = segments.begin(); iSeg != segments.end(); iSeg++ ){ //over all segments in the layer
 
          (*iSeg)->resetState();
+         (*iSeg)->setActive( true );
 
       }
 
@@ -586,7 +603,7 @@ std::vector <Track*> Automaton::getTracks( unsigned minHits ){
 
          Segment* segment = *iSeg;
 
-         if ( segment->getParents().size() == 0 ){ // if it has no parents it is the end of a possible track
+         if ( segment->getParents().empty() ){ // if it has no parents it is the end of a possible track
 
 
             // get the tracks from the segment

@@ -11,6 +11,7 @@ Segment::Segment( std::vector <AutHit*> autHits){
    _children.clear(); 
    _parents.clear();
 
+   _active = true;
 }
 
 
@@ -22,7 +23,7 @@ Segment::Segment( AutHit* autHit){
    _children.clear(); 
    _parents.clear();
    
-
+   _active = true;
 }
 
 
