@@ -9,6 +9,7 @@
 #include "Segment.h"
 #include <EVENT/LCRelation.h>
 
+#include "FTDTrackFitter.h"
 #include "ICriterion.h"
 #include <string>
 
@@ -90,6 +91,7 @@ protected:
    std::string _treeName2;
    std::string _treeName3;
    std::string _treeName4;
+   std::string _treeNameKalman;
 
    std::string _colNameMCTrueTracksRel;
    
@@ -97,6 +99,18 @@ protected:
    std::vector <ICriterion*> _crits3;
    std::vector <ICriterion*> _crits4;
 
+   
+   //For Fitting
+   FTDTrackFitter _trackFitter;
+   
+   bool _MSOn ;
+   bool _ElossOn ;
+   bool _SmoothOn ;
+   
+   
+   double _ptMin;
+   double _distToIPMax;
+   int _nHitsMin;
    
 } ;
 
