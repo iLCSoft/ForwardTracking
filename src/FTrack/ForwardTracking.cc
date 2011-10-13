@@ -295,12 +295,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
 //       automaton.drawSegments();
       
-      // Let the automaton lengthen its 1-segments to 2-segments
-      // Because for 1-segments (== single hits) and automaton isn't very useful. TODO: verify this hyphothesis
-      automaton.lengthenSegments();
-      
-      
-      // So now we have 2-segments and are ready to perform the cellular automaton.
       // Load some criteria for the automaton:
       std::vector <ICriterion*> crit3Vec;
       
@@ -308,10 +302,19 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       crit3Vec.push_back( new Crit3_ChangeRZRatio( 1.001) );
       crit3Vec.push_back( new Crit3_PTMin (0.2) );
       crit3Vec.push_back( new Crit3_IPCircleDist (4) );
+      for ( unsigned i=0; i< crit3Vec.size(); i++) automaton.addCriterion ( crit3Vec[i] );      
+      
+      // Let the automaton lengthen its 1-segments to 2-segments
+      // Because for 1-segments (== single hits) and automaton isn't very useful. TODO: verify this hyphothesis
+      automaton.lengthenSegments();
+      
+      
+      // So now we have 2-segments and are ready to perform the cellular automaton.
+
       
       
       
-      for ( unsigned i=0; i< crit3Vec.size(); i++) automaton.addCriterion ( crit3Vec[i] );
+
       
       // Perform the automaton
       automaton.doAutomaton();
