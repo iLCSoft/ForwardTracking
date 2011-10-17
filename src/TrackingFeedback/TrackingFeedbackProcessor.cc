@@ -7,6 +7,8 @@
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
+#include "HelixClass.h"
+
 #include <EVENT/LCRelation.h>
 #include <EVENT/Track.h>
 #include <EVENT/MCParticle.h>
@@ -466,21 +468,61 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          streamlog_out( MESSAGE0 )  << "chi2Prob = " << chi2Prob 
                                     << "( chi2=" << chi2 <<", Ndf=" << ndf << " )\n";
          
-         
+                                             
          std::vector<TrackerHit*> cheatTrackHits = cheatTrack->getTrackerHits(); // we write it into an own vector so wen can sort it
          sort (cheatTrackHits.begin() , cheatTrackHits.end() , compare_z );
          // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
          // So the direction of the hits when following the index from 0 on is:
          // from inside out: from the IP into the distance.
          
+         // Make a helix from the mcp
+         HelixClass helixClass;
+         
+         float vertex[3]; 
+         vertex[0] = mcp->getVertex()[0];
+         vertex[1] = mcp->getVertex()[1];
+         vertex[2] = mcp->getVertex()[2];
+         float momentum[3];
+         momentum[0] = mcp->getMomentum()[0];
+         momentum[1] = mcp->getMomentum()[1];
+         momentum[2] = mcp->getMomentum()[2];
+         
+         helixClass.Initialize_VP( vertex, momentum, mcp->getCharge(), 3.5);
+         
+         
+         streamlog_out( MESSAGE0 ) << "mcpHelix parameter: " 
+                                   << "D0 = " << helixClass.getD0()
+                                   << ",  Phi = " << helixClass.getPhi0()
+                                   << ",  Omega = " << helixClass.getOmega()
+                                   << ",  Z0 = " << helixClass.getZ0()
+                                   << ",  tan(Lambda) = " << helixClass.getTanLambda();
+
+         
          
          for (unsigned int j=0; j< cheatTrackHits.size(); j++){ //over all Hits in the track
                         
+            
+            double x = cheatTrackHits[j]->getPosition()[0];
+            double y = cheatTrackHits[j]->getPosition()[1];
+            double z = cheatTrackHits[j]->getPosition()[2];
+   
+            float mcpHelixPoint[3] = {0.,0.,0.};
+            helixClass.getPointInZ( z , vertex, mcpHelixPoint);
+            
+            double xDist = mcpHelixPoint[0]-x;
+            double yDist = mcpHelixPoint[1]-y;
+            
+            double dist = sqrt( xDist*xDist + yDist*yDist );
+            
+
             streamlog_out( MESSAGE0 )  << "\n( "  
-                  << cheatTrackHits[j]->getPosition()[0] << " , " 
-                  << cheatTrackHits[j]->getPosition()[1] << " , " 
-                  << cheatTrackHits[j]->getPosition()[2] << " ) "
-                  << cheatTrackHits[j]->getType() ;
+                  << x << " , " 
+                  << y << " , " 
+                  << z << " ) type: "
+                  << cheatTrackHits[j]->getType() << " , xy-dist to mcp-helix= "
+                  << dist
+                  << " , zDist= " << mcpHelixPoint[2]-z;
+                  
                 
          }
          
