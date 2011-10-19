@@ -208,6 +208,7 @@ void TrueTrackCritAnalyser::init() {
    // Also insert branches for additional information
    branchNames2.insert( "MCP_pt" ); //transversal momentum
    branchNames2.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   branchNames2.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
    _treeName2 = "2Hit_Criteria";
@@ -249,6 +250,7 @@ void TrueTrackCritAnalyser::init() {
    // Also insert branches for additional information
    branchNames3.insert( "MCP_pt" ); //transversal momentum
    branchNames3.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   branchNames3.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
    _treeName3 = "3Hit_Criteria"; 
@@ -289,6 +291,7 @@ void TrueTrackCritAnalyser::init() {
    // Also insert branches for additional information
    branchNames4.insert( "MCP_pt" ); //transversal momentum
    branchNames4.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   branchNames4.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
    _treeName4 = "4Hit_Criteria"; 
@@ -456,13 +459,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             // So the direction of the hits when following the index from 0 on is:
             // from inside out: from the IP into the distance.
             
-            // Add the IP as a hit
-            TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
-            
-            double pos[] = {0. , 0. , 0.};
-            virtualIPHit->setPosition(  pos  ) ;
-            
-            trackerHits.insert( trackerHits.begin() , virtualIPHit );
+
             
             // Make authits from the trackerHits
             std::vector <AutHit*> autHits;
@@ -472,6 +469,20 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                autHits.push_back( new AutHit( trackerHits[j] ) );
                
             }
+            
+            
+            // Add the IP as a hit
+            TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
+            
+            double pos[] = {0. , 0. , 0.};
+            virtualIPHit->setPosition(  pos  ) ;
+            
+            AutHit* virtualIPAutHit = new AutHit( virtualIPHit );
+            virtualIPAutHit->setLayer( 0 );
+            
+            autHits.insert( autHits.begin() , virtualIPAutHit );
+            
+           
             
             /**********************************************************************************************/
             /*                Build the segments                                                          */
@@ -552,6 +563,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
                rootData["MCP_pt"] = pt;
                rootData["MCP_distToIP"] = distToIP;
+               rootData["layers"] = child->getAutHits()[0]->getLayer() *10 + parent->getAutHits()[0]->getLayer();
                
                rootDataVec2.push_back( rootData );
                
@@ -582,6 +594,9 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
                rootData["MCP_pt"] = pt;
                rootData["MCP_distToIP"] = distToIP;
+               rootData["layers"] = child->getAutHits()[1]->getLayer() *100 +
+                                    child->getAutHits()[0]->getLayer() *10 + 
+                                    parent->getAutHits()[0]->getLayer();
                
                rootDataVec3.push_back( rootData );
                
@@ -612,6 +627,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
                rootData["MCP_pt"] = pt;
                rootData["MCP_distToIP"] = distToIP;
+               rootData["layers"] = child->getAutHits()[2]->getLayer() *1000 +
+                                    child->getAutHits()[1]->getLayer() *100 +
+                                    child->getAutHits()[0]->getLayer() *10 + 
+                                    parent->getAutHits()[0]->getLayer();
                
                rootDataVec4.push_back( rootData );
                
