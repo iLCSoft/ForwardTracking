@@ -95,10 +95,10 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
     // register steering parameters: name, description, class-variable, default value
 
    registerInputCollection(LCIO::TRACK,
-                           "AutTrkCollection",
-                           "Name of Cellular Automaton Track output collection",
-                           _AutTrkCollection,
-                           std::string("AutTracks")); 
+                           "TrackCollection",
+                           "Name of Track collection to check",
+                           _TrackCollection,
+                           std::string("ForwardTracks")); 
    
    
    registerInputCollection(LCIO::LCRELATION,
@@ -122,6 +122,11 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               "The maximum distance from the origin of the MCP to the IP (0,0,0)",
                               _distToIPMax,
                               double (250. ) );   
+   
+   registerProcessorParameter("Chi2ProbCut",
+                              "Tracks with a chi2 probability below this value won't be considered",
+                              _chi2ProbCut,
+                              double (0.005) ); 
    
    registerProcessorParameter("NumberOfHitsMin",
                               "The minimum number of hits a track must have",
@@ -163,11 +168,14 @@ void TrackingFeedbackProcessor::init() {
     //Add the criteria that will be checked
     _crits2.push_back( new Crit2_RZRatio( 1.01 ) ); 
     _crits2.push_back( new Crit2_StraightTrack( 1.1 ) );
+    for( unsigned i=0; i< _crits2.size(); i++ ) _crits2[i]->setSaveValues( true );
     
     _crits3.push_back( new Crit3_ChangeRZRatio( 1.) );
     _crits3.push_back( new Crit3_PTMin (0.1) );
     _crits3.push_back( new Crit3_3DAngle (10) );
     _crits3.push_back( new Crit3_IPCircleDist (10) );
+    for( unsigned i=0; i< _crits3.size(); i++ ) _crits3[i]->setSaveValues( true );
+    
     
     _crits4.push_back( new  Crit4_2DAngleChange ( 1. ) );
     _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. ) );
@@ -175,6 +183,8 @@ void TrackingFeedbackProcessor::init() {
     _crits4.push_back( new  Crit4_distOfCircleCenters ( 1. ) );
     _crits4.push_back( new  Crit4_NoZigZag ( 1. ) );
     _crits4.push_back( new  Crit4_RChange ( 1. ) );
+    for( unsigned i=0; i< _crits4.size(); i++ ) _crits4[i]->setSaveValues( true );
+    
     
     
     
@@ -281,13 +291,35 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       //
       //////////////////////////////////////////////////////////////////////////////////
       
+      //////////////////////////////////////////////////////////////////////////////////
+      //If the chi2 probability is too low
+      
+      //Fit the track
+      //first: empty the stored tracks (if there are any)
+      _trackFitter.clearTracks();
+      
+      //then: fill in our trackCandidates:
+      _trackFitter.addTrack( track );
+      
+      //And get back fitted tracks
+      std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
+      
+      double chi2 = fittedTracks[0]->getChi2();
+      double ndf = fittedTracks[0]->getNdf();
+      
+      double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
+      
+      if ( chi2Prob < _chi2ProbCut ) isOfInterest = false;
+      //
+      //////////////////////////////////////////////////////////////////////////////////
+      
       if ( isOfInterest ) myRelations.push_back( new MyRelation( rel ) );
       
    }
    
    nMCTracks = myRelations.size();
    
-   col = evt->getCollection( _AutTrkCollection ) ;
+   col = evt->getCollection( _TrackCollection ) ;
 
    
    if( col != NULL ){

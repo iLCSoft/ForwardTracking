@@ -30,7 +30,7 @@ using namespace FTrack;
  * 
  * @param FTDHitCollection The collection of the FTD hits
  * 
- * @param AutTrkCollection The output collection
+ * @param ForwardTrackCollection Name of the Forward Tracking output collection
  * 
  * @param ptMin Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations. Measured in GeV
  * 
@@ -39,6 +39,8 @@ using namespace FTrack;
  * @param EnergyLossOn Whether to take energyloss into account when fitting the tracks
  * 
  * @param SmoothOn Whether to smooth all measurement sites in fit
+ * 
+ * @param Chi2ProbCut Tracks with a chi2 probability below this will get sorted out
  * 
  * @author R. Glattauer HEPHY, Wien
  *
@@ -89,7 +91,7 @@ class ForwardTracking : public Processor {
    
    /** Output collection name.
    */
-   std::string _AutTrkCollection;
+   std::string _ForwardTrackCollection;
 
 
    int _nRun ;
@@ -98,6 +100,8 @@ class ForwardTracking : public Processor {
 
    double _Bz; //B field in z direction
 
+
+   double _chi2ProbCut;
 
    //For Fitting
    FTDTrackFitter _trackFitter;

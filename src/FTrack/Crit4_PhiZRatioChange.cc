@@ -13,7 +13,7 @@ Crit4_PhiZRatioChange::Crit4_PhiZRatioChange ( double changeMax ){
    
    _changeMax = changeMax;
    
-   
+   _saveValues = false;
    
 }
 
@@ -76,7 +76,7 @@ bool Crit4_PhiZRatioChange::areCompatible( Segment* parent , Segment* child ){
          
          float ratioOfPhiZRatio = phiZRatio1 / phiZRatio2;
          
-         _map_name_value["ratioOfPhiZRatio"] = ratioOfPhiZRatio;
+         if (_saveValues) _map_name_value["PhiZRatioChange_ratioOfPhiZRatio"] = ratioOfPhiZRatio;
          
          
             
@@ -86,7 +86,7 @@ bool Crit4_PhiZRatioChange::areCompatible( Segment* parent , Segment* child ){
       }
       catch ( InvalidParameter ){
        
-         _map_name_value["ratioOfPhiZRatio"] = 0.;
+         if (_saveValues) _map_name_value["PhiZRatioChange_ratioOfPhiZRatio"] = 0.;
          
       }
       

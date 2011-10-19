@@ -7,7 +7,9 @@ using namespace FTrack;
 Crit2_RZRatio::Crit2_RZRatio ( double ratioMax ){
    
    
-   _ratioMax = ratioMax;  
+   _ratioMax = ratioMax; 
+   
+   _saveValues = false;
    
    
    
@@ -38,7 +40,7 @@ bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child ){
       if ( az-bz  != 0. ) ratioSquared = ( (ax-bx)*(ax-bx) + (ay-by)*(ay-by) + (az-bz)*(az-bz) ) / ( (az-bz) * ( az-bz ) );
       
       
-      _map_name_value[ "RZRatioSquared"] = ratioSquared;
+      if (_saveValues) _map_name_value[ "RZRatio_RZRatio"] = sqrt( ratioSquared );
       
 
       

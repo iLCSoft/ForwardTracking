@@ -10,7 +10,7 @@ Crit4_2DAngleChange::Crit4_2DAngleChange ( double changeMax ){
    
    _changeMax = changeMax;
    
-   
+   _saveValues = false;
    
 }
 
@@ -18,7 +18,7 @@ Crit4_2DAngleChange::Crit4_2DAngleChange ( double changeMax ){
 
 bool Crit4_2DAngleChange::areCompatible( Segment* parent , Segment* child ){
     
-   _map_name_value["ratioOf2DAngles"] = 0.;
+   if (_saveValues) _map_name_value["2DAngleChange_ratioOf2DAngles"] = 0.;
    
    if (( parent->getAutHits().size() == 3 )&&( child->getAutHits().size() == 3 )){ //this is a criterion for 3-segments
       
@@ -66,7 +66,7 @@ bool Crit4_2DAngleChange::areCompatible( Segment* parent , Segment* child ){
       
       float ratioOf2DAngles = angleXY1 / angleXY2 ;
 
-      _map_name_value["ratioOf2DAngles"] = ratioOf2DAngles;
+      if (_saveValues) _map_name_value["2DAngleChange_ratioOf2DAngles"] = ratioOf2DAngles;
       
       if ( ratioOf2DAngles > _changeMax ) return false;    
       if ( 1./ratioOf2DAngles > _changeMax ) return false;

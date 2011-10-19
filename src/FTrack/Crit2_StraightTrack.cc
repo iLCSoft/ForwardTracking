@@ -1,5 +1,6 @@
 #include "Crit2_StraightTrack.h"
 
+#include "cmath"
 
 using namespace FTrack;
 
@@ -8,7 +9,7 @@ using namespace FTrack;
    
    _ratioMax = ratioMax;  
    
-   
+   _saveValues = false;
    
 }
 
@@ -38,14 +39,29 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
       double rhoBSquared = bx*bx + by*by;
       
       //first check, if the distance to (0,0) rises --> such a combo could not reach the IP
-      _map_name_value["rhoParentSquared"] = rhoASquared;
-      _map_name_value["rhoChildSquared"]  = rhoBSquared;
+      if (_saveValues){
+         _map_name_value["StraighTrack_rhoParent"] = sqrt( rhoASquared );
+         _map_name_value["StraighTrack_rhoChild"]  = sqrt( rhoBSquared );
+         _map_name_value["StraighTrack_rhoParent-rhoChild"] = sqrt( rhoASquared ) - sqrt( rhoBSquared );
+      }
       
-
-      _map_name_value["StraightTrackRatioSquared"]= 0.;
       
-      _map_name_value["isRhoChild_Bigger_RhoParent"] = float( rhoBSquared > rhoASquared ); 
-
+      //////////////////////////////////////////////////////
+      float phia = atan2( ay, ax );
+      float phib = atan2( by, bx );
+      float deltaPhi = phia-phib;
+      if (deltaPhi > M_PI) deltaPhi -= 2*M_PI;           //to the range from -pi to pi
+      if (deltaPhi < -M_PI) deltaPhi += 2*M_PI;           //to the range from -pi to pi
+      
+      deltaPhi = fabs( deltaPhi );
+      if (_saveValues) _map_name_value["StraightTrack_deltaPhi"]= deltaPhi;
+      //////////////////////////////////////////////////////
+      
+      if (_saveValues){
+         _map_name_value["StraightTrack_Ratio"]= 0.;
+         
+      }
+      
       if (rhoBSquared > rhoASquared ) return false;
       
       
@@ -54,7 +70,7 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
          // the square is used, because it is faster to calculate with the squares than with sqrt, which takes some time!
          double ratioSquared = ( ( rhoASquared * ( bz*bz )  ) / ( rhoBSquared * ( az*az )  ) );
                
-         _map_name_value["StraightTrackRatioSquared"] = ratioSquared;
+         if (_saveValues) _map_name_value["StraightTrack_Ratio"] = sqrt(ratioSquared);
          
          
          if ( ratioSquared > _ratioMax * _ratioMax ) return false;

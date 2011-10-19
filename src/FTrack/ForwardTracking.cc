@@ -87,11 +87,16 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
 
 
    registerOutputCollection(LCIO::TRACK,
-                           "AutTrkCollection",
-                           "Name of Cellular Automaton Track output collection",
-                           _AutTrkCollection,
-                           std::string("AutTracks"));
+                           "ForwardTrackCollection",
+                           "Name of the Forward Tracking output collection",
+                           _ForwardTrackCollection,
+                           std::string("ForwardTracks"));
 
+   
+   registerProcessorParameter("Chi2ProbCut",
+                              "The chi2 value below which tracks will be cut",
+                              _chi2ProbCut,
+                              double(0.005));
    
    //For fitting:
    
@@ -298,7 +303,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // Load some criteria for the automaton:
       std::vector <ICriterion*> crit3Vec;
       
-      crit3Vec.push_back( new Crit3_3DAngle( 5.75 ) );
+      crit3Vec.push_back( new Crit3_3DAngle( 7. ) );
       crit3Vec.push_back( new Crit3_ChangeRZRatio( 1.001) );
       crit3Vec.push_back( new Crit3_PTMin (0.2) );
       crit3Vec.push_back( new Crit3_IPCircleDist (4) );
@@ -374,7 +379,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                                  << "( chi2=" << chi2 <<", Ndf=" << Ndf << " )";
 
       
-         if ( chi2Prob > 0.01 ){ //chi2 prob is okay, TODO: make this a tunable parameter
+         if ( chi2Prob > _chi2ProbCut ){ //chi2 prob is okay
             
             trackCandidates.push_back( track );         
             nTracksKept++;
@@ -416,10 +421,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                              
                              
       /**********************************************************************************************/
-      /*               Get the best subset of tracks                                               */
+      /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
                              
-                      
+         /*             
       // Make a TrackSubset
       TrackSubset subset;
       subset.addTracks( trackCandidates ); 
@@ -436,13 +441,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          delete rejectedTracks[i];
          
       }
+      */
+      /**********************************************************************************************/
+      /*               finally: save the tracks                                                     */
+      /**********************************************************************************************/
       
-      
-      //finally: save the tracks
+
 
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
-      for (unsigned int i=0; i < tracks.size(); i++) trkCol->addElement( tracks[i] );
-      evt->addCollection(trkCol,_AutTrkCollection.c_str());
+      for (unsigned int i=0; i < trackCandidates.size(); i++) trkCol->addElement( trackCandidates[i] );
+      evt->addCollection(trkCol,_ForwardTrackCollection.c_str());
       
 
 //       streamlog_out (MESSAGE0) << "\n\n Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 

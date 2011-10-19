@@ -4,6 +4,7 @@
 #include <vector>
 #include "Segment.h"
 #include "lcio.h"
+#include <cmath>
 
 #include "marlin/VerbosityLevels.h"
 
@@ -29,7 +30,10 @@ namespace FTrack{
   
       std::map < std::string , float > getMapOfValues() {return _map_name_value; };
       
+            
       virtual ~ICriterion(){};
+      
+      void setSaveValues( bool saveValues ){ _saveValues = saveValues;}
       
      
    protected:
@@ -37,6 +41,7 @@ namespace FTrack{
       
       std::map < std::string , float > _map_name_value;
       
+      bool _saveValues;
       
    };
    

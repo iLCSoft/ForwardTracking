@@ -10,7 +10,7 @@ Crit4_NoZigZag::Crit4_NoZigZag ( double prodMin ){
    
    _prodMin = prodMin;
    
-   
+   _saveValues = false;
    
 }
 
@@ -73,7 +73,7 @@ bool Crit4_NoZigZag::areCompatible( Segment* parent , Segment* child ){
 
       float prod = angleXY1 * angleXY2; // if the direction of curvature stays the same, both anlges have the same sign-> and therefore the product is positive
       
-      _map_name_value["angleXYProduct"] = prod;
+      if (_saveValues) _map_name_value["NoZigZag_angleXYProduct"] = prod;
       
       if ( prod < _prodMin ) return false;                                            
       

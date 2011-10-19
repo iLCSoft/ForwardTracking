@@ -56,7 +56,7 @@ class TrackingFeedbackProcessor : public Processor {
    /** Input collection name.
    */
    std::string _colNameMCTrueTracksRel;
-   std::string _AutTrkCollection;
+   std::string _TrackCollection;
 
    std::string _rootFileName;
    std::string _treeName;
@@ -66,6 +66,7 @@ class TrackingFeedbackProcessor : public Processor {
    
    double _ptMin;
    double _distToIPMax;
+   double _chi2ProbCut;
    int _nHitsMin;
    
    //For Fitting

@@ -99,7 +99,10 @@ TrueTrackCritAnalyser::TrueTrackCritAnalyser() : Processor("TrueTrackCritAnalyse
                               bool(false));
    
    
-   
+   registerProcessorParameter("Chi2ProbCut",
+                              "Tracks with a chi2 probability below this value won't be considered",
+                              _chi2ProbCut,
+                              double (0.005) ); 
    
    
    
@@ -184,6 +187,7 @@ void TrueTrackCritAnalyser::init() {
    
    for ( unsigned int i=0; i < _crits2 .size() ; i++ ){ //for all criteria
 
+      _crits2[i]->setSaveValues( true ); // so the calculated values won't just fade away, but are saved in a map
       //get the map
       _crits2 [i]->areCompatible( &virtual1Segment , &virtual1Segment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
                                                                    // names of the values ( and of course values that are useless, but we don't use them here anyway)
@@ -222,6 +226,9 @@ void TrueTrackCritAnalyser::init() {
    
    for ( unsigned int i=0; i < _crits3 .size() ; i++ ){ //for all criteria
 
+
+      _crits3[i]->setSaveValues( true ); // so the calculated values won't just fade away, but are saved in a map
+
       //get the map
       _crits3 [i]->areCompatible( &virtual2Segment , &virtual2Segment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
       // names of the values ( and of course values that are useless, but we don't use them here anyway)
@@ -259,6 +266,8 @@ void TrueTrackCritAnalyser::init() {
    
    
    for ( unsigned int i=0; i < _crits4 .size() ; i++ ){ //for all criteria
+
+      _crits4[i]->setSaveValues( true ); // so the calculated values won't just fade away, but are saved in a map
 
       //get the map
       _crits4 [i]->areCompatible( &virtual3Segment , &virtual3Segment ); // It's a bit of a cheat: we calculate it for virtual hits to get a map containing the
@@ -399,6 +408,29 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          //If there are more than 4 hits in the track
          
          if ( (int) track->getTrackerHits().size() < _nHitsMin ) isOfInterest = false;
+         //
+         //////////////////////////////////////////////////////////////////////////////////
+         
+         
+         //////////////////////////////////////////////////////////////////////////////////
+         //If the chi2 probability is too low
+         
+         //Fit the track
+         //first: empty the stored tracks (if there are any)
+         _trackFitter.clearTracks();
+         
+         //then: fill in our trackCandidates:
+         _trackFitter.addTrack( track );
+         
+         //And get back fitted tracks
+         std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
+         
+         double chi2 = fittedTracks[0]->getChi2();
+         double ndf = fittedTracks[0]->getNdf();
+         
+         double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
+         
+         if ( chi2Prob > _chi2ProbCut ) isOfInterest = false;
          //
          //////////////////////////////////////////////////////////////////////////////////
          

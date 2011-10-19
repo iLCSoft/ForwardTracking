@@ -11,6 +11,7 @@ Crit3_PTMin::Crit3_PTMin( double ptMin , double Bz){
    _ptMin  = ptMin;
    _Bz = Bz;
    
+   _saveValues = false;
    
 }
 
@@ -56,7 +57,7 @@ bool Crit3_PTMin::areCompatible( Segment* parent , Segment* child ){
          
          double pt = R * K * _Bz;
             
-         _map_name_value["pt"] =  pt;
+         if (_saveValues) _map_name_value["PtMin_pt"] =  pt;
                
          if ( pt < _ptMin ) return false;
 
@@ -64,7 +65,7 @@ bool Crit3_PTMin::areCompatible( Segment* parent , Segment* child ){
       }
       catch ( InvalidParameter ){
          
-         _map_name_value["pt"] =  0.;
+         if (_saveValues) _map_name_value["PtMin_pt"] =  0.;
          
       }
 

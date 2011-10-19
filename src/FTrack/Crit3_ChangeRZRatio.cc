@@ -10,6 +10,7 @@ Crit3_ChangeRZRatio::Crit3_ChangeRZRatio( double maxChange ){
    
    _ratioChangeMaxSquared = maxChange*maxChange;
    
+   _saveValues = false;
    
 }
 
@@ -48,9 +49,16 @@ bool Crit3_ChangeRZRatio::areCompatible( Segment* parent , Segment* child ){
       double ratioSquaredChild = 0.; 
       if ( cz-bz  != 0. ) ratioSquaredChild = ( (cx-bx)*(cx-bx) + (cy-by)*(cy-by) + (cz-bz)*(cz-bz) ) / ( (cz-bz) * ( cz-bz ) );
 
-      double ratioOfRZRatioSquared = ratioSquaredParent / ratioSquaredChild;
+      double ratioOfRZRatioSquared = 0.;
       
-      _map_name_value["ratioOfRZRatioSquared"] =  ratioOfRZRatioSquared;
+      if (ratioSquaredChild != 0.) ratioOfRZRatioSquared = ratioSquaredParent / ratioSquaredChild;
+      
+      if (_saveValues) {
+         
+         _map_name_value["ChangeRZRatio_ratioOfRZRatioSquared"] =  ratioOfRZRatioSquared;
+         _map_name_value["ChangeRZRatio_ratioOfRZRatio"] = sqrt( ratioOfRZRatioSquared );
+         
+      }
 
       if ( ratioOfRZRatioSquared > _ratioChangeMaxSquared) return false;
       if ( 1. / ratioOfRZRatioSquared > _ratioChangeMaxSquared ) return false;

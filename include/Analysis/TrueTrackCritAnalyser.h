@@ -110,6 +110,7 @@ protected:
    
    double _ptMin;
    double _distToIPMax;
+   double _chi2ProbCut;
    int _nHitsMin;
    
 } ;

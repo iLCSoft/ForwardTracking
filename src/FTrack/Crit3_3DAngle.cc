@@ -9,7 +9,7 @@ Crit3_3DAngle::Crit3_3DAngle ( double angleMax ){
    
    _cosAngleMin = cos ( angleMax * M_PI / 180. );
    
-   
+   _saveValues = false;
    
 }
 
@@ -67,13 +67,23 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child ){
       
       double denomSquared = uSquared * vSquared;
       
-      _map_name_value["cos3DAngleSquared"] =  -1;
+      if (_saveValues){
+         
+         _map_name_value["3DAngle_cos3DAngleSquared"] =  -1;
+         _map_name_value["3DAngle_3DAngle"] = -1;
+         
+      }
       
       if ( denomSquared > 0.){ //don't divide by 0
       
          double cosThetaSquared = numerator * numerator / ( uSquared * vSquared );
          
-         _map_name_value["cos3DAngleSquared"] =  cosThetaSquared;
+         if (_saveValues){
+            
+            _map_name_value["3DAngle_cos3DAngleSquared"] =  cosThetaSquared;
+            _map_name_value["3DAngle_3DAngle"] = acos( sqrt( cosThetaSquared ) ) * 180. / M_PI;
+            
+         }
          
          if (cosThetaSquared < _cosAngleMin*_cosAngleMin) return false;  
       

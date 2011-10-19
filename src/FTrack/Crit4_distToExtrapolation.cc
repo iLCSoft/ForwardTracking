@@ -13,7 +13,7 @@ Crit4_distToExtrapolation::Crit4_distToExtrapolation ( double distMax ){
    
    _distMax = distMax;
    
-   
+   _saveValues = false;
    
 }
 
@@ -78,14 +78,14 @@ bool Crit4_distToExtrapolation::areCompatible( Segment* parent , Segment* child 
          double distToPrediction = sqrt ( ( xChildPred- dx )*( xChildPred- dx ) + ( yChildPred- dy )*( yChildPred- dy ) );
          double distNormed = distToPrediction / zDistChild;   
          
-         _map_name_value["distToExtrapolationNormed"] = distNormed;
+         if (_saveValues) _map_name_value["distToExtrapolation_distToExtrapolationNormed"] = distNormed;
          
          if ( distNormed > _distMax ) return false;
          
       }
       catch ( InvalidParameter ){
          
-         _map_name_value["distToExtrapolationNormed"] = -1.;
+         if (_saveValues) _map_name_value["distToExtrapolation_distToExtrapolationNormed"] = -1.;
       
       }
       
