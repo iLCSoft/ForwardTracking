@@ -15,7 +15,7 @@ Crit3_3DAngle::Crit3_3DAngle ( double angleMax ){
 
 
       
-bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child ){
+bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
    
    
    //this is not written very beautiful, because this code gets called often and needs to be fast.
@@ -92,6 +92,17 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child ){
       
       
 
+      
+      
+   }
+   else{
+      
+      std::string s = "Crit3_3DAngle::This criterion needs 2 segments with 2 hits each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      
+      
+      throw BadSegmentLength( s );
       
       
    }

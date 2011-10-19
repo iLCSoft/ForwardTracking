@@ -16,7 +16,7 @@ namespace FTrack{
       
       Crit3_ChangeRZRatio ( double maxChange );
       
-      virtual bool areCompatible( Segment* parent , Segment* child );
+      virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
       virtual ~Crit3_ChangeRZRatio(){};
       

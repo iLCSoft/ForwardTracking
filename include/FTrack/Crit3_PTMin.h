@@ -16,7 +16,7 @@ namespace FTrack{
       
       Crit3_PTMin ( double ptMin , double _Bz = 3.5 );
       
-      virtual bool areCompatible( Segment* parent , Segment* child );
+      virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
       virtual ~Crit3_PTMin(){};
       

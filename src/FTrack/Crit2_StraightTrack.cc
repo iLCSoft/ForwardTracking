@@ -15,7 +15,7 @@ using namespace FTrack;
 
 
       
-bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
+      bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
    
    
    
@@ -78,6 +78,17 @@ bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child ){
          if ( ratioSquared < 1./ ( _ratioMax * _ratioMax ) ) return false;
       
       }
+      
+   }
+   else{
+      
+      std::string s = "Crit2_StraightTrack::This criterion needs 2 segments with 1 hit each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+
+      
+      throw BadSegmentLength( s );
+      
       
    }
    

@@ -16,7 +16,7 @@ Crit3_ChangeRZRatio::Crit3_ChangeRZRatio( double maxChange ){
 
 
 
-bool Crit3_ChangeRZRatio::areCompatible( Segment* parent , Segment* child ){
+bool Crit3_ChangeRZRatio::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
    
    
    
@@ -64,6 +64,17 @@ bool Crit3_ChangeRZRatio::areCompatible( Segment* parent , Segment* child ){
       if ( 1. / ratioOfRZRatioSquared > _ratioChangeMaxSquared ) return false;
 
 
+   }
+   else{
+      
+      std::string s = "Crit3_ChangeRZRatio::This criterion needs 2 segments with 2 hits each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      
+      
+      throw BadSegmentLength( s );
+      
+      
    }
    
    

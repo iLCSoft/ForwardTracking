@@ -64,6 +64,22 @@ namespace FTrack {
         message = "FTrack::InvalidParameter: " + text ;
      }
   }; 
+  
+  
+  /**Wrong segment length exception.
+   * @author R. Glattauer, HEPHY
+   */
+  class BadSegmentLength : public FTrackException{
+     
+  protected:
+     BadSegmentLength() {  /*no_op*/ ; } 
+  public: 
+     virtual ~BadSegmentLength() throw() { /*no_op*/; } 
+     
+     BadSegmentLength( std::string text ){
+        message = "FTrack::BadSegmentLength: " + text ;
+     }
+  }; 
 
 
 } 

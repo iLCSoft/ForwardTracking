@@ -15,9 +15,8 @@ Crit2_RZRatio::Crit2_RZRatio ( double ratioMax ){
    
 }
 
-
-      
-bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child ){
+  
+bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
    
    
    
@@ -46,6 +45,17 @@ bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child ){
       
       if ( ratioSquared > _ratioMax * _ratioMax ) return false;
   
+      
+      
+   }
+   else{
+      
+      std::string s = "Crit2_RZRatio::This criterion needs 2 segments with 1 hit each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+
+      
+      throw BadSegmentLength( s );
       
       
    }

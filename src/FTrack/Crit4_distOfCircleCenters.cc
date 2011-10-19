@@ -20,7 +20,7 @@ Crit4_distOfCircleCenters::Crit4_distOfCircleCenters ( double distMax ){
 
 
 
-bool Crit4_distOfCircleCenters::areCompatible( Segment* parent , Segment* child ){
+bool Crit4_distOfCircleCenters::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
     
    
    
@@ -103,7 +103,17 @@ bool Crit4_distOfCircleCenters::areCompatible( Segment* parent , Segment* child 
       
       
    }
-   
+   else{
+      
+      std::string s = "Crit4_distOfCircleCenters::This criterion needs 2 segments with 3 hits each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      
+      
+      throw BadSegmentLength( s );
+      
+      
+   }
    
    return true;
    

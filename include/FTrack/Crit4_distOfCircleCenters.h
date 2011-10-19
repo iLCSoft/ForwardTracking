@@ -19,7 +19,7 @@ namespace FTrack{
        */
       Crit4_distOfCircleCenters ( double distMax );
       
-      virtual bool areCompatible( Segment* parent , Segment* child );
+      virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
       virtual ~Crit4_distOfCircleCenters(){};
       

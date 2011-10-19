@@ -19,7 +19,7 @@ Crit4_PhiZRatioChange::Crit4_PhiZRatioChange ( double changeMax ){
 
 
 
-bool Crit4_PhiZRatioChange::areCompatible( Segment* parent , Segment* child ){
+bool Crit4_PhiZRatioChange::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
     
    
    
@@ -93,7 +93,17 @@ bool Crit4_PhiZRatioChange::areCompatible( Segment* parent , Segment* child ){
          
       
    }
-   
+   else{
+      
+      std::string s = "Crit4_PhiZRatioChange::This criterion needs 2 segments with 3 hits each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      
+      
+      throw BadSegmentLength( s );
+      
+      
+   }
    
    return true;
    

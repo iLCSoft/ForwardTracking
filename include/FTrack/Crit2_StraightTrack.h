@@ -16,7 +16,7 @@ namespace FTrack{
       
       Crit2_StraightTrack ( double ratioMax );
       
-      virtual bool areCompatible( Segment* parent , Segment* child );
+      virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
 
       virtual ~Crit2_StraightTrack(){};
 

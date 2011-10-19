@@ -4,6 +4,8 @@
 #include <vector>
 #include "Segment.h"
 #include "lcio.h"
+#include "FTrackExceptions.h"
+#include "FTrackTools.h"
 #include <cmath>
 
 #include "marlin/VerbosityLevels.h"
@@ -25,7 +27,7 @@ namespace FTrack{
    public: 
       
       
-      virtual bool areCompatible( Segment* parent , Segment* child ) = 0;
+      virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ) = 0;
       
   
       std::map < std::string , float > getMapOfValues() {return _map_name_value; };

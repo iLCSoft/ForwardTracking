@@ -19,7 +19,7 @@ namespace FTrack{
        */
       Crit4_distToExtrapolation ( double distMax );
       
-      virtual bool areCompatible( Segment* parent , Segment* child );
+      virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
       virtual ~Crit4_distToExtrapolation(){};
       

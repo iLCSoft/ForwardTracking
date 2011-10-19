@@ -19,7 +19,7 @@ Crit4_distToExtrapolation::Crit4_distToExtrapolation ( double distMax ){
 
 
 
-bool Crit4_distToExtrapolation::areCompatible( Segment* parent , Segment* child ){
+bool Crit4_distToExtrapolation::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
     
    
    
@@ -88,6 +88,17 @@ bool Crit4_distToExtrapolation::areCompatible( Segment* parent , Segment* child 
          if (_saveValues) _map_name_value["distToExtrapolation_distToExtrapolationNormed"] = -1.;
       
       }
+      
+   }
+   else{
+      
+      std::string s = "Crit4_distToExtrapolation::This criterion needs 2 segments with 3 hits each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      
+      
+      throw BadSegmentLength( s );
+      
       
    }
    

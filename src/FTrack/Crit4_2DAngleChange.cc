@@ -16,7 +16,7 @@ Crit4_2DAngleChange::Crit4_2DAngleChange ( double changeMax ){
 
 
 
-bool Crit4_2DAngleChange::areCompatible( Segment* parent , Segment* child ){
+bool Crit4_2DAngleChange::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
     
    if (_saveValues) _map_name_value["2DAngleChange_ratioOf2DAngles"] = 0.;
    
@@ -74,7 +74,17 @@ bool Crit4_2DAngleChange::areCompatible( Segment* parent , Segment* child ){
          
       
    }
-   
+   else{
+      
+      std::string s = "Crit4_2DAngleChange::This criterion needs 2 segments with 3 hits each, passed was a "
+      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      
+      
+      throw BadSegmentLength( s );
+      
+      
+   }
    
    return true;
    
