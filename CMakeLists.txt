@@ -91,7 +91,7 @@ ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
 ADD_DEFINITIONS( "-Wno-long-long" )
 
 # include directories
-INCLUDE_DIRECTORIES( ./include/FTrack ./include/TrackingFeedback ./include/TrackPicker ./include/NeuralNetwork ./include/FTDNoise ./include/Tools ./include/Analysis )
+INCLUDE_DIRECTORIES( ./include/FTrack ./include/TrackingFeedback ./include/TrackPicker ./include/NeuralNetwork ./include/FTDNoise ./include/Tools ./include/Analysis ./include/Criteria )
 #INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
 
 # add library
@@ -102,6 +102,7 @@ AUX_SOURCE_DIRECTORY( ./src/NeuralNetwork library_sources )
 AUX_SOURCE_DIRECTORY( ./src/FTDNoise library_sources )
 AUX_SOURCE_DIRECTORY( ./src/Tools library_sources )
 AUX_SOURCE_DIRECTORY( ./src/Analysis library_sources )
+AUX_SOURCE_DIRECTORY( ./src/Criteria library_sources )
 
 
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
