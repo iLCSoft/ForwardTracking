@@ -35,21 +35,7 @@
 #include "AutHit.h"
 
 
-// the criteria
-#include "Crit2_RZRatio.h"
-#include "Crit2_StraightTrackRatio.h"
-
-#include "Crit3_ChangeRZRatio.h"  
-#include "Crit3_PT.h"
-#include "Crit3_3DAngle.h"
-#include "Crit3_IPCircleDist.h"  
-
-#include "Crit4_2DAngleChange.h"        
-#include "Crit4_DistToExtrapolation.h"  
-#include "Crit4_PhiZRatioChange.h"
-#include "Crit4_DistOfCircleCenters.h"
-#include "Crit4_NoZigZag.h"
-#include "Crit4_RChange.h"
+#include "Criteria.h"
 
 
 // the hit connectors

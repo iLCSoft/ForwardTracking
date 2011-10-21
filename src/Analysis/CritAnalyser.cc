@@ -23,10 +23,7 @@
 
 #include <IMPL/TrackerHitPlaneImpl.h>
 
-// the criteria
-#include "Crit2_RZRatio.h"
-#include "Crit3_3DAngle.h"
-#include "Crit2_StraightTrackRatio.h"
+#include "Criteria.h"
 
 
 #include "AutCode.h"
