@@ -275,7 +275,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       //Load in some criteria
 //       Crit2_StraightTrack       crit2_StraightTrack( 1.001 );
-      Crit2_RZRatio             crit2_RZRatio(1.1);
+      Crit2_RZRatio             crit2_RZRatio(1., 1.1);
       
 //       segBuilder.addCriterion ( & crit2_StraightTrack ); 
       segBuilder.addCriterion ( & crit2_RZRatio );

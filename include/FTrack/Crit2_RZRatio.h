@@ -14,7 +14,7 @@ namespace FTrack{
 
    public:
       
-      Crit2_RZRatio ( double ratioMax );
+      Crit2_RZRatio ( double ratioMin, double ratioMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
 
@@ -23,6 +23,7 @@ namespace FTrack{
    private:
       
       double _ratioMax;
+      double _ratioMin;
       
       
    };

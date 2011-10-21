@@ -4,10 +4,11 @@
 
 using namespace FTrack;
 
-Crit2_RZRatio::Crit2_RZRatio ( double ratioMax ){
+Crit2_RZRatio::Crit2_RZRatio ( double ratioMin, double ratioMax ){
    
    
-   _ratioMax = ratioMax; 
+   _ratioMax = ratioMax;
+   _ratioMin = ratioMin;
    
    _saveValues = false;
    
@@ -44,6 +45,7 @@ bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child )throw( BadS
 
       
       if ( ratioSquared > _ratioMax * _ratioMax ) return false;
+      if ( ratioSquared < _ratioMin * _ratioMin ) return false;
   
       
       

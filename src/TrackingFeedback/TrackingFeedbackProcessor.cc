@@ -166,7 +166,7 @@ void TrackingFeedbackProcessor::init() {
     
     
     //Add the criteria that will be checked
-    _crits2.push_back( new Crit2_RZRatio( 1.01 ) ); 
+    _crits2.push_back( new Crit2_RZRatio( 1. , 1.01 ) ); 
     _crits2.push_back( new Crit2_StraightTrack( 1.1 ) );
     for( unsigned i=0; i< _crits2.size(); i++ ) _crits2[i]->setSaveValues( true );
     

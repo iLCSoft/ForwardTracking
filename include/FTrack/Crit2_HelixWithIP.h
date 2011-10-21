@@ -1,24 +1,24 @@
-#ifndef Crit2_StraightTrack_h
-#define Crit2_StraightTrack_h
+#ifndef Crit2_HelixWithIP_h
+#define Crit2_HelixWithIP_h
 
 
 #include "ICriterion.h"
 
 namespace FTrack{
 
-   /** Criterion: for straight tracks, if line between two hits point towards IP
+   /** Criterion: 
     */
-   class Crit2_StraightTrack : public ICriterion{
+   class Crit2_HelixWithIP : public ICriterion{
 
 
 
    public:
       
-      Crit2_StraightTrack ( double ratioMax );
+      Crit2_HelixWithIP ( double ratioMin , double ratioMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
 
-      virtual ~Crit2_StraightTrack(){};
+      virtual ~Crit2_HelixWithIP(){};
 
     
    private:

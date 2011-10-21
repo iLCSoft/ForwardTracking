@@ -26,6 +26,8 @@
 // the criteria
 #include "Crit2_RZRatio.h"
 #include "Crit2_StraightTrack.h"
+#include "Crit2_DeltaPhi.h"
+#include "Crit2_HelixWithIP.h"
 
 #include "Crit3_ChangeRZRatio.h"  
 #include "Crit3_PTMin.h"
@@ -139,8 +141,10 @@ void TrueTrackCritAnalyser::init() {
    
    
    //Add the criteria that will be checked
-   _crits2.push_back( new Crit2_RZRatio( 1.01 ) ); 
+   _crits2.push_back( new Crit2_RZRatio( 1. , 1.01 ) ); 
    _crits2.push_back( new Crit2_StraightTrack( 1.1 ) );
+   _crits2.push_back( new Crit2_DeltaPhi( 0. , 0. ) );
+   _crits2.push_back( new Crit2_HelixWithIP ( 1. , 1. ) );
    
    _crits3.push_back( new Crit3_ChangeRZRatio( 1.) );
    _crits3.push_back( new Crit3_PTMin (0.1) );
@@ -433,7 +437,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          
          double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
          
-         if ( chi2Prob > _chi2ProbCut ) isOfInterest = false;
+         if ( chi2Prob < _chi2ProbCut ) isOfInterest = false;
          //
          //////////////////////////////////////////////////////////////////////////////////
          

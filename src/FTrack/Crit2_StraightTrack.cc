@@ -1,6 +1,6 @@
 #include "Crit2_StraightTrack.h"
 
-#include "cmath"
+
 
 using namespace FTrack;
 
@@ -46,16 +46,7 @@ using namespace FTrack;
       }
       
       
-      //////////////////////////////////////////////////////
-      float phia = atan2( ay, ax );
-      float phib = atan2( by, bx );
-      float deltaPhi = phia-phib;
-      if (deltaPhi > M_PI) deltaPhi -= 2*M_PI;           //to the range from -pi to pi
-      if (deltaPhi < -M_PI) deltaPhi += 2*M_PI;           //to the range from -pi to pi
-      
-      deltaPhi = fabs( deltaPhi );
-      if (_saveValues) _map_name_value["StraightTrack_deltaPhi"]= deltaPhi;
-      //////////////////////////////////////////////////////
+
       
       if (_saveValues){
          _map_name_value["StraightTrack_Ratio"]= 0.;
@@ -75,7 +66,7 @@ using namespace FTrack;
          
          if ( ratioSquared > _ratioMax * _ratioMax ) return false;
    
-         if ( ratioSquared < 1./ ( _ratioMax * _ratioMax ) ) return false;
+         if ( ratioSquared < _ratioMin * _ratioMin ) return false;
       
       }
       

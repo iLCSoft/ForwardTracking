@@ -93,7 +93,7 @@ void CritAnalyser::init() {
    
    
    //Add the criteria that will be checked
-   Crit2_RZRatio* crit2_RZRatio = new Crit2_RZRatio( 1.01 );
+   Crit2_RZRatio* crit2_RZRatio = new Crit2_RZRatio( 1. , 1.01 );
    Crit2_StraightTrack* crit2_StraightTrack = new Crit2_StraightTrack( 1.1 );
    
    _crits.push_back ( crit2_RZRatio ); 
