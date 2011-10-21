@@ -1,4 +1,4 @@
-#include "Crit4_distToExtrapolation.h"
+#include "Crit4_DistToExtrapolation.h"
 
 #include <cmath>
 #include "SimpleCircle.h"
@@ -8,9 +8,10 @@
 
 using namespace FTrack;
 
-Crit4_distToExtrapolation::Crit4_distToExtrapolation ( double distMax ){
+Crit4_DistToExtrapolation::Crit4_DistToExtrapolation ( float distMin , float distMax ){
    
    
+   _distMin = distMin;
    _distMax = distMax;
    
    _saveValues = false;
@@ -19,7 +20,7 @@ Crit4_distToExtrapolation::Crit4_distToExtrapolation ( double distMax ){
 
 
 
-bool Crit4_distToExtrapolation::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
+bool Crit4_DistToExtrapolation::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
     
    
    
@@ -75,24 +76,25 @@ bool Crit4_distToExtrapolation::areCompatible( Segment* parent , Segment* child 
          double yChildPred = centerY + R* sin(phiChild);
          
          
-         double distToPrediction = sqrt ( ( xChildPred- dx )*( xChildPred- dx ) + ( yChildPred- dy )*( yChildPred- dy ) );
-         double distNormed = distToPrediction / zDistChild;   
+         double DistToPrediction = sqrt ( ( xChildPred- dx )*( xChildPred- dx ) + ( yChildPred- dy )*( yChildPred- dy ) );
+         double distNormed = DistToPrediction / zDistChild;   
          
-         if (_saveValues) _map_name_value["distToExtrapolation_distToExtrapolationNormed"] = distNormed;
+         if (_saveValues) _map_name_value["DistToExtrapolation_DistToExtrapolation"] = distNormed;
          
          if ( distNormed > _distMax ) return false;
+         if ( distNormed < _distMin ) return false;
          
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["distToExtrapolation_distToExtrapolationNormed"] = -1.;
+         if (_saveValues) _map_name_value["DistToExtrapolation_DistToExtrapolation"] = -1.;
       
       }
       
    }
    else{
       
-      std::string s = "Crit4_distToExtrapolation::This criterion needs 2 segments with 3 hits each, passed was a "
+      std::string s = "Crit4_DistToExtrapolation::This criterion needs 2 segments with 3 hits each, passed was a "
       +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
       +  intToString( child->getAutHits().size() ) + " hit segment (child).";
       

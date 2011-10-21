@@ -7,9 +7,10 @@
 
 using namespace FTrack;
 
-Crit4_RChange::Crit4_RChange ( double changeMax ){
+Crit4_RChange::Crit4_RChange ( float changeMin , float changeMax ){
    
    
+   _changeMin = changeMin;
    _changeMax = changeMax;
    
    _saveValues = false;
@@ -51,19 +52,20 @@ bool Crit4_RChange::areCompatible( Segment* parent , Segment* child )throw( BadS
          float R1 = circle1.getRadius();
          float R2 = circle2.getRadius();
          
-         float ratioOfR = R1/R2;
+         float ratioOfR = 1.;
+         if (R2 > 0) ratioOfR = R1/R2;
          
-         if (_saveValues) _map_name_value["RChange_ratioOfR"] = ratioOfR;
+         if (_saveValues) _map_name_value["RChange_RChange"] = ratioOfR;
          
          
             
          if ( ratioOfR > _changeMax ) return false;    
-         if ( 1./ratioOfR > _changeMax ) return false;
+         if ( ratioOfR < _changeMin ) return false;
          
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["RChange_ratioOfR"] = 0.;
+         if (_saveValues) _map_name_value["RChange_RChange"] = 1.;
          
       }
       

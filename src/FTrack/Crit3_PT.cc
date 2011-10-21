@@ -1,4 +1,4 @@
-#include "Crit3_PTMin.h"
+#include "Crit3_PT.h"
 
 #include "SimpleCircle.h"
 #include <cmath>
@@ -6,9 +6,10 @@
 using namespace FTrack;
 
 
-Crit3_PTMin::Crit3_PTMin( double ptMin , double Bz){
+Crit3_PT::Crit3_PT( float ptMin , float ptMax , float Bz ){
    
-   _ptMin  = ptMin;
+   _ptMin = ptMin;
+   _ptMax = ptMax;
    _Bz = Bz;
    
    _saveValues = false;
@@ -17,7 +18,7 @@ Crit3_PTMin::Crit3_PTMin( double ptMin , double Bz){
 
 
 
-bool Crit3_PTMin::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
+bool Crit3_PT::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
    
    
    
@@ -57,15 +58,16 @@ bool Crit3_PTMin::areCompatible( Segment* parent , Segment* child )throw( BadSeg
          
          double pt = R * K * _Bz;
             
-         if (_saveValues) _map_name_value["PtMin_pt"] =  pt;
+         if (_saveValues) _map_name_value["PT_PT"] =  pt;
                
          if ( pt < _ptMin ) return false;
+         if ( pt > _ptMax ) return false;
 
          
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["PtMin_pt"] =  0.;
+         if (_saveValues) _map_name_value["PT_PT"] =  0.;
          
       }
 
@@ -74,7 +76,7 @@ bool Crit3_PTMin::areCompatible( Segment* parent , Segment* child )throw( BadSeg
    }
    else{
       
-      std::string s = "Crit3_PTMin::This criterion needs 2 segments with 2 hits each, passed was a "
+      std::string s = "Crit3_PT::This criterion needs 2 segments with 2 hits each, passed was a "
       +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
       +  intToString( child->getAutHits().size() ) + " hit segment (child).";
       

@@ -26,7 +26,7 @@
 // the criteria
 #include "Crit2_RZRatio.h"
 #include "Crit3_3DAngle.h"
-#include "Crit2_StraightTrack.h"
+#include "Crit2_StraightTrackRatio.h"
 
 
 #include "AutCode.h"
@@ -94,10 +94,10 @@ void CritAnalyser::init() {
    
    //Add the criteria that will be checked
    Crit2_RZRatio* crit2_RZRatio = new Crit2_RZRatio( 1. , 1.01 );
-   Crit2_StraightTrack* crit2_StraightTrack = new Crit2_StraightTrack( 1.1 );
+   Crit2_StraightTrackRatio* crit2_StraightTrackRatio = new Crit2_StraightTrackRatio( 1. , 1. );
    
    _crits.push_back ( crit2_RZRatio ); 
-   _crits.push_back ( crit2_StraightTrack );
+   _crits.push_back ( crit2_StraightTrackRatio );
    
    std::set < std::string > branchNames;
    

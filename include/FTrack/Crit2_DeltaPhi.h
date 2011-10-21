@@ -14,7 +14,7 @@ namespace FTrack{
 
    public:
       
-      Crit2_DeltaPhi ( double deltaPhiMin , double deltaPhiMax );
+      Crit2_DeltaPhi ( float deltaPhiMin , float deltaPhiMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
 
@@ -23,8 +23,8 @@ namespace FTrack{
     
    private:
       
-      double _deltaPhiMax;
-      double _deltaPhiMin;
+      float _deltaPhiMax;
+      float _deltaPhiMin;
       
       
       

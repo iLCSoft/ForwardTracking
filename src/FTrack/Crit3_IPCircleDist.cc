@@ -6,9 +6,10 @@
 using namespace FTrack;
 
 
-Crit3_IPCircleDist::Crit3_IPCircleDist( double distToCircleMax ){
+Crit3_IPCircleDist::Crit3_IPCircleDist( float distToCircleMin , float distToCircleMax ){
    
    _distToCircleMax  = distToCircleMax;
+   _distToCircleMin  = distToCircleMin;
    
    _saveValues = false;
    
@@ -48,15 +49,16 @@ bool Crit3_IPCircleDist::areCompatible( Segment* parent , Segment* child )throw(
          
          double circleDistToIP = fabs( R - sqrt (x*x+y*y) );
          
-         if (_saveValues) _map_name_value["IPCircleDist_circleDistToIP"] =  circleDistToIP;
+         if (_saveValues) _map_name_value["IPCircleDist_IPCircleDist"] =  circleDistToIP;
                
          if ( circleDistToIP  > _distToCircleMax ) return false;
+         if ( circleDistToIP  < _distToCircleMin ) return false;
 
       }
       catch ( InvalidParameter ){
          
          
-         if (_saveValues) _map_name_value["IPCircleDist_circleDistToIP"] =  -1.;
+         if (_saveValues) _map_name_value["IPCircleDist_IPCircleDist"] =  0.;
          
       }
 

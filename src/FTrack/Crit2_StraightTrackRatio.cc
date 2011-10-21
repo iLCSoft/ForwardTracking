@@ -1,13 +1,14 @@
-#include "Crit2_StraightTrack.h"
+#include "Crit2_StraightTrackRatio.h"
 
 
 
 using namespace FTrack;
 
-   Crit2_StraightTrack::Crit2_StraightTrack ( double ratioMax ){
+Crit2_StraightTrackRatio::Crit2_StraightTrackRatio ( float ratioMin, float ratioMax ){
    
    
-   _ratioMax = ratioMax;  
+   _ratioMax = ratioMax; 
+   _ratioMin = ratioMin;
    
    _saveValues = false;
    
@@ -15,7 +16,7 @@ using namespace FTrack;
 
 
       
-      bool Crit2_StraightTrack::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
+bool Crit2_StraightTrackRatio::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
    
    
    
@@ -38,30 +39,21 @@ using namespace FTrack;
       double rhoASquared = ax*ax + ay*ay;
       double rhoBSquared = bx*bx + by*by;
       
-      //first check, if the distance to (0,0) rises --> such a combo could not reach the IP
-      if (_saveValues){
-         _map_name_value["StraighTrack_rhoParent"] = sqrt( rhoASquared );
-         _map_name_value["StraighTrack_rhoChild"]  = sqrt( rhoBSquared );
-         _map_name_value["StraighTrack_rhoParent-rhoChild"] = sqrt( rhoASquared ) - sqrt( rhoBSquared );
-      }
-      
       
 
       
       if (_saveValues){
-         _map_name_value["StraightTrack_Ratio"]= 0.;
+         _map_name_value["StraightTrackRatio_StraightTrackRatio"]= 1.;
          
       }
-      
-      if (rhoBSquared > rhoASquared ) return false;
-      
+     
       
       if( (rhoBSquared >0.) && ( az != 0. ) ){ //prevent division by 0
          
          // the square is used, because it is faster to calculate with the squares than with sqrt, which takes some time!
          double ratioSquared = ( ( rhoASquared * ( bz*bz )  ) / ( rhoBSquared * ( az*az )  ) );
                
-         if (_saveValues) _map_name_value["StraightTrack_Ratio"] = sqrt(ratioSquared);
+         if (_saveValues) _map_name_value["StraightTrackRatio_StraightTrackRatio"] = sqrt(ratioSquared);
          
          
          if ( ratioSquared > _ratioMax * _ratioMax ) return false;
@@ -73,7 +65,7 @@ using namespace FTrack;
    }
    else{
       
-      std::string s = "Crit2_StraightTrack::This criterion needs 2 segments with 1 hit each, passed was a "
+      std::string s = "Crit2_StraightTrackRatio::This criterion needs 2 segments with 1 hit each, passed was a "
       +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
       +  intToString( child->getAutHits().size() ) + " hit segment (child).";
 

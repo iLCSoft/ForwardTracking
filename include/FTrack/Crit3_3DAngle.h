@@ -17,7 +17,7 @@ namespace FTrack{
       /**
        * @param angleMax the maximum angle between 2 2-segments in grad
        */
-      Crit3_3DAngle ( double angleMax );
+      Crit3_3DAngle ( float angleMin, float angleMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
 
@@ -25,7 +25,8 @@ namespace FTrack{
     
    private:
       
-      double _cosAngleMin;
+      float _cosAngleMin;
+      float _cosAngleMax;
       
    };
 

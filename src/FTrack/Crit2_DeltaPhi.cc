@@ -4,7 +4,7 @@
 
 using namespace FTrack;
 
-Crit2_DeltaPhi::Crit2_DeltaPhi ( double deltaPhiMin , double deltaPhiMax ){
+Crit2_DeltaPhi::Crit2_DeltaPhi ( float deltaPhiMin , float deltaPhiMax ){
    
    
    _deltaPhiMax = deltaPhiMax;  
@@ -45,7 +45,7 @@ Crit2_DeltaPhi::Crit2_DeltaPhi ( double deltaPhiMin , double deltaPhiMax ){
       if (( by*by + bx*bx < 0.0001 )||( ay*ay + ax*ax < 0.0001 )) deltaPhi = 0.; // In case one of the hits is too close to the origin
 
       deltaPhi = 180.*fabs( deltaPhi ) / M_PI;
-      if (_saveValues) _map_name_value["DeltaPhi_deltaPhi"]= deltaPhi;
+      if (_saveValues) _map_name_value["DeltaPhi_DeltaPhi"]= deltaPhi;
 
       
       

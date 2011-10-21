@@ -4,7 +4,7 @@
 
 using namespace FTrack;
 
-Crit2_HelixWithIP::Crit2_HelixWithIP ( double ratioMin , double ratioMax ){
+Crit2_HelixWithIP::Crit2_HelixWithIP ( float ratioMin , float ratioMax ){
    
    
    _ratioMax = ratioMax;  
@@ -86,7 +86,7 @@ bool Crit2_HelixWithIP::areCompatible( Segment* parent , Segment* child )throw( 
 
 
       
-      if (_saveValues) _map_name_value["HelixWithIP_ratio"]= ratio;
+      if (_saveValues) _map_name_value["HelixWithIP_HelixWithIP"]= ratio;
        
          
       if ( ratio > _ratioMax ) return false;

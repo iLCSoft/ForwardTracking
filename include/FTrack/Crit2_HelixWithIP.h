@@ -14,7 +14,7 @@ namespace FTrack{
 
    public:
       
-      Crit2_HelixWithIP ( double ratioMin , double ratioMax );
+      Crit2_HelixWithIP ( float ratioMin , float ratioMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
 
@@ -23,8 +23,8 @@ namespace FTrack{
     
    private:
       
-      double _ratioMax;
-      double _ratioMin;
+      float _ratioMax;
+      float _ratioMin;
       
       
       

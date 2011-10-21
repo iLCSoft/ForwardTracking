@@ -5,10 +5,11 @@
 using namespace FTrack;
 
 
-Crit3_ChangeRZRatio::Crit3_ChangeRZRatio( double maxChange ){
+Crit3_ChangeRZRatio::Crit3_ChangeRZRatio( float minChange , float maxChange ){
    
    
    _ratioChangeMaxSquared = maxChange*maxChange;
+   _ratioChangeMinSquared = minChange*minChange;
    
    _saveValues = false;
    
@@ -56,12 +57,12 @@ bool Crit3_ChangeRZRatio::areCompatible( Segment* parent , Segment* child )throw
       if (_saveValues) {
          
          _map_name_value["ChangeRZRatio_ratioOfRZRatioSquared"] =  ratioOfRZRatioSquared;
-         _map_name_value["ChangeRZRatio_ratioOfRZRatio"] = sqrt( ratioOfRZRatioSquared );
+         _map_name_value["ChangeRZRatio_ChangeRZRatio"] = sqrt( ratioOfRZRatioSquared );
          
       }
 
-      if ( ratioOfRZRatioSquared > _ratioChangeMaxSquared) return false;
-      if ( 1. / ratioOfRZRatioSquared > _ratioChangeMaxSquared ) return false;
+      if ( ratioOfRZRatioSquared > _ratioChangeMaxSquared ) return false;
+      if ( ratioOfRZRatioSquared < _ratioChangeMinSquared ) return false;
 
 
    }

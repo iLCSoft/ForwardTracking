@@ -37,17 +37,17 @@
 
 // the criteria
 #include "Crit2_RZRatio.h"
-#include "Crit2_StraightTrack.h"
+#include "Crit2_StraightTrackRatio.h"
 
 #include "Crit3_ChangeRZRatio.h"  
-#include "Crit3_PTMin.h"
+#include "Crit3_PT.h"
 #include "Crit3_3DAngle.h"
 #include "Crit3_IPCircleDist.h"  
 
 #include "Crit4_2DAngleChange.h"        
-#include "Crit4_distToExtrapolation.h"  
+#include "Crit4_DistToExtrapolation.h"  
 #include "Crit4_PhiZRatioChange.h"
-#include "Crit4_distOfCircleCenters.h"
+#include "Crit4_DistOfCircleCenters.h"
 #include "Crit4_NoZigZag.h"
 #include "Crit4_RChange.h"
 
@@ -303,10 +303,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // Load some criteria for the automaton:
       std::vector <ICriterion*> crit3Vec;
       
-      crit3Vec.push_back( new Crit3_3DAngle( 7. ) );
-      crit3Vec.push_back( new Crit3_ChangeRZRatio( 1.001) );
-      crit3Vec.push_back( new Crit3_PTMin (0.2) );
-      crit3Vec.push_back( new Crit3_IPCircleDist (4) );
+      crit3Vec.push_back( new Crit3_3DAngle( 0. , 7. ) );
+//       crit3Vec.push_back( new Crit3_ChangeRZRatio( 1.001) );
+//       crit3Vec.push_back( new Crit3_PT (0.2) );
+//       crit3Vec.push_back( new Crit3_IPCircleDist (4) );
       for ( unsigned i=0; i< crit3Vec.size(); i++) automaton.addCriterion ( crit3Vec[i] );      
       
       // Let the automaton lengthen its 1-segments to 2-segments

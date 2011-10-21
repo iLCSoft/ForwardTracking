@@ -8,9 +8,10 @@
 
 using namespace FTrack;
 
-Crit4_PhiZRatioChange::Crit4_PhiZRatioChange ( double changeMax ){
+Crit4_PhiZRatioChange::Crit4_PhiZRatioChange ( float changeMin , float changeMax ){
    
    
+   _changeMin = changeMin;
    _changeMax = changeMax;
    
    _saveValues = false;
@@ -76,17 +77,17 @@ bool Crit4_PhiZRatioChange::areCompatible( Segment* parent , Segment* child )thr
          
          float ratioOfPhiZRatio = phiZRatio1 / phiZRatio2;
          
-         if (_saveValues) _map_name_value["PhiZRatioChange_ratioOfPhiZRatio"] = ratioOfPhiZRatio;
+         if (_saveValues) _map_name_value["PhiZRatioChange_PhiZRatioChange"] = ratioOfPhiZRatio;
          
          
             
          if ( ratioOfPhiZRatio > _changeMax ) return false;    
-         if ( 1./ratioOfPhiZRatio > _changeMax ) return false;
+         if ( ratioOfPhiZRatio < _changeMin ) return false;
          
       }
       catch ( InvalidParameter ){
        
-         if (_saveValues) _map_name_value["PhiZRatioChange_ratioOfPhiZRatio"] = 0.;
+         if (_saveValues) _map_name_value["PhiZRatioChange_PhiZRatioChange"] = 1.;
          
       }
       

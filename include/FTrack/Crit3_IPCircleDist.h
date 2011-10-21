@@ -14,7 +14,7 @@ namespace FTrack{
       
    public:
       
-      Crit3_IPCircleDist ( double distToCircleMax );
+      Crit3_IPCircleDist ( float distToCircleMin , float distToCircleMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
@@ -23,7 +23,8 @@ namespace FTrack{
       
    private:
       
-      double _distToCircleMax;
+      float _distToCircleMax;
+      float _distToCircleMin;
       
       
    };

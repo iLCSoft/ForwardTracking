@@ -14,7 +14,7 @@ namespace FTrack{
       
    public:
       
-      Crit3_ChangeRZRatio ( double maxChange );
+      Crit3_ChangeRZRatio ( float minChange , float maxChange );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
@@ -23,7 +23,8 @@ namespace FTrack{
       
    private:
       
-      double _ratioChangeMaxSquared;
+      float _ratioChangeMaxSquared;
+      float _ratioChangeMinSquared;
 
       
       

@@ -17,7 +17,7 @@ namespace FTrack{
       /**
        * @param changeMax 
        */
-      Crit4_2DAngleChange ( double changeMax );
+      Crit4_2DAngleChange ( float changeMin , float changeMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
@@ -25,7 +25,8 @@ namespace FTrack{
       
    private:
       
-      double _changeMax;
+      float _changeMin;
+      float _changeMax;
       
    };
    

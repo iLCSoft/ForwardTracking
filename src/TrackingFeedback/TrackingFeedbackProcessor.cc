@@ -35,17 +35,17 @@
 
 // the criteria
 #include "Crit2_RZRatio.h"
-#include "Crit2_StraightTrack.h"
+#include "Crit2_StraightTrackRatio.h"
 
 #include "Crit3_ChangeRZRatio.h"  
-#include "Crit3_PTMin.h"
+#include "Crit3_PT.h"
 #include "Crit3_3DAngle.h"
 #include "Crit3_IPCircleDist.h"  
 
 #include "Crit4_2DAngleChange.h"        
-#include "Crit4_distToExtrapolation.h"  
+#include "Crit4_DistToExtrapolation.h"  
 #include "Crit4_PhiZRatioChange.h"
-#include "Crit4_distOfCircleCenters.h"
+#include "Crit4_DistOfCircleCenters.h"
 #include "Crit4_NoZigZag.h"
 #include "Crit4_RChange.h"
 
@@ -166,23 +166,23 @@ void TrackingFeedbackProcessor::init() {
     
     
     //Add the criteria that will be checked
-    _crits2.push_back( new Crit2_RZRatio( 1. , 1.01 ) ); 
-    _crits2.push_back( new Crit2_StraightTrack( 1.1 ) );
+    _crits2.push_back( new Crit2_RZRatio( 1. , 1. ) ); 
+    _crits2.push_back( new Crit2_StraightTrackRatio( 1. , 1. ) );
     for( unsigned i=0; i< _crits2.size(); i++ ) _crits2[i]->setSaveValues( true );
     
-    _crits3.push_back( new Crit3_ChangeRZRatio( 1.) );
-    _crits3.push_back( new Crit3_PTMin (0.1) );
-    _crits3.push_back( new Crit3_3DAngle (10) );
-    _crits3.push_back( new Crit3_IPCircleDist (10) );
+    _crits3.push_back( new Crit3_ChangeRZRatio( 1. , 1. ) );
+    _crits3.push_back( new Crit3_PT (0. , 0.) );
+    _crits3.push_back( new Crit3_3DAngle (0. , 0.) );
+    _crits3.push_back( new Crit3_IPCircleDist (0. , 0.) );
     for( unsigned i=0; i< _crits3.size(); i++ ) _crits3[i]->setSaveValues( true );
     
     
-    _crits4.push_back( new  Crit4_2DAngleChange ( 1. ) );
-    _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. ) );
-    _crits4.push_back( new  Crit4_distToExtrapolation ( 1. ) );
-    _crits4.push_back( new  Crit4_distOfCircleCenters ( 1. ) );
-    _crits4.push_back( new  Crit4_NoZigZag ( 1. ) );
-    _crits4.push_back( new  Crit4_RChange ( 1. ) );
+    _crits4.push_back( new  Crit4_2DAngleChange ( 1. , 1. ) );
+    _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. , 1. ) );
+    _crits4.push_back( new  Crit4_DistToExtrapolation ( 1. , 1. ) );
+    _crits4.push_back( new  Crit4_DistOfCircleCenters ( 1. , 1. ) );
+    _crits4.push_back( new  Crit4_NoZigZag ( 1. , 1. ) );
+    _crits4.push_back( new  Crit4_RChange ( 1. , 1. ) );
     for( unsigned i=0; i< _crits4.size(); i++ ) _crits4[i]->setSaveValues( true );
     
     

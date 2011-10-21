@@ -1,4 +1,4 @@
-#include "Crit4_distOfCircleCenters.h"
+#include "Crit4_DistOfCircleCenters.h"
 
 #include <cmath>
 #include "SimpleCircle.h"
@@ -8,10 +8,11 @@
 
 using namespace FTrack;
 
-Crit4_distOfCircleCenters::Crit4_distOfCircleCenters ( double distMax ){
+Crit4_DistOfCircleCenters::Crit4_DistOfCircleCenters ( float distMin , float distMax ){
    
    
    _distMax = distMax;
+   _distMin = distMin;
    
    _saveValues = false;
    
@@ -20,7 +21,7 @@ Crit4_distOfCircleCenters::Crit4_distOfCircleCenters ( double distMax ){
 
 
 
-bool Crit4_distOfCircleCenters::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
+bool Crit4_DistOfCircleCenters::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
     
    
    
@@ -82,7 +83,7 @@ bool Crit4_distOfCircleCenters::areCompatible( Segment* parent , Segment* child 
          
          float distOfCircleCenters = sqrt( (X2-X1)*(X2-X1) + (Y2-Y1)*(Y2-Y1) );
          
-         if (_saveValues) _map_name_value["distOfCircleCenters_distOfCenters"] = distOfCircleCenters;
+         if (_saveValues) _map_name_value["DistOfCircleCenters_DistOfCircleCenters"] = distOfCircleCenters;
          
 //          streamlog_out( DEBUG4 ) << "\n" << distOfCircleCenters;
 //          streamlog_out( DEBUG4 ) << "\nx1 " << X1;
@@ -92,11 +93,12 @@ bool Crit4_distOfCircleCenters::areCompatible( Segment* parent , Segment* child 
 
          
          if ( distOfCircleCenters > _distMax ) return false;
+         if ( distOfCircleCenters < _distMin ) return false;
       
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["distOfCircleCenters_distOfCenters"] = -1.;
+         if (_saveValues) _map_name_value["DistOfCircleCenters_DistOfCircleCenters"] = 0.;
          
          
       }
@@ -105,7 +107,7 @@ bool Crit4_distOfCircleCenters::areCompatible( Segment* parent , Segment* child 
    }
    else{
       
-      std::string s = "Crit4_distOfCircleCenters::This criterion needs 2 segments with 3 hits each, passed was a "
+      std::string s = "Crit4_DistOfCircleCenters::This criterion needs 2 segments with 3 hits each, passed was a "
       +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
       +  intToString( child->getAutHits().size() ) + " hit segment (child).";
       

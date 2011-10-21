@@ -4,10 +4,11 @@
 
 using namespace FTrack;
 
-Crit3_3DAngle::Crit3_3DAngle ( double angleMax ){
+Crit3_3DAngle::Crit3_3DAngle ( float angleMin, float angleMax ){
    
    
    _cosAngleMin = cos ( angleMax * M_PI / 180. );
+   _cosAngleMax = cos ( angleMin * M_PI / 180. );
    
    _saveValues = false;
    
@@ -69,8 +70,8 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child )throw( BadS
       
       if (_saveValues){
          
-         _map_name_value["3DAngle_cos3DAngleSquared"] =  -1;
-         _map_name_value["3DAngle_3DAngle"] = -1;
+         _map_name_value["3DAngle_cos3DAngleSquared"] =  1.;
+         _map_name_value["3DAngle_3DAngle"] = 0.;
          
       }
       
@@ -85,7 +86,8 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child )throw( BadS
             
          }
          
-         if (cosThetaSquared < _cosAngleMin*_cosAngleMin) return false;  
+         if (cosThetaSquared < _cosAngleMin*_cosAngleMin) return false;
+         if (cosThetaSquared > _cosAngleMax*_cosAngleMax) return false;
       
       }
       

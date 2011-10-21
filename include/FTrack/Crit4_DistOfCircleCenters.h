@@ -1,5 +1,5 @@
-#ifndef Crit4_distToExtrapolation_h
-#define Crit4_distToExtrapolation_h
+#ifndef Crit4_DistOfCircleCenters_h
+#define Crit4_DistOfCircleCenters_h
 
 
 #include "ICriterion.h"
@@ -8,7 +8,7 @@ namespace FTrack{
    
    /** Criterion: check for the change of the 2D angle
     */
-   class Crit4_distToExtrapolation : public ICriterion{
+   class Crit4_DistOfCircleCenters : public ICriterion{
       
       
       
@@ -17,15 +17,16 @@ namespace FTrack{
       /**
        * @param distMax 
        */
-      Crit4_distToExtrapolation ( double distMax );
+      Crit4_DistOfCircleCenters ( float distMin , float distMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
-      virtual ~Crit4_distToExtrapolation(){};
+      virtual ~Crit4_DistOfCircleCenters(){};
       
    private:
       
-      double _distMax;
+      float _distMax;
+      float _distMin;
       
    };
    

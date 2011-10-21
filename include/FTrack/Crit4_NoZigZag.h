@@ -17,7 +17,7 @@ namespace FTrack{
       /**
        * @param prodMin the minimum product of the two angles in the range from -180° to 180° TODO: explain better
        */
-      Crit4_NoZigZag ( double prodMin );
+      Crit4_NoZigZag ( float prodMin , float prodMax );
       
       virtual bool areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength );
       
@@ -25,7 +25,8 @@ namespace FTrack{
       
    private:
       
-      double _prodMin;
+      float _prodMin;
+      float _prodMax;
       
    };
    

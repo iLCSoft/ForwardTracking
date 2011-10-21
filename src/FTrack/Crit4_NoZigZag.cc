@@ -5,10 +5,11 @@
 
 using namespace FTrack;
 
-Crit4_NoZigZag::Crit4_NoZigZag ( double prodMin ){
+Crit4_NoZigZag::Crit4_NoZigZag ( float prodMin , float prodMax ){
    
    
    _prodMin = prodMin;
+   _prodMin = prodMax;
    
    _saveValues = false;
    
@@ -73,9 +74,10 @@ bool Crit4_NoZigZag::areCompatible( Segment* parent , Segment* child )throw( Bad
 
       float prod = angleXY1 * angleXY2; // if the direction of curvature stays the same, both anlges have the same sign-> and therefore the product is positive
       
-      if (_saveValues) _map_name_value["NoZigZag_angleXYProduct"] = prod;
+      if (_saveValues) _map_name_value["NoZigZag_NoZigZag"] = prod;
       
-      if ( prod < _prodMin ) return false;                                            
+      if ( prod < _prodMin ) return false;
+      if ( prod > _prodMax ) return false;
       
          
       

@@ -4,7 +4,7 @@
 
 using namespace FTrack;
 
-Crit2_RZRatio::Crit2_RZRatio ( double ratioMin, double ratioMax ){
+Crit2_RZRatio::Crit2_RZRatio ( float ratioMin, float ratioMax ){
    
    
    _ratioMax = ratioMax;
