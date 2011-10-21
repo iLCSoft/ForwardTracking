@@ -14,10 +14,12 @@
 
 #include "Crit3_ChangeRZRatio.h"  
 #include "Crit3_PT.h"
+#include "Crit3_2DAngle.h"
 #include "Crit3_3DAngle.h"
 #include "Crit3_IPCircleDist.h"  
 
-#include "Crit4_2DAngleChange.h"        
+#include "Crit4_2DAngleChange.h"    
+#include "Crit4_3DAngleChange.h" 
 #include "Crit4_DistToExtrapolation.h"  
 #include "Crit4_PhiZRatioChange.h"
 #include "Crit4_DistOfCircleCenters.h"

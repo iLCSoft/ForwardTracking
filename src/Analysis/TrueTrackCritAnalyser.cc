@@ -132,10 +132,12 @@ void TrueTrackCritAnalyser::init() {
    
    _crits3.push_back( new Crit3_ChangeRZRatio( 1. , 1. ) );
    _crits3.push_back( new Crit3_PT (0.1 , 0.1) );
+   _crits3.push_back( new Crit3_2DAngle (0. , 0.) );
    _crits3.push_back( new Crit3_3DAngle (0. , 0.) );
    _crits3.push_back( new Crit3_IPCircleDist (0. , 0.) );
    
    _crits4.push_back( new  Crit4_2DAngleChange ( 1. , 1. ) );
+   _crits4.push_back( new  Crit4_3DAngleChange ( 1. , 1. ) );
    _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. , 1. ) );
    _crits4.push_back( new  Crit4_DistToExtrapolation ( 1. , 1. ) );
    _crits4.push_back( new  Crit4_DistOfCircleCenters ( 1. , 1. ) );
