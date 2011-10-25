@@ -1,3 +1,7 @@
+#ifndef Criteria_h
+#define Criteria_h
+
+
 /**
  * Information about all Criteria.
  * 
@@ -25,3 +29,45 @@
 #include "Crit4_DistOfCircleCenters.h"
 #include "Crit4_NoZigZag.h"
 #include "Crit4_RChange.h"
+
+
+
+
+#include <map>
+#include <vector>
+#include <string>
+
+
+namespace FTrack{
+
+   
+   
+   class Criteria {
+      
+      
+      
+   public:
+      
+      /** @return a vector of strings that represent all types of criteria stored.
+       * For example: "2Hit_Criteria" or else
+       */
+      static std::vector< std::string > getTypes();
+      
+      
+      static std::vector< std::string > getCriteria( std::string type );
+      
+      /** Needs to be calles before the class can be used.
+       */
+      static void init();
+      
+      
+   private:
+      
+      static std::map< std::string , std::vector< std::string > > map_type_crits;
+      
+   };
+
+}
+
+#endif
+
