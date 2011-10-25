@@ -9,7 +9,7 @@ Crit4_NoZigZag::Crit4_NoZigZag ( float prodMin , float prodMax ){
    
    
    _prodMin = prodMin;
-   _prodMin = prodMax;
+   _prodMax = prodMax;
    
    _saveValues = false;
    

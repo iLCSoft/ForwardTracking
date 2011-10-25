@@ -149,17 +149,21 @@ void TrackingFeedbackProcessor::init() {
     //Then initialise
     _trackFitter.initialise( "KalTest" , marlin::Global::GEAR , "" ); //Use KalTest as Fitter
 
-    
+
     
     //Add the criteria that will be checked
     _crits2.push_back( new Crit2_RZRatio( 1. , 1. ) ); 
     _crits2.push_back( new Crit2_StraightTrackRatio( 1. , 1. ) );
+    _crits2.push_back( new Crit2_HelixWithIP( 1. , 1. ) );
+    _crits2.push_back( new Crit2_DeltaRho( 0. , 0. ) );
+    _crits2.push_back( new Crit2_DeltaPhi( 0. , 0. ) );
     for( unsigned i=0; i< _crits2.size(); i++ ) _crits2[i]->setSaveValues( true );
     
     _crits3.push_back( new Crit3_ChangeRZRatio( 1. , 1. ) );
     _crits3.push_back( new Crit3_PT (0. , 0.) );
     _crits3.push_back( new Crit3_3DAngle (0. , 0.) );
     _crits3.push_back( new Crit3_IPCircleDist (0. , 0.) );
+    _crits3.push_back( new Crit3_2DAngle( 0. , 0. ) );
     for( unsigned i=0; i< _crits3.size(); i++ ) _crits3[i]->setSaveValues( true );
     
     
@@ -776,8 +780,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          // Print out, if this track is lost or not found completely
          
-         if (myRelations[i]->isLost == true) streamlog_out( MESSAGE0 ) << "LOST" <<std::endl;
-         if (myRelations[i]->isFoundCompletely== false) streamlog_out( MESSAGE0 ) << "NOT FOUND COMPLETELY";
+         if (myRelations[i]->isLost == true) streamlog_out( MESSAGE0 ) << "LOST\n" <<std::endl;
+         if (myRelations[i]->isFoundCompletely== false) streamlog_out( MESSAGE0 ) << "NOT FOUND COMPLETELY\n";
          
          
          

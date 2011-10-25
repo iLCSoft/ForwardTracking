@@ -46,9 +46,13 @@ namespace FTrack{
        */
       SegmentBuilder(  FTDRepresentation* ftdRep);
       
-      /** Adds a criterium. //TODO: check LEO: should this be criterium in singular?????
+      /** Adds a criterion. 
        */
       void addCriterion ( ICriterion* criterion ){ _criteria.push_back( criterion );};
+      
+      /** Adds criteria
+       */
+      void addCriteria ( std::vector< ICriterion* > criteria){ _criteria.insert( _criteria.end(), criteria.begin() , criteria.end() ); }
       
       /** Adds a hitConnector
        */

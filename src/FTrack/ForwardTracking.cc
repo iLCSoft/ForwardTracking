@@ -260,11 +260,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       SegmentBuilder segBuilder( &ftdRep );
       
       //Load in some criteria
-//       Crit2_StraightTrack       crit2_StraightTrack( 1.001 );
-      Crit2_RZRatio             crit2_RZRatio(1., 1.1);
+      std::vector <ICriterion*> crit2Vec;
       
-//       segBuilder.addCriterion ( & crit2_StraightTrack ); 
-      segBuilder.addCriterion ( & crit2_RZRatio );
+      crit2Vec.push_back( new Crit2_DeltaPhi( 0 , 18.8252 ) );
+      crit2Vec.push_back( new Crit2_DeltaRho( 26.6211 , 118.352 ) );
+      crit2Vec.push_back( new Crit2_HelixWithIP( 0.953064 , 1.13454 ) );
+      crit2Vec.push_back( new Crit2_RZRatio( 1.00511 , 1.05042 ) );
+      crit2Vec.push_back( new Crit2_StraightTrackRatio( 0.924623 , 1.01756 ) );
+      
+      
+      segBuilder.addCriteria ( crit2Vec );
       
       //Also load hit connectors
       HitCon hitCon( &autCode );
@@ -289,11 +294,15 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // Load some criteria for the automaton:
       std::vector <ICriterion*> crit3Vec;
       
-      crit3Vec.push_back( new Crit3_3DAngle( 0. , 7. ) );
-//       crit3Vec.push_back( new Crit3_ChangeRZRatio( 1.001) );
-//       crit3Vec.push_back( new Crit3_PT (0.2) );
-//       crit3Vec.push_back( new Crit3_IPCircleDist (4) );
-      for ( unsigned i=0; i< crit3Vec.size(); i++) automaton.addCriterion ( crit3Vec[i] );      
+      crit3Vec.push_back( new Crit3_2DAngle( 0. , 32.0663 ) );
+      crit3Vec.push_back( new Crit3_3DAngle( 0. , 9.60971 ) );
+      crit3Vec.push_back( new Crit3_ChangeRZRatio( 0.98226 , 1.01224 ) );
+      crit3Vec.push_back( new Crit3_IPCircleDist( 0 , 11.8752 ) );
+      crit3Vec.push_back( new Crit3_PT( 0.203996 , 22.9936 ) );
+      
+      automaton.clearCriteria();
+      automaton.addCriteria( crit3Vec );  
+      
       
       // Let the automaton lengthen its 1-segments to 2-segments
       // Because for 1-segments (== single hits) and automaton isn't very useful. TODO: verify this hyphothesis
@@ -301,10 +310,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       // So now we have 2-segments and are ready to perform the cellular automaton.
-
-      
-      
-      
 
       
       // Perform the automaton
@@ -321,10 +326,52 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Reset the states of all segments
       automaton.resetStates();
       
+      
+      // Next: go to 3-hit segments:
+      
+      
+      // Load some criteria for the automaton:
+      std::vector <ICriterion*> crit4Vec;
+      
+      crit4Vec.push_back( new Crit4_2DAngleChange( -8.18525 , 14.0879 ) );
+      crit4Vec.push_back( new Crit4_3DAngleChange( 0.708752 , 1.40708 ) );
+      crit4Vec.push_back( new Crit4_DistOfCircleCenters( 0.00508438 , 9849.63 ) );
+      crit4Vec.push_back( new Crit4_DistToExtrapolation( 5.85123e-06 , 41.4473 ) );
+      crit4Vec.push_back( new Crit4_NoZigZag( -18.9909 , 631.716 ) );
+      crit4Vec.push_back( new Crit4_PhiZRatioChange( 0.300892 , 12.248 ) );
+      crit4Vec.push_back( new Crit4_RChange( 0.0806439 , 2.92675 ) );
+    
+      
+      
+      automaton.clearCriteria();
+      automaton.addCriteria( crit4Vec );      
+      
+      automaton.lengthenSegments();
+      // So now we have 3 hit segments 
+      
+      // Perform the automaton
+      automaton.doAutomaton();
+
+      //Clean segments with bad states
+      automaton.cleanBadStates();
+       
+      //Clean connections of segments (this uses the same criteria again as before)
+      automaton.cleanBadConnections();
+      
+      //Reset the states of all segments
+      automaton.resetStates();
+      
+      
+      
+      
+      
+      
+      
+      
       //Get the track candidates
       std::vector <Track*> autTrackCandidates = automaton.getTracks();
       
-//       trackCandidates = autTrackCandidates;
+      trackCandidates = autTrackCandidates;
            
       /**********************************************************************************************/
       /*                Fitting                                                                     */
@@ -347,7 +394,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       
       
-      
+      /*
       unsigned nTracksRejected = 0;
       unsigned nTracksKept = 0;
       
@@ -384,7 +431,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       streamlog_out (MESSAGE0) << "\n Kept " <<  nTracksKept 
                              << " tracks with good chi2Prob, and rejected " << nTracksRejected << "\n";
       
-      
+     */ 
       /*
       // Output of the tracks                       
       for ( unsigned i=0; i< trackCandidates.size(); i++ ){
@@ -453,8 +500,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                 
       }
       
+      for ( unsigned i=0; i< crit2Vec.size(); i++) delete crit2Vec[i];
       for ( unsigned i=0; i< crit3Vec.size(); i++) delete crit3Vec[i];
-      
+      for ( unsigned i=0; i< crit4Vec.size(); i++) delete crit4Vec[i];
 
       
       

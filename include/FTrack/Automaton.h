@@ -76,7 +76,8 @@ namespace FTrack{
       /**Adds a criteria to the automaton. So it will be used, when the methods doAutomaton()
        * or cleanBadConnections() are called.
        */
-      void addCriterion ( ICriterion* criterion ){ _criteria.push_back( criterion ); };
+      void addCriterion ( ICriterion* criterion ){ _criteria.push_back( criterion ); }
+      void addCriteria ( std::vector< ICriterion* > criteria ){ _criteria.insert( _criteria.end() , criteria.begin() , criteria.end() ); }
       void clearCriteria() { _criteria.clear(); };
       
       /** Does iteration until the states of the segments don't change anymore.

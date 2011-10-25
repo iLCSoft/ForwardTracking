@@ -105,8 +105,11 @@ AUX_SOURCE_DIRECTORY( ./src/Analysis library_sources )
 AUX_SOURCE_DIRECTORY( ./src/Criteria library_sources )
 
 
+
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
 INSTALL_SHARED_LIBRARY( ${PROJECT_NAME} DESTINATION lib )
+
+ADD_EXECUTABLE( QuantileAnalyser ${library_sources} )
 
 
 

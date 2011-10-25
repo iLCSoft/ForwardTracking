@@ -438,7 +438,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             double pt=  sqrt( p[0]*p[0]+p[1]*p[1] );
             
             const double* vtx = mcp->getVertex();
-            double distToIP = sqrt( vtx[0]*vtx[0] + vtx[0]*vtx[0] + vtx[0]*vtx[0] );
+            double distToIP = sqrt( vtx[0]*vtx[0] + vtx[1]*vtx[1] + vtx[2]*vtx[2] );
             
             
             
@@ -483,7 +483,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             std::vector <Segment*> segments1;
             
-            for ( unsigned j=0; j < autHits.size()-1; j++ ){
+            for ( unsigned j=0; j < autHits.size(); j++ ){
                
                
                std::vector <AutHit*> segAutHits;
@@ -495,7 +495,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             std::vector <Segment*> segments2;
             
-            for ( unsigned j=0; j < autHits.size()-2; j++ ){
+            for ( unsigned j=0; j < autHits.size()-1; j++ ){
                
                
                std::vector <AutHit*> segAutHits;
@@ -509,7 +509,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             std::vector <Segment*> segments3;
             
-            for ( unsigned j=0; j < autHits.size()-3; j++ ){
+            for ( unsigned j=0; j < autHits.size()-2; j++ ){
                
                
                std::vector <AutHit*> segAutHits;
