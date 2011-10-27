@@ -50,6 +50,10 @@ namespace FTrack{
    /** Converts a float to a string
     */
    std::string floatToString (float f);
+   
+   /** Converts a double to a string
+    */
+   std::string doubleToString (double d);
 
 
    /** method that compares two TrackerHits.

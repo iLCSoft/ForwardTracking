@@ -687,9 +687,9 @@ void Automaton::drawSegments(){
                
                float p =  sqrt ((float)  segment->getInnerState() / (float) ( _segments.size()) );
                
-               green = ceil ( (1.-p) * 255 );
-               red = floor( 255*p );
-               blue = ceil ( (1.-p) * 255 );
+               green = unsigned( ceil ( (1.-p) * 255 ) );
+               red = unsigned( floor( 255*p ) );
+               blue = unsigned( ceil ( (1.-p) * 255 ) );
                
                color = red * 256*256 + green * 256 + blue;
                

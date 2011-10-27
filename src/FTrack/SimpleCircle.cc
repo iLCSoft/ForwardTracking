@@ -20,12 +20,12 @@ SimpleCircle::SimpleCircle( double x1 , double y1 , double x2 , double y2 , doub
      
      
      std::string s = "SimpleCircle::The 3 points are on one line in xy-space: x1 = "
-                               +  intToString( x1 ) +
-                     ", y1 = " +  intToString( y1 ) +
-                     ", x2 = " +  intToString( x2 ) +
-                     ", y2 = " +  intToString( y2 ) +
-                     ", x3 = " +  intToString( x3 ) +
-                     ", y3 = " +  intToString( y3 );
+                               +  doubleToString( x1 ) +
+                     ", y1 = " +  doubleToString( y1 ) +
+                     ", x2 = " +  doubleToString( x2 ) +
+                     ", y2 = " +  doubleToString( y2 ) +
+                     ", x3 = " +  doubleToString( x3 ) +
+                     ", y3 = " +  doubleToString( y3 );
                      
      throw InvalidParameter( s );
      

@@ -82,6 +82,14 @@ std::string FTrack::floatToString (float f){
    
 }
 
+std::string FTrack::doubleToString (double d){
+   
+   std::ostringstream sin;
+   sin << d;
+   return sin.str();
+   
+}
+
 
 void FTrack::saveToRoot( std::string rootFileName, std::string treeName , std::map < std::string , float > map_name_data ){
 

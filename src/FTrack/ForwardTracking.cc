@@ -235,7 +235,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 //-----------------------------------------------------------------------
   
   //get FTD geometry info
-   const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
+//    const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
 //    drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
 
 
