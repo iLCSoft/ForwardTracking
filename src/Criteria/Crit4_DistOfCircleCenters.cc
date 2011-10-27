@@ -14,6 +14,9 @@ Crit4_DistOfCircleCenters::Crit4_DistOfCircleCenters ( float distMin , float dis
    _distMax = distMax;
    _distMin = distMin;
    
+   _name = "Crit4_DistOfCircleCenters";
+   _type = "4Hit";
+   
    _saveValues = false;
    
    
@@ -83,7 +86,7 @@ bool Crit4_DistOfCircleCenters::areCompatible( Segment* parent , Segment* child 
          
          float distOfCircleCenters = sqrt( (X2-X1)*(X2-X1) + (Y2-Y1)*(Y2-Y1) );
          
-         if (_saveValues) _map_name_value["DistOfCircleCenters_DistOfCircleCenters"] = distOfCircleCenters;
+         if (_saveValues) _map_name_value["Crit4_DistOfCircleCenters"] = distOfCircleCenters;
          
 //          streamlog_out( DEBUG4 ) << "\n" << distOfCircleCenters;
 //          streamlog_out( DEBUG4 ) << "\nx1 " << X1;
@@ -98,7 +101,7 @@ bool Crit4_DistOfCircleCenters::areCompatible( Segment* parent , Segment* child 
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["DistOfCircleCenters_DistOfCircleCenters"] = 0.;
+         if (_saveValues) _map_name_value["Crit4_DistOfCircleCenters"] = 0.;
          
          
       }

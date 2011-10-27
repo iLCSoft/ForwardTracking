@@ -10,6 +10,9 @@ Crit2_HelixWithIP::Crit2_HelixWithIP ( float ratioMin , float ratioMax ){
    _ratioMax = ratioMax;  
    _ratioMin = ratioMin;  
    
+   _name = "Crit2_HelixWithIP";
+   _type = "2Hit";
+   
    _saveValues = false;
    
 }
@@ -86,7 +89,7 @@ bool Crit2_HelixWithIP::areCompatible( Segment* parent , Segment* child )throw( 
 
 
       
-      if (_saveValues) _map_name_value["HelixWithIP_HelixWithIP"]= ratio;
+      if (_saveValues) _map_name_value["Crit2_HelixWithIP"]= ratio;
        
          
       if ( ratio > _ratioMax ) return false;

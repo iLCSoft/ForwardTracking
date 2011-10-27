@@ -10,6 +10,9 @@ Crit2_StraightTrackRatio::Crit2_StraightTrackRatio ( float ratioMin, float ratio
    _ratioMax = ratioMax; 
    _ratioMin = ratioMin;
    
+   _name = "Crit2_StraightTrackRatio";
+   _type = "2Hit";
+   
    _saveValues = false;
    
 }
@@ -43,7 +46,7 @@ bool Crit2_StraightTrackRatio::areCompatible( Segment* parent , Segment* child )
 
       
       if (_saveValues){
-         _map_name_value["StraightTrackRatio_StraightTrackRatio"]= 1.;
+         _map_name_value["Crit2_StraightTrackRatio"]= 1.;
          
       }
      
@@ -53,7 +56,7 @@ bool Crit2_StraightTrackRatio::areCompatible( Segment* parent , Segment* child )
          // the square is used, because it is faster to calculate with the squares than with sqrt, which takes some time!
          double ratioSquared = ( ( rhoASquared * ( bz*bz )  ) / ( rhoBSquared * ( az*az )  ) );
                
-         if (_saveValues) _map_name_value["StraightTrackRatio_StraightTrackRatio"] = sqrt(ratioSquared);
+         if (_saveValues) _map_name_value["Crit2_StraightTrackRatio"] = sqrt(ratioSquared);
          
          
          if ( ratioSquared > _ratioMax * _ratioMax ) return false;

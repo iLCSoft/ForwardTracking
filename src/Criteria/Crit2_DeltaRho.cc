@@ -10,6 +10,9 @@ Crit2_DeltaRho::Crit2_DeltaRho ( float deltaRhoMin , float deltaRhoMax ){
    _deltaRhoMax = deltaRhoMax;  
    _deltaRhoMin = deltaRhoMin;
    
+   _name = "Crit2_DeltaRho";
+   _type = "2Hit";
+   
    _saveValues = false;
    
 }
@@ -41,9 +44,9 @@ bool Crit2_DeltaRho::areCompatible( Segment* parent , Segment* child )throw( Bad
       
       //first check, if the distance to (0,0) rises --> such a combo could not reach the IP
       if (_saveValues){
-         _map_name_value["DeltaRho_rhoParent"] = rhoA;
-         _map_name_value["DeltaRho_rhoChild"] = rhoB;
-         _map_name_value["DeltaRho_DeltaRho"] = deltaRho;
+         _map_name_value["Crit2_DeltaRho_rhoParent"] = rhoA;
+         _map_name_value["Crit2_DeltaRho_rhoChild"] = rhoB;
+         _map_name_value["Crit2_DeltaRho"] = deltaRho;
       }
       
       

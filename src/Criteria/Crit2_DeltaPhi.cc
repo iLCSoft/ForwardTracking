@@ -9,6 +9,8 @@ Crit2_DeltaPhi::Crit2_DeltaPhi ( float deltaPhiMin , float deltaPhiMax ){
    
    _deltaPhiMax = deltaPhiMax;  
    _deltaPhiMin = deltaPhiMin;  
+   _name = "Crit2_DeltaPhi";
+   _type = "2Hit";
    
    _saveValues = false;
    
@@ -45,7 +47,7 @@ Crit2_DeltaPhi::Crit2_DeltaPhi ( float deltaPhiMin , float deltaPhiMax ){
       if (( by*by + bx*bx < 0.0001 )||( ay*ay + ax*ax < 0.0001 )) deltaPhi = 0.; // In case one of the hits is too close to the origin
 
       deltaPhi = 180.*fabs( deltaPhi ) / M_PI;
-      if (_saveValues) _map_name_value["DeltaPhi_DeltaPhi"]= deltaPhi;
+      if (_saveValues) _map_name_value["Crit2_DeltaPhi"]= deltaPhi;
 
       
       

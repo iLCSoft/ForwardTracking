@@ -11,6 +11,9 @@ Crit4_2DAngleChange::Crit4_2DAngleChange ( float changeMin , float changeMax ){
    _changeMax = changeMax;
    _changeMin = changeMin;
    
+   _name = "Crit4_2DAngleChange";
+   _type = "4Hit";
+   
    _saveValues = false;
    
 }
@@ -66,7 +69,7 @@ bool Crit4_2DAngleChange::areCompatible( Segment* parent , Segment* child )throw
       
       float ratioOf2DAngles = angleXY1 / angleXY2 ;
 
-      if (_saveValues) _map_name_value["2DAngleChange_2DAngleChange"] = ratioOf2DAngles;
+      if (_saveValues) _map_name_value["Crit4_2DAngleChange"] = ratioOf2DAngles;
       
       if ( ratioOf2DAngles > _changeMax ) return false;    
       if ( ratioOf2DAngles < _changeMin ) return false;

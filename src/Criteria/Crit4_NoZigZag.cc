@@ -11,6 +11,9 @@ Crit4_NoZigZag::Crit4_NoZigZag ( float prodMin , float prodMax ){
    _prodMin = prodMin;
    _prodMax = prodMax;
    
+   _name = "Crit4_NoZigZag";
+   _type = "4Hit";
+   
    _saveValues = false;
    
 }
@@ -74,7 +77,7 @@ bool Crit4_NoZigZag::areCompatible( Segment* parent , Segment* child )throw( Bad
 
       float prod = angleXY1 * angleXY2; // if the direction of curvature stays the same, both anlges have the same sign-> and therefore the product is positive
       
-      if (_saveValues) _map_name_value["NoZigZag_NoZigZag"] = prod;
+      if (_saveValues) _map_name_value["Crit4_NoZigZag"] = prod;
       
       if ( prod < _prodMin ) return false;
       if ( prod > _prodMax ) return false;

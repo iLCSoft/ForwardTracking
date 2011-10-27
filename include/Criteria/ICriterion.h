@@ -35,8 +35,14 @@ namespace FTrack{
             
       virtual ~ICriterion(){};
       
+      /** sets, whether the values calculated shall be saved in a map
+       */
       void setSaveValues( bool saveValues ){ _saveValues = saveValues;}
       
+      
+      
+      std::string getName(){return _name;}
+      std::string getType(){return _type;}
      
    protected:
       
@@ -44,6 +50,9 @@ namespace FTrack{
       std::map < std::string , float > _map_name_value;
       
       bool _saveValues;
+      
+      std::string _name;
+      std::string _type;
       
    };
    

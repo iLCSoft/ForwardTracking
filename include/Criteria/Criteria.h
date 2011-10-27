@@ -51,19 +51,31 @@ namespace FTrack{
       /** @return a vector of strings that represent all types of criteria stored.
        * For example: "2Hit_Criteria" or else
        */
-      static std::vector< std::string > getTypes();
+      static std::set< std::string > getTypes();
       
+            
+      /** @return a vector of all criteria of a certain type
+       */
+      static std::set< std::string > getCriteriaNames( std::string type );
       
-      static std::vector< std::string > getCriteria( std::string type );
+      /** @return all criteria
+       */
+      static std::set< std::string > getAllCriteriaNames(){ return _critNames; }
+      
+      static std::vector< std::string > getAllCriteriaNamesVec();
       
       /** Needs to be calles before the class can be used.
        */
       static void init();
       
+      /**
+       * Creates a criterion with the name and the min and max values
+       */
+      static ICriterion* createCriterion( std::string critName , float min=0. , float max=0. )throw (UnknownCriterion) ;
       
    private:
       
-      static std::map< std::string , std::vector< std::string > > map_type_crits;
+      static std::set< std::string > _critNames;
       
    };
 

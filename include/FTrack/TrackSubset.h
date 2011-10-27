@@ -11,7 +11,7 @@ namespace FTrack {
  
    /** A class to get the best subset of tracks.
     * 
-    * Uses the HopfielNeural Network for this task.
+    * Uses the HopfieldNeural Network for this task.
     * 
     */
    class TrackSubset{

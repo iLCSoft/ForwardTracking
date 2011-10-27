@@ -11,6 +11,9 @@ Crit3_ChangeRZRatio::Crit3_ChangeRZRatio( float minChange , float maxChange ){
    _ratioChangeMaxSquared = maxChange*maxChange;
    _ratioChangeMinSquared = minChange*minChange;
    
+   _name = "Crit3_ChangeRZRatio";
+   _type = "3Hit";
+   
    _saveValues = false;
    
 }
@@ -56,8 +59,8 @@ bool Crit3_ChangeRZRatio::areCompatible( Segment* parent , Segment* child )throw
       
       if (_saveValues) {
          
-         _map_name_value["ChangeRZRatio_ratioOfRZRatioSquared"] =  ratioOfRZRatioSquared;
-         _map_name_value["ChangeRZRatio_ChangeRZRatio"] = sqrt( ratioOfRZRatioSquared );
+         _map_name_value["Crit3_ChangeRZRatio_ratioOfRZRatioSquared"] =  ratioOfRZRatioSquared;
+         _map_name_value["Crit3_ChangeRZRatio"] = sqrt( ratioOfRZRatioSquared );
          
       }
 

@@ -12,6 +12,9 @@ Crit3_PT::Crit3_PT( float ptMin , float ptMax , float Bz ){
    _ptMax = ptMax;
    _Bz = Bz;
    
+   _name = "Crit3_PT";
+   _type = "3Hit";
+   
    _saveValues = false;
    
 }
@@ -58,7 +61,7 @@ bool Crit3_PT::areCompatible( Segment* parent , Segment* child )throw( BadSegmen
          
          double pt = R * K * _Bz;
             
-         if (_saveValues) _map_name_value["PT_PT"] =  pt;
+         if (_saveValues) _map_name_value["Crit3_PT"] =  pt;
                
          if ( pt < _ptMin ) return false;
          if ( pt > _ptMax ) return false;
@@ -67,7 +70,7 @@ bool Crit3_PT::areCompatible( Segment* parent , Segment* child )throw( BadSegmen
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["PT_PT"] =  0.;
+         if (_saveValues) _map_name_value["Crit3_PT"] =  0.;
          
       }
 

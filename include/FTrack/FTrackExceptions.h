@@ -81,6 +81,22 @@ namespace FTrack {
      }
   }; 
 
+  
+  
+  /**Unknown criterion exception.
+   * @author R. Glattauer, HEPHY
+   */
+  class UnknownCriterion : public FTrackException{
+     
+  protected:
+     UnknownCriterion() {  /*no_op*/ ; } 
+  public: 
+     virtual ~UnknownCriterion() throw() { /*no_op*/; } 
+     
+     UnknownCriterion( std::string text ){
+        message = "FTrack::UnknownCriterion: " + text ;
+     }
+  }; 
 
 } 
 

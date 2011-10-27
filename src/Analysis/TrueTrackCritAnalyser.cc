@@ -201,7 +201,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames2.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
-   _treeName2 = "2Hit_Criteria";
+   _treeName2 = "2Hit";
    setUpRootFile( _rootFileName, _treeName2, branchNames2 );      //prepare the root file.
    
    
@@ -243,7 +243,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames3.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
-   _treeName3 = "3Hit_Criteria"; 
+   _treeName3 = "3Hit"; 
    
    setUpRootFile( _rootFileName, _treeName3, branchNames3 , false );      //prepare the root file.
   
@@ -284,7 +284,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames4.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
-   _treeName4 = "4Hit_Criteria"; 
+   _treeName4 = "4Hit"; 
    
    setUpRootFile( _rootFileName, _treeName4, branchNames4 , false );      //prepare the root file.
    

@@ -9,7 +9,7 @@
 #include "Segment.h"
 
 #include "FTDTrackFitter.h"
-
+#include "Criteria.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -115,6 +115,14 @@ class ForwardTracking : public Processor {
     */
    void drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal);
 
+   std::vector< std::string > _criteriaNames;
+   std::map< std::string , float > _critMinima;
+   std::map< std::string , float > _critMaxima;
+   
+   
+   std::vector <ICriterion*> _crit2Vec;
+   std::vector <ICriterion*> _crit3Vec;
+   std::vector <ICriterion*> _crit4Vec;
     
 } ;
 

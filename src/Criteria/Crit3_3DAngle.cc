@@ -10,6 +10,9 @@ Crit3_3DAngle::Crit3_3DAngle ( float angleMin, float angleMax ){
    _cosAngleMin = cos ( angleMax * M_PI / 180. );
    _cosAngleMax = cos ( angleMin * M_PI / 180. );
    
+   _name = "Crit3_3DAngle";
+   _type = "3Hit";
+   
    _saveValues = false;
    
 }
@@ -70,8 +73,8 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child )throw( BadS
       
       if (_saveValues){
          
-         _map_name_value["3DAngle_cos3DAngleSquared"] =  1.;
-         _map_name_value["3DAngle_3DAngle"] = 0.;
+         _map_name_value["Crit3_3DAngle_cos3DAngleSquared"] =  1.;
+         _map_name_value["Crit3_3DAngle"] = 0.;
          
       }
       
@@ -81,8 +84,8 @@ bool Crit3_3DAngle::areCompatible( Segment* parent , Segment* child )throw( BadS
          
          if (_saveValues){
             
-            _map_name_value["3DAngle_cos3DAngleSquared"] =  cosThetaSquared;
-            _map_name_value["3DAngle_3DAngle"] = acos( sqrt( cosThetaSquared ) ) * 180. / M_PI;
+            _map_name_value["Crit3_3DAngle_cos3DAngleSquared"] =  cosThetaSquared;
+            _map_name_value["Crit3_3DAngle"] = acos( sqrt( cosThetaSquared ) ) * 180. / M_PI;
             
          }
          

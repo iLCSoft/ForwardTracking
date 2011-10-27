@@ -11,6 +11,9 @@ Crit3_IPCircleDist::Crit3_IPCircleDist( float distToCircleMin , float distToCirc
    _distToCircleMax  = distToCircleMax;
    _distToCircleMin  = distToCircleMin;
    
+   _name = "Crit3_IPCircleDist";
+   _type = "3Hit";
+   
    _saveValues = false;
    
 }
@@ -49,7 +52,7 @@ bool Crit3_IPCircleDist::areCompatible( Segment* parent , Segment* child )throw(
          
          double circleDistToIP = fabs( R - sqrt (x*x+y*y) );
          
-         if (_saveValues) _map_name_value["IPCircleDist_IPCircleDist"] =  circleDistToIP;
+         if (_saveValues) _map_name_value["Crit3_IPCircleDist"] =  circleDistToIP;
                
          if ( circleDistToIP  > _distToCircleMax ) return false;
          if ( circleDistToIP  < _distToCircleMin ) return false;
@@ -58,7 +61,7 @@ bool Crit3_IPCircleDist::areCompatible( Segment* parent , Segment* child )throw(
       catch ( InvalidParameter ){
          
          
-         if (_saveValues) _map_name_value["IPCircleDist_IPCircleDist"] =  0.;
+         if (_saveValues) _map_name_value["Crit3_IPCircleDist"] =  0.;
          
       }
 

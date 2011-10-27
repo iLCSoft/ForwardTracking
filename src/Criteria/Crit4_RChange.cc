@@ -13,6 +13,9 @@ Crit4_RChange::Crit4_RChange ( float changeMin , float changeMax ){
    _changeMin = changeMin;
    _changeMax = changeMax;
    
+   _name = "Crit4_RChange";
+   _type = "4Hit";
+   
    _saveValues = false;
    
 }
@@ -55,7 +58,7 @@ bool Crit4_RChange::areCompatible( Segment* parent , Segment* child )throw( BadS
          float ratioOfR = 1.;
          if (R2 > 0) ratioOfR = R1/R2;
          
-         if (_saveValues) _map_name_value["RChange_RChange"] = ratioOfR;
+         if (_saveValues) _map_name_value["Crit4_RChange"] = ratioOfR;
          
          
             
@@ -65,7 +68,7 @@ bool Crit4_RChange::areCompatible( Segment* parent , Segment* child )throw( BadS
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["RChange_RChange"] = 1.;
+         if (_saveValues) _map_name_value["Crit4_RChange"] = 1.;
          
       }
       

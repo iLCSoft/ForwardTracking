@@ -7,7 +7,7 @@
 #include "TTree.h"
 
 #include "Criteria.h"
-
+#include "FTrackTools.h"
 
 using namespace FTrack;
 
@@ -58,12 +58,16 @@ void calcMinMaxOfQuantile( std::vector< float > values, float &min, float &max, 
 
 int main(int argc,char *argv[]){
    
-   std::string ROOT_FILE_PATH = "/scratch/ilcsoft/Steers/TrueTracksCritAnalysis.root";
-   if( argc >= 3 ) ROOT_FILE_PATH = argv[2];
-
+   
    float quantile = 1.;
    
    if( argc >= 2 ) quantile = atof( argv[1] );
+   
+   
+   std::string ROOT_FILE_PATH = "/scratch/ilcsoft/Steers/TrueTracksCritAnalysis.root";
+   if( argc >= 3 ) ROOT_FILE_PATH = argv[2];
+
+
    
    
    
@@ -75,14 +79,16 @@ int main(int argc,char *argv[]){
     
    
    Criteria::init();
-   std::vector< std::string > critTypes = Criteria::getTypes();
+   std::set< std::string > critTypes = Criteria::getTypes();
    
+   std::set< std::string >::iterator iType;
    
+   std::string steerInfo = "\n\n"; //for getting something that can be used in the marlin steer file
+   std::string steerInfob; // a second part
    
-   
-   for( unsigned i = 0; i < critTypes.size(); i++ ){ // once for every type of criteria ( 1 type = 1 tree in ROOT file )
+   for( iType = critTypes.begin(); iType != critTypes.end(); iType++ ){ // once for every type of criteria ( 1 type = 1 tree in ROOT file )
       
-      
+         
       std::map < std::string , std::vector <float> > map_name_value;
       
       
@@ -90,24 +96,30 @@ int main(int argc,char *argv[]){
       /*                Read out the tree                                                           */
       /**********************************************************************************************/
       
-      std::string critType = critTypes[i];
+      std::string critType = *iType;
       std::string treeName = critType;
       std::cout << "\n" << critType;
    
       TTree* tree = (TTree*) rootFile->Get( treeName.c_str() );
       unsigned nTreeEntries = tree->GetEntries();
       
-      std::vector< std::string > crits = Criteria::getCriteria( critType );
+      std::set< std::string > crits = Criteria::getCriteriaNames( critType );
+      std::set< std::string >::iterator iCrit;
+      
+      
+      
       
       
       for (unsigned j = 0; j< nTreeEntries; j++){
       
-         for( unsigned k=0; k < crits.size() ; k++){
+         
+         
+         for( iCrit = crits.begin(); iCrit != crits.end() ; iCrit++){
             
             
-            std::string critName = crits[k];
+            std::string critName = *iCrit;
             
-            std::string branchName = critName + "_" + critName;
+            std::string branchName = critName;
             
             map_name_value[ critName ].push_back( 0. );
             
@@ -144,22 +156,32 @@ int main(int argc,char *argv[]){
          min -= 0.01*fabs(min); // So that the actual minimum is not the boarder, but inside by a little bit
          max += 0.01*fabs(max);
          
-//          std::cout << "\n" << critName << ": min = " << min << ", max = " << max;
-         std::cout << "\n\t" << "Crit" << critType[0] << "_" << critName 
-                   << "( " << min << " , " << max << " )";
+         std::cout << "\n" << critName << ": min = " << min << ", max = " << max;
+         steerInfo += "\n<parameter name=\"" + critName + "_min\" type=\"float\">" + floatToString(min) + "</parameter>";
+         steerInfo += "\n<parameter name=\"" + critName + "_max\" type=\"float\">" + floatToString(max) + "</parameter>";
+         steerInfob += critName + " ";
          
       }
       
-      /**********************************************************************************************/
-      /*                Save the information                                                        */
-      /**********************************************************************************************/
+
+   steerInfo += "\n\n";
+
 
    
    }
    
+   steerInfo += "<parameter name=\"Criteria\" type=\"StringVec\">";
+   steerInfo += steerInfob;
+   steerInfo += "</parameter>\n\n";
+   
+   std::cout << steerInfo;
    
    delete rootFile;
    
+
+   
+   
+
    
    
    

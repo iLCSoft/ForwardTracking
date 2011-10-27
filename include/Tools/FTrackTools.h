@@ -46,6 +46,10 @@ namespace FTrack{
    /** Converts an int to a string
     */
    std::string intToString (int i);
+   
+   /** Converts a float to a string
+    */
+   std::string floatToString (float f);
 
 
    /** method that compares two TrackerHits.

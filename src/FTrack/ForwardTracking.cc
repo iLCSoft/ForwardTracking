@@ -25,6 +25,7 @@
 //--------------------------------------------------------------
 //My own classes begin
 
+#include "FTrackTools.h"
 #include "TrackSubset.h"
 #include "FTDRepresentation.h"
 #include "AutCode.h"
@@ -35,7 +36,6 @@
 #include "AutHit.h"
 
 
-#include "Criteria.h"
 
 
 // the hit connectors
@@ -101,6 +101,43 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               _SmoothOn,
                               bool(false));
    
+   /////////////////////////////////////////////////////////////////////////////////
+   // Test
+   
+
+   Criteria::init();
+   std::vector< std::string > allCriteria = Criteria::getAllCriteriaNamesVec();
+   
+   
+   registerProcessorParameter( "Criteria",
+                               "A vector of the criteria that are going to be used. For every criterion a min and max needs to be set!!!",
+                               _criteriaNames,
+                               allCriteria);
+   
+   for( unsigned i=0; i < _criteriaNames.size(); i++ ){
+    
+      
+      std::string critMinString = _criteriaNames[i] + "_min";
+      
+      registerProcessorParameter( critMinString,
+                                  "The minimum of " + _criteriaNames[i],
+                                  _critMinima[ _criteriaNames[i] ],
+                                  float( 0. ));
+      
+      
+      std::string critMaxString = _criteriaNames[i] + "_max";
+      
+      registerProcessorParameter( critMaxString,
+                                  "The maximum of " + _criteriaNames[i],
+                                  _critMaxima[ _criteriaNames[i] ],
+                                  float( 0. ));
+      
+   
+   }
+      
+   
+   /////////////////////////////////////////////////////////////////////////////////
+   
                                 
                                 
 }
@@ -134,6 +171,42 @@ void ForwardTracking::init() {
    //Then initialise
    _trackFitter.initialise( "KalTest" , marlin::Global::GEAR , "" ); //Use KalTest as Fitter
   
+   
+   
+   
+   // store the criteria where they belong
+   for( unsigned i=0; i<_criteriaNames.size(); i++ ){
+      
+      std::string critName = _criteriaNames[i];
+      
+      ICriterion* crit = Criteria::createCriterion( critName, _critMinima[critName] , _critMaxima[critName] );
+      
+      std::string type = crit->getType();
+      
+      streamlog_out( DEBUG4 ) <<  "\nAdded: Criterion " << critName << " (type =  " << type 
+                              << " ). Min = " << _critMinima[critName]
+                              << ", Max = " << _critMaxima[critName];
+      
+      if( type == "2Hit" ){
+         
+         _crit2Vec.push_back( crit );
+         
+      }
+      else 
+      if( type == "3Hit" ){
+         
+         _crit3Vec.push_back( crit );
+         
+      }
+      else 
+      if( type == "4Hit" ){
+         
+         _crit4Vec.push_back( crit );
+         
+      }
+
+
+   }
 
   
 
@@ -247,11 +320,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
       
       }
-      
-      
-      
-      
-
       
       
       streamlog_out( MESSAGE0 ) << "\n--SegementBuilder--" ;
@@ -371,7 +439,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Get the track candidates
       std::vector <Track*> autTrackCandidates = automaton.getTracks();
       
-      trackCandidates = autTrackCandidates;
+//       trackCandidates = autTrackCandidates;
            
       /**********************************************************************************************/
       /*                Fitting                                                                     */
@@ -394,7 +462,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       
       
-      /*
+      
       unsigned nTracksRejected = 0;
       unsigned nTracksKept = 0;
       
@@ -431,7 +499,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       streamlog_out (MESSAGE0) << "\n Kept " <<  nTracksKept 
                              << " tracks with good chi2Prob, and rejected " << nTracksRejected << "\n";
       
-     */ 
+      
       /*
       // Output of the tracks                       
       for ( unsigned i=0; i< trackCandidates.size(); i++ ){
@@ -457,7 +525,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
                              
-         /*             
+                      
       // Make a TrackSubset
       TrackSubset subset;
       subset.addTracks( trackCandidates ); 
@@ -474,7 +542,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          delete rejectedTracks[i];
          
       }
-      */
+      
       /**********************************************************************************************/
       /*               finally: save the tracks                                                     */
       /**********************************************************************************************/
@@ -482,7 +550,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
-      for (unsigned int i=0; i < trackCandidates.size(); i++) trkCol->addElement( trackCandidates[i] );
+      for (unsigned int i=0; i < tracks.size(); i++) trkCol->addElement( tracks[i] );
       evt->addCollection(trkCol,_ForwardTrackCollection.c_str());
       
 
@@ -525,7 +593,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 void ForwardTracking::check( LCEvent * evt ) {}
 
 
-void ForwardTracking::end(){}
+void ForwardTracking::end(){
+   
+   for ( unsigned i=0; i< _crit2Vec.size(); i++) delete _crit2Vec[i];
+   for ( unsigned i=0; i< _crit3Vec.size(); i++) delete _crit3Vec[i];
+   for ( unsigned i=0; i< _crit4Vec.size(); i++) delete _crit4Vec[i];
+   
+   
+}
 
 void ForwardTracking::drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal){
    

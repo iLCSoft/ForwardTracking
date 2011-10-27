@@ -10,6 +10,9 @@ Crit2_RZRatio::Crit2_RZRatio ( float ratioMin, float ratioMax ){
    _ratioMax = ratioMax;
    _ratioMin = ratioMin;
    
+   _name = "Crit2_RZRatio";
+   _type = "2Hit";
+   
    _saveValues = false;
    
    
@@ -40,7 +43,7 @@ bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child )throw( BadS
       if ( az-bz  != 0. ) ratioSquared = ( (ax-bx)*(ax-bx) + (ay-by)*(ay-by) + (az-bz)*(az-bz) ) / ( (az-bz) * ( az-bz ) );
       
       
-      if (_saveValues) _map_name_value[ "RZRatio_RZRatio"] = sqrt( ratioSquared );
+      if (_saveValues) _map_name_value[ "Crit2_RZRatio"] = sqrt( ratioSquared );
       
 
       

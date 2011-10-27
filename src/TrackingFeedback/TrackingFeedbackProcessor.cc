@@ -12,6 +12,7 @@
 #include <EVENT/LCRelation.h>
 #include <EVENT/Track.h>
 #include <EVENT/MCParticle.h>
+#include <IMPL/TrackImpl.h>
 #include <cmath>
 #include "TVector3.h"
 #include "fstream"
@@ -489,13 +490,60 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                   
          streamlog_out( MESSAGE0 )  << "chi2Prob = " << chi2Prob 
                                     << "( chi2=" << chi2 <<", Ndf=" << ndf << " )\n";
-         
+                                    
+                                    
+        
                                              
          std::vector<TrackerHit*> cheatTrackHits = cheatTrack->getTrackerHits(); // we write it into an own vector so wen can sort it
          sort (cheatTrackHits.begin() , cheatTrackHits.end() , compare_z );
          // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
          // So the direction of the hits when following the index from 0 on is:
          // from inside out: from the IP into the distance.
+         
+         
+         // check the chi2 of shorter track versions
+         ///////////////////////////////////////
+         
+         
+         
+         if( cheatTrackHits.size() >= 3 ){
+            
+            _trackFitter.clearTracks();
+            
+            TrackImpl* shorterTrack = new TrackImpl();
+            
+            for( unsigned j=0; j<2; j++ ) shorterTrack->addHit( cheatTrackHits[j]);  //add the first 2 hits
+            
+            _trackFitter.addTrack( shorterTrack ); //store the track in the trackfitter
+         
+            
+            
+            for( unsigned j=2; j<cheatTrackHits.size(); j++ ){ 
+               
+               // add a hit and fit
+               
+               shorterTrack->addHit( cheatTrackHits[j] );
+               
+               std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
+               
+               double chi2 = fittedTracks[0]->getChi2();
+               double ndf = fittedTracks[0]->getNdf();
+               
+               double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
+               
+               streamlog_out( MESSAGE0 )  << "\t" << j+1 << "-hit track: chi2Prob = " << chi2Prob 
+               << "( chi2=" << chi2 <<", Ndf=" << ndf << " )\n";
+               
+               
+               
+            }
+         
+         }
+         
+         
+         ////////////////////////////////////////
+         
+         
          
          // Make a helix from the mcp
          HelixClass helixClass;

@@ -14,6 +14,9 @@ Crit4_DistToExtrapolation::Crit4_DistToExtrapolation ( float distMin , float dis
    _distMin = distMin;
    _distMax = distMax;
    
+   _name = "Crit4_DistToExtrapolation";
+   _type = "4Hit";
+   
    _saveValues = false;
    
 }
@@ -79,7 +82,7 @@ bool Crit4_DistToExtrapolation::areCompatible( Segment* parent , Segment* child 
          double DistToPrediction = sqrt ( ( xChildPred- dx )*( xChildPred- dx ) + ( yChildPred- dy )*( yChildPred- dy ) );
          double distNormed = DistToPrediction / zDistChild;   
          
-         if (_saveValues) _map_name_value["DistToExtrapolation_DistToExtrapolation"] = distNormed;
+         if (_saveValues) _map_name_value["Crit4_DistToExtrapolation"] = distNormed;
          
          if ( distNormed > _distMax ) return false;
          if ( distNormed < _distMin ) return false;
@@ -87,7 +90,7 @@ bool Crit4_DistToExtrapolation::areCompatible( Segment* parent , Segment* child 
       }
       catch ( InvalidParameter ){
          
-         if (_saveValues) _map_name_value["DistToExtrapolation_DistToExtrapolation"] = -1.;
+         if (_saveValues) _map_name_value["Crit4_DistToExtrapolation"] = -1.;
       
       }
       
