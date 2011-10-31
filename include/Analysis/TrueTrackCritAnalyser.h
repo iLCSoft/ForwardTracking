@@ -9,7 +9,6 @@
 #include "Segment.h"
 #include <EVENT/LCRelation.h>
 
-#include "FTDTrackFitter.h"
 #include "ICriterion.h"
 #include <string>
 
@@ -100,8 +99,6 @@ protected:
    std::vector <ICriterion*> _crits4;
 
    
-   //For Fitting
-   FTDTrackFitter _trackFitter;
    
    bool _MSOn ;
    bool _ElossOn ;
