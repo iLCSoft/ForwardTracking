@@ -8,7 +8,7 @@
 #include <EVENT/Track.h>
 #include "Segment.h"
 
-#include "FTDTrackFitter.h"
+#include <gear/BField.h>
 #include "Criteria.h"
 
 using namespace lcio ;
@@ -103,8 +103,7 @@ class ForwardTracking : public Processor {
 
    double _chi2ProbCut;
 
-   //For Fitting
-   FTDTrackFitter _trackFitter;
+
 
    bool _MSOn ;
    bool _ElossOn ;

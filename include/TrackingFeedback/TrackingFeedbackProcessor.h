@@ -4,7 +4,6 @@
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
-#include "FTDTrackFitter.h"
 #include "ICriterion.h"
 
 
@@ -69,13 +68,17 @@ class TrackingFeedbackProcessor : public Processor {
    double _chi2ProbCut;
    int _nHitsMin;
    
-   //For Fitting
-   FTDTrackFitter _trackFitter;
+
 
    std::vector <ICriterion*> _crits2;
    std::vector <ICriterion*> _crits3;
    std::vector <ICriterion*> _crits4;
 
+   
+   bool _MSOn ;
+   bool _ElossOn ;
+   bool _SmoothOn ;
+   
    
 } ;
 

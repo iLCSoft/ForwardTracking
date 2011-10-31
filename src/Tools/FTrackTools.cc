@@ -159,13 +159,17 @@ void FTrack::saveToRoot( std::string rootFileName, std::string treeName , std::v
 }
 
 
-bool FTrack::compare_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b ){
+bool FTrack::compare_TrackerHit_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b ){
    
    return ( fabs(a->getPosition()[2]) < fabs( b->getPosition()[2]) ); //compare their z values
    
 }
 
-
+bool FTrack::compare_z( AutHit* a, AutHit* b ){
+   
+   return ( fabs( a->getZ() ) < fabs( b->getZ() ) ); //compare their z values
+   
+}
 
 
 

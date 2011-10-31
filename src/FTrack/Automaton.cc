@@ -231,6 +231,8 @@ void Automaton::lengthenSegments(){
             }
 
          }
+         
+         delete segment;
 
       }
 
@@ -512,17 +514,17 @@ void Automaton::cleanBadConnections(){
 
 
 
-std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std::vector< TrackerHit*> hits , unsigned minHits ){
+std::vector <MyTrack*> Automaton::getTracksOfSegment ( Segment* segment, const std::vector< AutHit*> hits , unsigned minHits ){
 
 
-   std::vector <Track*> tracks; //the vector of the tracks to be returned
+   std::vector <MyTrack*> tracks; //the vector of the tracks to be returned
 
    std::vector <AutHit*> autHits = segment->getAutHits(); // the autHits of the segment
 
-   std::vector <TrackerHit*> newHits= hits;
+   std::vector <AutHit*> newHits= hits;
 
    //add the outer hit
-   if ( autHits[0]->isVirtual() == false ) newHits.push_back ( autHits[0]->getTrackerHit() );  //Of course add only real hits to the track
+   if ( autHits[0]->isVirtual() == false ) newHits.push_back ( autHits[0] );  //Of course add only real hits to the track
 
 
    std::list <Segment*> children = segment->getChildren();
@@ -532,7 +534,7 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
       //add the rest of the hits to the vector
       for ( unsigned int i = 1 ; i < autHits.size(); i++){
 
-         if ( autHits[i]->isVirtual() == false ) newHits.push_back ( autHits[i]->getTrackerHit() );
+         if ( autHits[i]->isVirtual() == false ) newHits.push_back ( autHits[i] );
 
       }
 
@@ -540,7 +542,7 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
       if ( newHits.size() >= minHits ){
 
          //make a new track
-         TrackImpl* newTrack = new TrackImpl();
+         MyTrack* newTrack = new MyTrack();
 
 
          //Store all the hits in the track
@@ -563,7 +565,7 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
       for ( std::list<Segment*>::iterator iChild=children.begin(); iChild!= children.end(); iChild++){ //for all children
 
 
-         std::vector <Track*> newTracks = getTracksOfSegment( *iChild , newHits );
+         std::vector <MyTrack*> newTracks = getTracksOfSegment( *iChild , newHits );
 
          for (unsigned int j=0; j < newTracks.size(); j++){//for all the tracks of the child
 
@@ -584,13 +586,13 @@ std::vector <Track*> Automaton::getTracksOfSegment ( Segment* segment, const std
 }
 
 
-std::vector <Track*> Automaton::getTracks( unsigned minHits ){
+std::vector <MyTrack*> Automaton::getTracks( unsigned minHits ){
 
 
 
-   std::vector <Track*> tracks;
+   std::vector <MyTrack*> tracks;
 
-   std::vector <TrackerHit*> emptyHitVec;
+   std::vector <AutHit*> emptyHitVec;
 
 
    for ( unsigned layer = 0 ; layer < _segments.size() ; layer++ ){ //over all layers
@@ -607,7 +609,7 @@ std::vector <Track*> Automaton::getTracks( unsigned minHits ){
 
 
             // get the tracks from the segment
-            std::vector <Track*> newTracks = getTracksOfSegment( segment , emptyHitVec , minHits );
+            std::vector <MyTrack*> newTracks = getTracksOfSegment( segment , emptyHitVec , minHits );
 
             // and add them to the vector of all tracks
             tracks.insert( tracks.end() , newTracks.begin() , newTracks.end() );

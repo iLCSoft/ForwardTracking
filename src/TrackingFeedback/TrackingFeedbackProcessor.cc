@@ -28,7 +28,7 @@
 #include <sstream>
 #include <MarlinCED.h>
 #include "FTrackTools.h"
-
+#include "MyTrack.h"
 
 #include <IMPL/TrackerHitPlaneImpl.h>
 
@@ -120,6 +120,21 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               _nHitsMin,
                               int (4)  );   
    
+   
+   registerProcessorParameter("MultipleScatteringOn",
+                              "Use MultipleScattering in Fit",
+                              _MSOn,
+                              bool(true));
+   
+   registerProcessorParameter("EnergyLossOn",
+                              "Use Energy Loss in Fit",
+                              _ElossOn,
+                              bool(true));
+   
+   registerProcessorParameter("SmoothOn",
+                              "Smooth All Measurement Sites in Fit",
+                              _SmoothOn,
+                              bool(false));
 
 }
 
@@ -139,17 +154,9 @@ void TrackingFeedbackProcessor::init() {
     _nEvt = 0 ;
     
     
-    //Initialise the TrackFitter (as the system and the method of fitting will stay the same over the events, we might set it up here,
-    //( otherwise we would have to repeat this over and over again)
+    //Initialise the TrackFitter of the tracks:
+    MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
     
-    //First set some bools
-    _trackFitter.setMSOn( true );        // Multiple scattering on
-    _trackFitter.setElossOn( true );     // Energy loss on
-    _trackFitter.setSmoothOn( false );   // Smoothing off
-    
-    //Then initialise
-    _trackFitter.initialise( "KalTest" , marlin::Global::GEAR , "" ); //Use KalTest as Fitter
-
 
     
     //Add the criteria that will be checked
@@ -231,7 +238,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    // fill the vector with the relations
    for( int i=0; i < nMCTracks; i++){
       
-      bool isOfInterest = true;  // A bool to hold information wether this track we are looking at is interesting for us at all
+      bool isOfInterest = true;  // A bool to hold information whether this track we are looking at is interesting for us at all
                                  // So we might apply different criteria to it.
                                  // For example: if a track is very curly we might not want to consider it at all.
                                  // So when we want to know how high the percentage of reconstructed tracks is, we might
@@ -286,21 +293,24 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       //If the chi2 probability is too low
       
       //Fit the track
-      //first: empty the stored tracks (if there are any)
-      _trackFitter.clearTracks();
+      std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
+      // sort the hits in the track
       
-      //then: fill in our trackCandidates:
-      _trackFitter.addTrack( track );
+      // Make authits from the trackerHits
+      std::vector <AutHit*> autHits;
       
-      //And get back fitted tracks
-      std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
+      for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits.push_back( new AutHit( trackerHits[j] ) );
       
-      double chi2 = fittedTracks[0]->getChi2();
-      double ndf = fittedTracks[0]->getNdf();
       
-      double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
+      MyTrack myTrack;
+      for( unsigned j=0; j<autHits.size(); j++ ) myTrack.addHit( autHits[j] );
       
-      if ( chi2Prob < _chi2ProbCut ) isOfInterest = false;
+      myTrack.fit();
+      
+      if ( myTrack.getChi2Prob() < _chi2ProbCut ) isOfInterest = false;
+      
+      for( unsigned j=0; j<autHits.size(); j++ ) delete autHits[j];
+      
       //
       //////////////////////////////////////////////////////////////////////////////////
       
@@ -473,77 +483,69 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          streamlog_out( MESSAGE0 ) << "x= " << mcp->getVertex()[0] << " y= " <<  mcp->getVertex()[1] << " z= " <<  mcp->getVertex()[2] << std::endl;
          streamlog_out( MESSAGE0 ) << "/gun/direction " << mcp->getMomentum()[0]/mcpP << " " <<  mcp->getMomentum()[1]/mcpP << " " <<  mcp->getMomentum()[2]/mcpP << std::endl;
 
-         //Fit the track
-         //first: empty the stored tracks (if there are any)
-         _trackFitter.clearTracks();
          
-         //then: fill in our trackCandidates:
-         _trackFitter.addTrack( cheatTrack );
-         
-         //And get back fitted tracks
-         std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
-
-         double chi2 = fittedTracks[0]->getChi2();
-         double ndf = fittedTracks[0]->getNdf();
-         
-         double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
-                  
-         streamlog_out( MESSAGE0 )  << "chi2Prob = " << chi2Prob 
-                                    << "( chi2=" << chi2 <<", Ndf=" << ndf << " )\n";
-                                    
-                                    
-        
-                                             
          std::vector<TrackerHit*> cheatTrackHits = cheatTrack->getTrackerHits(); // we write it into an own vector so wen can sort it
-         sort (cheatTrackHits.begin() , cheatTrackHits.end() , compare_z );
+         sort (cheatTrackHits.begin() , cheatTrackHits.end() , compare_TrackerHit_z );
          // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
          // So the direction of the hits when following the index from 0 on is:
          // from inside out: from the IP into the distance.
          
          
-         // check the chi2 of shorter track versions
-         ///////////////////////////////////////
          
+         std::vector <AutHit*> autHits;
+         
+         
+         
+         
+         // check the chi2 of different lengths
+         ///////////////////////////////////////
          
          
          if( cheatTrackHits.size() >= 3 ){
             
-            _trackFitter.clearTracks();
             
-            TrackImpl* shorterTrack = new TrackImpl();
+            MyTrack myTrack;
             
-            for( unsigned j=0; j<2; j++ ) shorterTrack->addHit( cheatTrackHits[j]);  //add the first 2 hits
+           
+            for( unsigned j=0; j<2; j++ ){//add the first 2 hits
+               
+               
+               AutHit* autHit = new AutHit( cheatTrackHits[j] );
+               
+               autHits.push_back( autHit );
+               
+               myTrack.addHit( autHit );  
+               
+               
+            }
             
-            _trackFitter.addTrack( shorterTrack ); //store the track in the trackfitter
-         
             
             
-            for( unsigned j=2; j<cheatTrackHits.size(); j++ ){ 
+            
+            for( unsigned j=2; j<cheatTrackHits.size(); j++ ){ //for 3 hits plus (enough to fit)
                
                // add a hit and fit
                
-               shorterTrack->addHit( cheatTrackHits[j] );
+               AutHit* autHit = new AutHit( cheatTrackHits[j] );
                
-               std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
+               autHits.push_back( autHit );
                
-               double chi2 = fittedTracks[0]->getChi2();
-               double ndf = fittedTracks[0]->getNdf();
+               myTrack.addHit( autHit );  
                
-               double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
+               myTrack.fit();
                
-               streamlog_out( MESSAGE0 )  << "\t" << j+1 << "-hit track: chi2Prob = " << chi2Prob 
-               << "( chi2=" << chi2 <<", Ndf=" << ndf << " )\n";
+               streamlog_out( MESSAGE0 )  << "\t" << j+1 << "-hit track: chi2Prob = " << myTrack.getChi2Prob() 
+               << "( chi2=" << myTrack.getChi2() <<", Ndf=" << myTrack.getNdf() << " )\n";
                
                
                
             }
-         
+            
+            
          }
          
          
          ////////////////////////////////////////
-         
-         
          
          // Make a helix from the mcp
          HelixClass helixClass;
@@ -605,14 +607,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          cheatTrackHits.insert( cheatTrackHits.begin() , virtualIPHit );
          
-         // Make authits from the trackerHits
-         std::vector <AutHit*> autHits;
-         
-         for ( unsigned j=0; j< cheatTrackHits.size(); j++ ){
-            
-            autHits.push_back( new AutHit( cheatTrackHits[j] ) );
-            
-         }
+         autHits.insert( autHits.begin() , new AutHit( virtualIPHit ) );
+
          
          // Now we have a vector of autHits starting with the IP followed by all the hits from the track.
          // So we now are able to build segments from them
@@ -817,9 +813,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          streamlog_out( MESSAGE0 ) << "\n";
          
          for (unsigned j=0; j<segments1.size(); j++) delete segments1[j];
+         segments1.clear();
          for (unsigned j=0; j<segments2.size(); j++) delete segments2[j];
+         segments2.clear();
          for (unsigned j=0; j<segments3.size(); j++) delete segments3[j];
+         segments3.clear();
          for (unsigned j=0; j<autHits.size(); j++) delete autHits[j];
+         autHits.clear();
          
          delete virtualIPHit;
          
@@ -838,17 +838,41 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          std::map<Track*,TrackType> relTracks = myRelations[i]->relatedTracks;
          for (std::map<Track*,TrackType>::const_iterator it = relTracks.begin(); it != relTracks.end(); ++it)
          {
-            streamlog_out( DEBUG3 ) << TRACK_TYPE_NAMES[it->second] << "\t";
+            streamlog_out( MESSAGE0 ) << TRACK_TYPE_NAMES[it->second] << "\t";
             
-            for (unsigned int k = 0; k < it->first->getTrackerHits().size(); k++){
+            Track* track = it->first;
+            
+            std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
+            // sort the hits in the track
+            
+            // Make authits from the trackerHits
+            std::vector <AutHit*> autHits2;
+            
+            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new AutHit( trackerHits[j] ) );
+            
+            MyTrack myTrack;
+            for( unsigned j=0; j<autHits2.size(); j++ ) myTrack.addHit( autHits2[j] );
+            
+            myTrack.fit();
+            
+           
+            
+            // print out the hits
+            for (unsigned int k = 0; k < track->getTrackerHits().size(); k++){
                
-               streamlog_out( DEBUG3 ) << "(" << it->first->getTrackerHits()[k]->getPosition()[0] << ","
-                     << it->first->getTrackerHits()[k]->getPosition()[1] << ","
-                     << it->first->getTrackerHits()[k]->getPosition()[2] << ")";
+               streamlog_out( MESSAGE0 ) << "(" << track->getTrackerHits()[k]->getPosition()[0] << ","
+                     << track->getTrackerHits()[k]->getPosition()[1] << ","
+                     << track->getTrackerHits()[k]->getPosition()[2] << ")";
                
             }
             
-            streamlog_out( DEBUG3 )<<"\n";
+            streamlog_out( MESSAGE0 )<<"chi2prob = " << myTrack.getChi2Prob() << "\n";
+            
+            
+            
+            for( unsigned j=0; j<autHits2.size(); j++ ) delete autHits2[j];
+            
+            
          }
          
          
@@ -988,6 +1012,9 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 
 
      MarlinCED::draw(this); //CED
+     
+     
+     for( unsigned int k=0; k < myRelations.size(); k++) delete myRelations[k];
         
     _nEvt ++ ;
 }

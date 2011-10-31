@@ -30,7 +30,7 @@
 #include "FTDRepresentation.h"
 #include "SegmentBuilder.h"
 #include "HitCon.h"
-
+#include "MyTrack.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -315,16 +315,8 @@ void TrueTrackCritAnalyser::init() {
    /**********************************************************************************************/
    
    
-   //Initialise the TrackFitter (as the system and the method of fitting will stay the same over the events, we might set it up here,
-   //( otherwise we would have to repeat this over and over again)
-   
-   //First set some bools
-   _trackFitter.setMSOn(_MSOn);             // Multiple scattering on
-   _trackFitter.setElossOn( _ElossOn );     // Energy loss on
-   _trackFitter.setSmoothOn( _SmoothOn );   // Smoothing off
-   
-   //Then initialise
-   _trackFitter.initialise( "KalTest" , marlin::Global::GEAR , "" ); //Use KalTest as Fitter
+   //Initialise the TrackFitter of the tracks:
+   MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
    
    
 }
@@ -409,21 +401,26 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          //If the chi2 probability is too low
          
          //Fit the track
-         //first: empty the stored tracks (if there are any)
-         _trackFitter.clearTracks();
          
-         //then: fill in our trackCandidates:
-         _trackFitter.addTrack( track );
+         std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
+         // sort the hits in the track
+         sort( trackerHits.begin(), trackerHits.end(), compare_TrackerHit_z );
+         // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
+         // So the direction of the hits when following the index from 0 on is:
+         // from inside out: from the IP into the distance.
+        
+         // Make authits from the trackerHits
+         std::vector <AutHit*> autHits;
          
-         //And get back fitted tracks
-         std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
+         for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits.push_back( new AutHit( trackerHits[j] ) );
+        
          
-         double chi2 = fittedTracks[0]->getChi2();
-         double ndf = fittedTracks[0]->getNdf();
+         MyTrack myTrack;
+         for( unsigned j=0; j<autHits.size(); j++ ) myTrack.addHit( autHits[j] );
          
-         double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , ndf );
+         myTrack.fit();
          
-         if ( chi2Prob < _chi2ProbCut ) isOfInterest = false;
+         if ( myTrack.getChi2Prob() < _chi2ProbCut ) isOfInterest = false;
          //
          //////////////////////////////////////////////////////////////////////////////////
          
@@ -441,24 +438,6 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             double distToIP = sqrt( vtx[0]*vtx[0] + vtx[1]*vtx[1] + vtx[2]*vtx[2] );
             
             
-            
-            std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
-            // sort the hits in the track
-            sort( trackerHits.begin(), trackerHits.end(), compare_z );
-            // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
-            // So the direction of the hits when following the index from 0 on is:
-            // from inside out: from the IP into the distance.
-            
-
-            
-            // Make authits from the trackerHits
-            std::vector <AutHit*> autHits;
-            
-            for ( unsigned j=0; j< trackerHits.size(); j++ ){
-               
-               autHits.push_back( new AutHit( trackerHits[j] ) );
-               
-            }
             
             
             // Add the IP as a hit
@@ -628,8 +607,37 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             
             
-
-            // Clean up
+            /**********************************************************************************************/
+            /*                Save the fit of the track                                                   */
+            /**********************************************************************************************/
+            
+            // the data that will get stored
+            std::map < std::string , float > rootData;
+               
+               
+               
+            float chi2 = myTrack.getChi2();
+            int Ndf = myTrack.getNdf();
+            float chi2Prob = myTrack.getChi2Prob();
+            
+            
+            
+            rootData[ "chi2" ]          = chi2;
+            rootData[ "Ndf" ]           = Ndf;
+            rootData[ "nHits" ]         = myTrack.getHits().size();
+            rootData[ "chi2prob" ]      = chi2Prob;
+            
+            rootData["MCP_pt"] = pt;
+            rootData["MCP_distToIP"] = distToIP;
+            
+            rootDataVecKalman.push_back( rootData );
+            
+            
+            
+            
+            /**********************************************************************************************/
+            /*                Clean up                                                                    */
+            /**********************************************************************************************/
             
             for (unsigned i=0; i<segments1.size(); i++) delete segments1[i];
             for (unsigned i=0; i<segments2.size(); i++) delete segments2[i];
@@ -639,51 +647,6 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             delete virtualIPHit;
             
             
-            
-            /**********************************************************************************************/
-            /*                Make a fit of the track                                                     */
-            /**********************************************************************************************/
-            
-            // the data that will get stored
-            std::map < std::string , float > rootData;
-                     
-            //first: empty the stored tracks (if there are any)
-            _trackFitter.clearTracks();
-            
-            //then: fill in our trackCandidates:
-            _trackFitter.addTrack( track );
-            
-            //And get back fitted tracks
-            std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
-            
-            if( !fittedTracks.empty() ){
-               
-               Track* fittedTrack = fittedTracks[0];
-               
-               
-               float chi2 = fittedTrack->getChi2();
-               int Ndf = fittedTrack->getNdf();
-               
-               
-               // Calculate the chi2 probability
-               float chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , Ndf );
-               
-               
-               
-               rootData[ "chi2" ]          = chi2;
-               rootData[ "Ndf" ]           = Ndf;
-               rootData[ "nHits" ]         = fittedTrack->getTrackerHits().size();
-               rootData[ "chi2prob" ]      = chi2Prob;
-               
-               rootData["MCP_pt"] = pt;
-               rootData["MCP_distToIP"] = distToIP;
-               
-               rootDataVecKalman.push_back( rootData );
-               
-               
-               
-            }
-         
        
          }
        

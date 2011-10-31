@@ -55,7 +55,6 @@ void calcMinMaxOfQuantile( std::vector< float > values, float &min, float &max, 
 }
 
 
-
 int main(int argc,char *argv[]){
    
    
@@ -159,7 +158,7 @@ int main(int argc,char *argv[]){
          std::cout << "\n" << critName << ": min = " << min << ", max = " << max;
          steerInfo += "\n<parameter name=\"" + critName + "_min\" type=\"float\">" + floatToString(min) + "</parameter>";
          steerInfo += "\n<parameter name=\"" + critName + "_max\" type=\"float\">" + floatToString(max) + "</parameter>";
-         steerInfob += critName + " ";
+         steerInfob += critName + "\n";
          
       }
       

@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include "EVENT/TrackerHit.h"
+#include "AutHit.h"
 #include <cmath>
 
 namespace FTrack{
@@ -60,8 +61,8 @@ namespace FTrack{
     * 
     * @return true if |a.z| < |b.z| , i.e. true if a is nearer to z=0 than b is
     */
-   bool compare_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b );
-   
+   bool compare_TrackerHit_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b );
+   bool compare_z( AutHit* a, AutHit* b );   
    
 
 }

@@ -5,7 +5,7 @@
 #include "Segment.h"
 #include "ICriterion.h"
 
-#include "EVENT/Track.h"
+#include "MyTrack.h"
 
 namespace FTrack{
    
@@ -131,13 +131,13 @@ namespace FTrack{
        * that have less won't be considered as tracks and won't be returned.
        * 
        */
-      std::vector <Track*> getTracks( unsigned minHits = 3 );
+      std::vector <MyTrack*> getTracks( unsigned minHits = 3 );
       
       
       /**Returns all the tracks starting from this segment.
        * It is a recursive method and gets invoked by getTracks.
        */
-      std::vector <Track*> getTracksOfSegment ( Segment* segment, std::vector< TrackerHit*> hits , unsigned minHits = 3 );
+      std::vector <MyTrack*> getTracksOfSegment ( Segment* segment, std::vector< AutHit* > hits , unsigned minHits = 3 );
       
       
       /**

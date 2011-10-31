@@ -18,6 +18,7 @@ namespace FTrack{
       
       AutHit( TrackerHit* trackerHit );
       
+      
       TrackerHit* getTrackerHit(){ return _trackerHit; };
       
       float getX() { return _x; };

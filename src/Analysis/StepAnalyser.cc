@@ -138,7 +138,7 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
       std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
       
       //sort the hits
-      sort( trackerHits.begin(), trackerHits.end(), compare_z ); 
+      sort( trackerHits.begin(), trackerHits.end(), compare_TrackerHit_z ); 
       
       int path = 0; // An integer encoding the path of the particle: 5432 = a hit moving from layer 2 to layer 3, 4 and then 5
                     // 542 is the same track, but skipping layer 3.

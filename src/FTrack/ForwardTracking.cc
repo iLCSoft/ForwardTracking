@@ -1,5 +1,4 @@
 #include "ForwardTracking.h"
-#include <iostream>
 #include <algorithm>
 
 #include <EVENT/TrackerHit.h>
@@ -15,15 +14,13 @@
 
 #include <MarlinCED.h>
 
-#include <gear/BField.h>
 
-
-// Root, for calculating the chi2 probability. 
-#include "Math/ProbFunc.h"
 
 
 //--------------------------------------------------------------
 //My own classes begin
+
+#include "MyTrack.h"
 
 #include "FTrackTools.h"
 #include "TrackSubset.h"
@@ -160,17 +157,8 @@ void ForwardTracking::init() {
     
   
 
-   //Initialise the TrackFitter (as the system and the method of fitting will stay the same over the events, we might set it up here,
-   //( otherwise we would have to repeat this over and over again)
-   
-   //First set some bools
-   _trackFitter.setMSOn(_MSOn);        // Multiple scattering on
-   _trackFitter.setElossOn( _ElossOn );     // Energy loss on
-   _trackFitter.setSmoothOn( _SmoothOn );   // Smoothing off
-   
-   //Then initialise
-   _trackFitter.initialise( "KalTest" , marlin::Global::GEAR , "" ); //Use KalTest as Fitter
-  
+   //Initialise the TrackFitter of the tracks:
+   MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
    
    
    
@@ -226,11 +214,11 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 //--CED---------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
 
-  MarlinCED::newEvent(this , 0) ; 
+//   MarlinCED::newEvent(this , 0) ; 
 
-  CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+//   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
 
-  pHandler.update(evt); 
+//   pHandler.update(evt); 
 
 //-----------------------------------------------------------------------
   
@@ -259,9 +247,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
    if( col != NULL ){
 
      
-      std::vector <Track*> trackCandidates;
-     
-      int nHits = col->getNumberOfElements()  ;
+      unsigned nHits = col->getNumberOfElements()  ;
 
       
       streamlog_out( MESSAGE0 ) << "\n\nNumber of hits on the FTDs: " << nHits <<"\n";
@@ -278,9 +264,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       FTDRepresentation ftdRep ( &autCode );
       std::vector< AutHit* > autHitsTBD; //AutHits to be deleted
       
-      for(int i=0; i< nHits ; i++){
-
-       
+      for(unsigned i=0; i< nHits ; i++){
+         
+         
          TrackerHit* trkHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
          
          //Make an AutHit from the TrackerHit 
@@ -289,22 +275,23 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
        
          ftdRep.addHit( autHit );
          
-                
+         
         
       }
       
       //TODO: put this somewhere else? Maybe a method or another place? To keep the processor more readable
       // Add the virtual IP to the hits (one for forward and one for backward)
       
+      TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
+      
+      
+      double pos[] = {0. , 0. , 0.};
+      virtualIPHit->setPosition(  pos  ) ;
+      
+      
       for ( int side=-1 ; side <= 1; side+=2 ){
-
          
-         TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
          
-         //TODO: keep in mind, that it might be a good idea to implement more things here (like u and v and stuff?)
-         
-         double pos[] = {0. , 0. , 0.};
-         virtualIPHit->setPosition(  pos  ) ;
          
          // create the AutHit and set its parameters
          AutHit* virtualIPAutHit = new AutHit ( virtualIPHit );
@@ -327,17 +314,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Create a segmentbuilder
       SegmentBuilder segBuilder( &ftdRep );
       
-      //Load in some criteria
-      std::vector <ICriterion*> crit2Vec;
-      
-      crit2Vec.push_back( new Crit2_DeltaPhi( 0 , 18.8252 ) );
-      crit2Vec.push_back( new Crit2_DeltaRho( 26.6211 , 118.352 ) );
-      crit2Vec.push_back( new Crit2_HelixWithIP( 0.953064 , 1.13454 ) );
-      crit2Vec.push_back( new Crit2_RZRatio( 1.00511 , 1.05042 ) );
-      crit2Vec.push_back( new Crit2_StraightTrackRatio( 0.924623 , 1.01756 ) );
       
       
-      segBuilder.addCriteria ( crit2Vec );
+      segBuilder.addCriteria ( _crit2Vec );
       
       //Also load hit connectors
       HitCon hitCon( &autCode );
@@ -348,7 +327,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // And get out the 1-segments
       Automaton automaton = segBuilder.get1SegAutomaton();
       
-            
+      
       /**********************************************************************************************/
       /*                Automaton                                                                   */
       /**********************************************************************************************/
@@ -359,17 +338,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
 //       automaton.drawSegments();
       
-      // Load some criteria for the automaton:
-      std::vector <ICriterion*> crit3Vec;
-      
-      crit3Vec.push_back( new Crit3_2DAngle( 0. , 32.0663 ) );
-      crit3Vec.push_back( new Crit3_3DAngle( 0. , 9.60971 ) );
-      crit3Vec.push_back( new Crit3_ChangeRZRatio( 0.98226 , 1.01224 ) );
-      crit3Vec.push_back( new Crit3_IPCircleDist( 0 , 11.8752 ) );
-      crit3Vec.push_back( new Crit3_PT( 0.203996 , 22.9936 ) );
       
       automaton.clearCriteria();
-      automaton.addCriteria( crit3Vec );  
+      automaton.addCriteria( _crit3Vec );  
       
       
       // Let the automaton lengthen its 1-segments to 2-segments
@@ -377,13 +348,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       automaton.lengthenSegments();
       
       
+      /*******************************/
+      /*      2-hit segments         */
+      /*******************************/
+      
+      
       // So now we have 2-segments and are ready to perform the cellular automaton.
 
       
       // Perform the automaton
       automaton.doAutomaton();
-      
-//       automaton.drawSegments();
       
       //Clean segments with bad states
       automaton.cleanBadStates();
@@ -395,24 +369,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       automaton.resetStates();
       
       
-      // Next: go to 3-hit segments:
+      /*******************************/
+      /*      3-hit segments         */
+      /*******************************/
       
-      
-      // Load some criteria for the automaton:
-      std::vector <ICriterion*> crit4Vec;
-      
-      crit4Vec.push_back( new Crit4_2DAngleChange( -8.18525 , 14.0879 ) );
-      crit4Vec.push_back( new Crit4_3DAngleChange( 0.708752 , 1.40708 ) );
-      crit4Vec.push_back( new Crit4_DistOfCircleCenters( 0.00508438 , 9849.63 ) );
-      crit4Vec.push_back( new Crit4_DistToExtrapolation( 5.85123e-06 , 41.4473 ) );
-      crit4Vec.push_back( new Crit4_NoZigZag( -18.9909 , 631.716 ) );
-      crit4Vec.push_back( new Crit4_PhiZRatioChange( 0.300892 , 12.248 ) );
-      crit4Vec.push_back( new Crit4_RChange( 0.0806439 , 2.92675 ) );
-    
       
       
       automaton.clearCriteria();
-      automaton.addCriteria( crit4Vec );      
+      automaton.addCriteria( _crit4Vec );      
       
       automaton.lengthenSegments();
       // So now we have 3 hit segments 
@@ -437,56 +401,43 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       //Get the track candidates
-      std::vector <Track*> autTrackCandidates = automaton.getTracks();
+      std::vector <MyTrack*> autTrackCandidates = automaton.getTracks();
       
 //       trackCandidates = autTrackCandidates;
-           
-      /**********************************************************************************************/
-      /*                Fitting                                                                     */
-      /**********************************************************************************************/
- 
-      streamlog_out( MESSAGE0 ) << "\n--Fitting--\n" ;
-      
-      //first: empty the stored tracks (if there are any)
-      _trackFitter.clearTracks();
-      
-      //then: fill in our trackCandidates:
-      _trackFitter.addTracks( autTrackCandidates );
-      
-      //And get back fitted tracks
-      std::vector <Track*> fittedTracks = _trackFitter.getFittedTracks();
   
       
       /**********************************************************************************************/
-      /*                Store the good tracks, delete the bad ones                                  */
+      /*                Fitting and erasing bad fits                                                */
       /**********************************************************************************************/
       
-      
+      std::vector< MyTrack* > trackCandidates;
       
       unsigned nTracksRejected = 0;
       unsigned nTracksKept = 0;
       
-      for ( unsigned i=0; i < fittedTracks.size(); i++ ){ //over all fitted tracks
-
-         Track* track = fittedTracks[i];
-         // calculate the chi squared probability
-         double chi2 = track->getChi2();
-         int Ndf = track->getNdf();
-         
-         double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , Ndf );
+      for ( unsigned i=0; i < autTrackCandidates.size(); i++ ){
+       
+         MyTrack* track = autTrackCandidates[i];
          
          
-         streamlog_out( DEBUG2 ) << "\n Track " << i << " chi2Prob = " << chi2Prob 
-                                 << "( chi2=" << chi2 <<", Ndf=" << Ndf << " )";
-
-      
-         if ( chi2Prob > _chi2ProbCut ){ //chi2 prob is okay
+         // fit the track
+         track->fit();
+         
+         
+         streamlog_out( DEBUG2 ) << "\n Track " << i 
+                                 << " chi2Prob = " << track->getChi2Prob() 
+                                 << "( chi2=" << track->getChi2() 
+                                 <<", Ndf=" << track->getNdf() << " )";
+       
+         
+         if ( track->getChi2Prob() > _chi2ProbCut ){ //chi2 prob is okay
             
             trackCandidates.push_back( track );         
             nTracksKept++;
             
          }
-         else{
+         else{ // chi2 prob is too low
+            
             
             nTracksRejected++;
             delete track; //Not needed anymore --> therefore delete it
@@ -496,36 +447,18 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       }      
    
    
-      streamlog_out (MESSAGE0) << "\n Kept " <<  nTracksKept 
-                             << " tracks with good chi2Prob, and rejected " << nTracksRejected << "\n";
+      streamlog_out (MESSAGE0)   << "\n Kept " <<  nTracksKept 
+                                 << " tracks with good chi2Prob, and rejected " << nTracksRejected << "\n";
+      
+    
       
       
-      /*
-      // Output of the tracks                       
-      for ( unsigned i=0; i< trackCandidates.size(); i++ ){
-         
-         std::vector < TrackerHit* > trackerHits = trackCandidates[i]->getTrackerHits();
-         
-         streamlog_out(DEBUG2) << "\n\nTrack " << i << ":";
-         
-         for ( unsigned j=0; j < trackerHits.size(); j++ ){
-            
-            const double* pos = trackerHits[j]->getPosition();
-            
-            streamlog_out(DEBUG2) << "\n( " << pos[0] << " , " << pos[1] << " , " << pos[2] << " )";
-         
-         }
-         
-      }*/
-
-                             
-                             
-                             
+      
       /**********************************************************************************************/
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
-                             
-                      
+     
+      
       // Make a TrackSubset
       TrackSubset subset;
       subset.addTracks( trackCandidates ); 
@@ -533,28 +466,30 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Calculate the best subset:
       subset.calculateBestSet();
       
-      std::vector< Track* > tracks = subset.getBestTrackSubset();
-      std::vector< Track* > rejectedTracks = subset.getRejectedTracks();
+      std::vector< MyTrack* > tracks = subset.getBestTrackSubset();
+      std::vector< MyTrack* > rejectedTracks = subset.getRejectedTracks();
 
       // immediately delete the rejected ones
       for ( unsigned i=0; i<rejectedTracks.size(); i++){
          
+         delete rejectedTracks[i]->getLcioTrack();
          delete rejectedTracks[i];
          
       }
+      
+      
       
       /**********************************************************************************************/
       /*               finally: save the tracks                                                     */
       /**********************************************************************************************/
       
-
-
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
-      for (unsigned int i=0; i < tracks.size(); i++) trkCol->addElement( tracks[i] );
+      for (unsigned int i=0; i < tracks.size(); i++) trkCol->addElement( tracks[i]->getLcioTrack() );
       evt->addCollection(trkCol,_ForwardTrackCollection.c_str());
       
-
-//       streamlog_out (MESSAGE0) << "\n\n Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
+      
+      
+      streamlog_out (MESSAGE0) << "\n\n Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
       
       
       /**********************************************************************************************/
@@ -562,17 +497,13 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       
       // delete all the created AutHits
-      for ( unsigned i=0; i<autHitsTBD.size(); i++ ){
-         
-         delete autHitsTBD[i];
-                
-      }
+      for ( unsigned i=0; i<autHitsTBD.size(); i++ )  delete autHitsTBD[i];
       
-      for ( unsigned i=0; i< crit2Vec.size(); i++) delete crit2Vec[i];
-      for ( unsigned i=0; i< crit3Vec.size(); i++) delete crit3Vec[i];
-      for ( unsigned i=0; i< crit4Vec.size(); i++) delete crit4Vec[i];
-
+      // delete the FTracks
+      for (unsigned int i=0; i < tracks.size(); i++){ delete tracks[i];}
       
+      
+      delete virtualIPHit;
       
   }
 
