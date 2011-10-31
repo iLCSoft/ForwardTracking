@@ -6,7 +6,7 @@
 
 namespace FTrack{
 
-   /** Criterion: for straight tracks, if line between two hits point towards IP
+   /** Criterion: the difference of the sqrt(x^2 + y^2) of two hits.
     */
    class Crit2_DeltaRho : public ICriterion{
 

@@ -6,7 +6,7 @@
 
 namespace FTrack{
 
-   /** Criterion: 
+   /** Criterion: the difference between the phi angles of two hits in grad. 
     */
    class Crit2_DeltaPhi : public ICriterion{
 

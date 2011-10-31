@@ -6,7 +6,12 @@
 
 namespace FTrack{
 
-   /** Criterion: for straight tracks, if line between two hits point towards IP
+   /** Criterion: for straight tracks, if line between two hits points towards IP.
+    * Calculated is
+    * 
+    * \f[ \frac{ \frac{\rho_1}{z_1} }{ \frac{\rho_2}{z_2} } \simeq 1 \f]
+    * 
+    * , where \f$ \rho = \sqrt{ x^2 + y^2 }\f$
     */
    class Crit2_StraightTrackRatio : public ICriterion{
 
