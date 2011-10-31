@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 
+using namespace FTrack;
 
 NeuralNet::NeuralNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega){
 
