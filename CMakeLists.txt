@@ -113,6 +113,9 @@ INSTALL_SHARED_LIBRARY( ${PROJECT_NAME} DESTINATION lib )
 ADD_EXECUTABLE( QuantileAnalyser ./src/Executables/QuantileAnalyser.cc )
 TARGET_LINK_LIBRARIES( QuantileAnalyser ${PROJECT_NAME} )
 
+ADD_EXECUTABLE( CritRunner ./src/Executables/CritRunner.cc )
+TARGET_LINK_LIBRARIES( CritRunner ${PROJECT_NAME} )
+
 
 ### TESTING #################################################################
 

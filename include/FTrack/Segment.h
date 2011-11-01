@@ -40,7 +40,7 @@ namespace FTrack{
     * 
     * TODO: why are there inner and outer states?
     * 
-    * 
+    * TODO: what is the order of the autHits? (from outside to inside -> but should this be always that way or flexible?)
     * 
     */   
    class Segment {

@@ -617,7 +617,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
                
             float chi2 = myTrack.getChi2();
-            int Ndf = myTrack.getNdf();
+            int Ndf = int( myTrack.getNdf() );
             float chi2Prob = myTrack.getChi2Prob();
             
             

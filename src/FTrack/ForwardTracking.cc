@@ -192,6 +192,7 @@ void ForwardTracking::init() {
          _crit4Vec.push_back( crit );
          
       }
+      else delete crit;
 
 
    }
