@@ -24,11 +24,11 @@ bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child )throw( BadS
    
    
    
-   if (( parent->getAutHits().size() == 1 )&&( child->getAutHits().size() == 1 )){ //a criterion for 1-segments
+   if (( parent->getHits().size() == 1 )&&( child->getHits().size() == 1 )){ //a criterion for 1-segments
       
       
-      AutHit* a = parent->getAutHits()[0];
-      AutHit* b = child-> getAutHits()[0];
+      IHit* a = parent->getHits()[0];
+      IHit* b = child-> getHits()[0];
       
       float ax = a->getX();
       float ay = a->getY();
@@ -56,8 +56,8 @@ bool Crit2_RZRatio::areCompatible( Segment* parent , Segment* child )throw( BadS
    else{
       
       std::string s = "Crit2_RZRatio::This criterion needs 2 segments with 1 hit each, passed was a "
-      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
-      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      +  intToString( parent->getHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getHits().size() ) + " hit segment (child).";
 
       
       throw BadSegmentLength( s );

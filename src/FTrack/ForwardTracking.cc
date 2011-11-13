@@ -6,8 +6,6 @@
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
 
-// For the virtual IP
-#include <IMPL/TrackerHitPlaneImpl.h>
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
@@ -31,7 +29,7 @@
 #include "Automaton.h"
 
 #include "AutHit.h"
-
+#include "SimpleHit.h"
 
 
 
@@ -151,17 +149,25 @@ void ForwardTracking::init() {
 
    _nRun = 0 ;
    _nEvt = 0 ;
-   
+
 
    MarlinCED::init(this) ;    //CED
-    
-  
+   
+
+
+   // TODO: get this from gear
+   unsigned int nLayers = 8; // layer 0 is for the IP
+   unsigned int nModules = 16;
+   unsigned int nSensors = 2;  
+
+   _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
+
 
    //Initialise the TrackFitter of the tracks:
    MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
-   
-   
-   
+
+
+
    // store the criteria where they belong
    for( unsigned i=0; i<_criteriaNames.size(); i++ ){
       
@@ -197,7 +203,7 @@ void ForwardTracking::init() {
 
    }
 
-  
+
 
 }
 
@@ -249,21 +255,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
      
       unsigned nHits = col->getNumberOfElements()  ;
-
+      
       
       streamlog_out( MESSAGE0 ) << "\n\nNumber of hits on the FTDs: " << nHits <<"\n";
-
-      //TODO: get those from gear
-      unsigned int nLayers = 8; // layer 0 is for the IP
-      unsigned int nModules = 16;
-      unsigned int nSensors = 2;
-      
-      AutCode autCode ( nLayers, nModules , nSensors );
-      
       streamlog_out( MESSAGE0 ) << "\n--FTDRepresentation--" ;
       
-      FTDRepresentation ftdRep ( &autCode );
-      std::vector< AutHit* > autHitsTBD; //AutHits to be deleted
+      // A map to store the hits according to their sectors
+      std::map< int , std::vector< IHit* > > map_sector_hits;
+      
+      
+      std::vector< IHit* > hitsTBD; //Hits to be deleted at the end
       
       for(unsigned i=0; i< nHits ; i++){
          
@@ -271,56 +272,41 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          TrackerHit* trkHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
          
          //Make an AutHit from the TrackerHit 
-         AutHit* autHit = new AutHit ( trkHit );
-         autHitsTBD.push_back(autHit);
+         AutHit* autHit = new AutHit ( trkHit , _sectorSystemFTD );
+         hitsTBD.push_back(autHit);
        
-         ftdRep.addHit( autHit );
-         
+         map_sector_hits[ autHit->getSector() ].push_back( autHit );         
          
         
       }
       
-      //TODO: put this somewhere else? Maybe a method or another place? To keep the processor more readable
-      // Add the virtual IP to the hits (one for forward and one for backward)
       
-      TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
+      IHit* virtualIPHitForward = createVirtualIPHit(1 , _sectorSystemFTD );
+      hitsTBD.push_back( virtualIPHitForward );
+      map_sector_hits[ virtualIPHitForward->getSector() ].push_back( virtualIPHitForward );
+      
+      IHit* virtualIPHitBackward = createVirtualIPHit(-1 , _sectorSystemFTD );
+      hitsTBD.push_back( virtualIPHitBackward );
+      map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
       
       
-      double pos[] = {0. , 0. , 0.};
-      virtualIPHit->setPosition(  pos  ) ;
       
-      
-      for ( int side=-1 ; side <= 1; side+=2 ){
-         
-         
-         
-         // create the AutHit and set its parameters
-         AutHit* virtualIPAutHit = new AutHit ( virtualIPHit );
-         autHitsTBD.push_back( virtualIPAutHit);
-         virtualIPAutHit->setIsVirtual ( true );
-         virtualIPAutHit->setSide( side );
-         virtualIPAutHit->setLayer(0);
-         virtualIPAutHit->setModule(0);
-         virtualIPAutHit->setSensor(0);
-         
-         // Add the AutHit to the FTDRepresentation
-         ftdRep.addHit( virtualIPAutHit );
-         
-      
-      }
+      /**********************************************************************************************/
+      /*                Build the segments                                                          */
+      /**********************************************************************************************/
       
       
       streamlog_out( MESSAGE0 ) << "\n--SegementBuilder--" ;
       
       //Create a segmentbuilder
-      SegmentBuilder segBuilder( &ftdRep );
+      SegmentBuilder segBuilder( map_sector_hits );
       
       
       
       segBuilder.addCriteria ( _crit2Vec );
       
       //Also load hit connectors
-      HitCon hitCon( &autCode );
+      HitCon hitCon( _sectorSystemFTD );
       
       segBuilder.addHitConnector ( & hitCon );
       
@@ -402,7 +388,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       //Get the track candidates
-      std::vector <MyTrack*> autTrackCandidates = automaton.getTracks();
+      std::vector < std::vector< IHit* > > autTracks = automaton.getTracks(); //TODO: the method should have a different name
+      std::vector <ITrack*> autTrackCandidates;
+      
+      for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new MyTrack( autTracks[i] ) );
       
 //       trackCandidates = autTrackCandidates;
   
@@ -411,14 +400,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*                Fitting and erasing bad fits                                                */
       /**********************************************************************************************/
       
-      std::vector< MyTrack* > trackCandidates;
+      std::vector< ITrack* > trackCandidates;
       
       unsigned nTracksRejected = 0;
       unsigned nTracksKept = 0;
       
       for ( unsigned i=0; i < autTrackCandidates.size(); i++ ){
        
-         MyTrack* track = autTrackCandidates[i];
+         ITrack* track = autTrackCandidates[i];
          
          
          // fit the track
@@ -467,13 +456,12 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Calculate the best subset:
       subset.calculateBestSet();
       
-      std::vector< MyTrack* > tracks = subset.getBestTrackSubset();
-      std::vector< MyTrack* > rejectedTracks = subset.getRejectedTracks();
+      std::vector< ITrack* > tracks = subset.getBestTrackSubset();
+      std::vector< ITrack* > rejectedTracks = subset.getRejectedTracks();
 
       // immediately delete the rejected ones
       for ( unsigned i=0; i<rejectedTracks.size(); i++){
          
-         delete rejectedTracks[i]->getLcioTrack();
          delete rejectedTracks[i];
          
       }
@@ -485,7 +473,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
-      for (unsigned int i=0; i < tracks.size(); i++) trkCol->addElement( tracks[i]->getLcioTrack() );
+      for (unsigned int i=0; i < tracks.size(); i++){
+         
+         MyTrack* myTrack = dynamic_cast< MyTrack* >( tracks[i] );
+         
+         if( myTrack != NULL ) trkCol->addElement( myTrack->getLcioTrack() );
+         
+         
+      }
       evt->addCollection(trkCol,_ForwardTrackCollection.c_str());
       
       
@@ -497,14 +492,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*                Clean up                                                                    */
       /**********************************************************************************************/
       
-      // delete all the created AutHits
-      for ( unsigned i=0; i<autHitsTBD.size(); i++ )  delete autHitsTBD[i];
+      // delete all the created IHits
+      for ( unsigned i=0; i<hitsTBD.size(); i++ )  delete hitsTBD[i];
       
       // delete the FTracks
       for (unsigned int i=0; i < tracks.size(); i++){ delete tracks[i];}
       
       
-      delete virtualIPHit;
+      
       
   }
 
@@ -530,7 +525,12 @@ void ForwardTracking::end(){
    for ( unsigned i=0; i< _crit2Vec.size(); i++) delete _crit2Vec[i];
    for ( unsigned i=0; i< _crit3Vec.size(); i++) delete _crit3Vec[i];
    for ( unsigned i=0; i< _crit4Vec.size(); i++) delete _crit4Vec[i];
+   _crit2Vec.clear();
+   _crit3Vec.clear();
+   _crit4Vec.clear();
    
+   delete _sectorSystemFTD;
+   _sectorSystemFTD = NULL;
    
 }
 
@@ -603,6 +603,7 @@ void ForwardTracking::drawFTDSensors ( const gear::GearParameters& paramFTD , un
    
    
 }
+
 
 
 

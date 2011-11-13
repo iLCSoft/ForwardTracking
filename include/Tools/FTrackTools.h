@@ -64,6 +64,8 @@ namespace FTrack{
    bool compare_TrackerHit_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b );
    bool compare_z( AutHit* a, AutHit* b );   
    
+   
+   IHit* createVirtualIPHit( int side , const SectorSystemFTD* sectorSystemFTD );
 
 }
 

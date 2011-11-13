@@ -12,29 +12,36 @@
 
 // FTrack
 #include "AutHit.h"
+#include "ITrack.h"
 
 
 namespace FTrack{
 
 
-   class MyTrack{
+   class MyTrack : public ITrack {
       
    public:
       
       MyTrack();
+      MyTrack( std::vector< IHit* > hits );
       
       /** @return a track in the lcio format
        */
       Track* getLcioTrack(){ return ( new IMPL::TrackImpl(*_lcioTrack) );}
       
     
-      void addHit( AutHit* hit );
+      void addHit( IHit* hit );
       
-      double getNdf(){ return _lcioTrack->getNdf(); }
-      double getChi2(){ return _lcioTrack->getChi2(); }
-      double getChi2Prob(){ return _chi2Prob; }
+      virtual double getNdf() const { return _lcioTrack->getNdf(); }
+      virtual double getChi2() const { return _lcioTrack->getChi2(); }
+      virtual double getChi2Prob() const { return _chi2Prob; }
       
-      std::vector< AutHit* > getHits(){ return _hits; }
+      virtual std::vector< IHit* > getHits() const 
+         { std::vector<IHit*> hits; 
+         for(unsigned i=0; i<_hits.size();i++) hits.push_back( _hits[i] ); 
+         return hits; }
+      
+      virtual double getQI() const { return getChi2Prob(); }
       
       /** For the fitting of a track an environment (containing detector information and so on) has to be set and this
        * is done via this method. It is static, as there is only one environment and therefore only one initilisation
@@ -49,7 +56,7 @@ namespace FTrack{
       
       /** Fits the track and sets chi2, Ndf etc.
        */
-      void fit();
+      virtual void fit();
       
       ~MyTrack(){ delete _lcioTrack; }
       

@@ -1,63 +1,60 @@
 #ifndef AutHit_h
 #define AutHit_h
 
+#include "IHit.h"
 #include "EVENT/TrackerHit.h"
 #include "lcio.h"
+
+#include "SectorSystemFTD.h"
 
 using namespace lcio;
 
 namespace FTrack{
    
    
-   /** a class representing a hit as used by the cellular automaton
+   /** A hit using an lcio TrackerHit as basis.
     */   
-   class AutHit{
+   class AutHit : public IHit{
       
       
    public:
       
-      AutHit( TrackerHit* trackerHit );
+      AutHit( TrackerHit* trackerHit , const SectorSystemFTD* const sectorSystemFTD );
       
       
-      TrackerHit* getTrackerHit(){ return _trackerHit; };
+      TrackerHit* getTrackerHit() { return _trackerHit; };
       
-      float getX() { return _x; };
-      float getY() { return _y; };
-      float getZ() { return _z; };
       
-      int getSide() { return _side; };
-      unsigned getLayer() { return _layer; };
-      unsigned getModule() { return _module; };
-      unsigned getSensor() { return _sensor; };
+      int getSide() { return _side; }
+      unsigned getModule() { return _module; }
+      unsigned getSensor() { return _sensor; }
       
-      void setSide( int side ){ _side = side; };
-      void setLayer( unsigned layer ){ _layer = layer; };
-      void setModule( unsigned module ){ _module = module; };
-      void setSensor( unsigned sensor ){ _layer = sensor; };
+      void setSide( int side ){ _side = side; calculateSector();}
+      void setLayer( unsigned layer ){ _layer = layer; calculateSector();}
+      void setModule( unsigned module ){ _module = module; calculateSector();}
+      void setSensor( unsigned sensor ){ _layer = sensor; calculateSector();}
       
-      void setIsVirtual( bool isVirtual ){ _isVirtual = isVirtual; };
-      bool isVirtual(){ return _isVirtual; };
       
+      
+      virtual const ISectorSystem* getSectorSystem() const { return _sectorSystemFTD; };
       
    private:
       
       TrackerHit* _trackerHit;
       
-      float _x;
-      float _y;
-      float _z;
       
       int _side;
       unsigned _layer;
       unsigned _module;
       unsigned _sensor;
       
-      bool _isVirtual;
+      const SectorSystemFTD* _sectorSystemFTD;
       
-      
+      /** Calculates and sets the sector number
+       */
+      void calculateSector(){ _sector = _sectorSystemFTD->getSector( _side, _layer , _module , _sensor ); }
+   
    };
-   
-   
    
 }
 

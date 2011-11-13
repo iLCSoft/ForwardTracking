@@ -3,8 +3,9 @@
 
 #include "IHitConnector.h"
 
-#include "AutCode.h"
-//TODO: maybe an interface for the code-class would be useful?
+#include "SectorSystemFTD.h"
+
+// TODO: rename
 // TODO: split this up into several hitconnectors: one for a fixed step size. one for hopping to layer 0 and so on.
 
 
@@ -23,15 +24,15 @@ namespace FTrack{
       
    public:
       
-      HitCon ( AutCode* autCode );
+      HitCon ( const SectorSystemFTD* sectorSystemFTD );
       
-      virtual std::set <int>  getTargetCode ( int code );
+      virtual std::set <int>  getTargetSectors ( int sector );
       
       virtual ~HitCon(){};
       
    private:
       
-      AutCode* _autCode;
+      const SectorSystemFTD* _sectorSystemFTD;
       
    };
    

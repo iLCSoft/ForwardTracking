@@ -142,50 +142,58 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
 
 void TrackingFeedbackProcessor::init() { 
 
-    streamlog_out(DEBUG) << "   init called  " << std::endl ;
+   
+   streamlog_out(DEBUG) << "   init called  " << std::endl ;
 
-    // usually a good idea to
-    printParameters() ;
-    
-    _treeName = "trackCands";
-    setUpRootFile(_rootFileName, _treeName);      //prepare the root file.
+   // usually a good idea to
+   printParameters() ;
 
-    _nRun = 0 ;
-    _nEvt = 0 ;
-    
-    
-    //Initialise the TrackFitter of the tracks:
-    MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
-    
+   _treeName = "trackCands";
+   setUpRootFile(_rootFileName, _treeName);      //prepare the root file.
 
-    
-    //Add the criteria that will be checked
-    _crits2.push_back( new Crit2_RZRatio( 1. , 1. ) ); 
-    _crits2.push_back( new Crit2_StraightTrackRatio( 1. , 1. ) );
-    _crits2.push_back( new Crit2_HelixWithIP( 1. , 1. ) );
-    _crits2.push_back( new Crit2_DeltaRho( 0. , 0. ) );
-    _crits2.push_back( new Crit2_DeltaPhi( 0. , 0. ) );
-    for( unsigned i=0; i< _crits2.size(); i++ ) _crits2[i]->setSaveValues( true );
-    
-    _crits3.push_back( new Crit3_ChangeRZRatio( 1. , 1. ) );
-    _crits3.push_back( new Crit3_PT (0. , 0.) );
-    _crits3.push_back( new Crit3_3DAngle (0. , 0.) );
-    _crits3.push_back( new Crit3_IPCircleDist (0. , 0.) );
-    _crits3.push_back( new Crit3_2DAngle( 0. , 0. ) );
-    for( unsigned i=0; i< _crits3.size(); i++ ) _crits3[i]->setSaveValues( true );
-    
-    
-    _crits4.push_back( new  Crit4_2DAngleChange ( 1. , 1. ) );
-    _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. , 1. ) );
-    _crits4.push_back( new  Crit4_DistToExtrapolation ( 1. , 1. ) );
-    _crits4.push_back( new  Crit4_DistOfCircleCenters ( 1. , 1. ) );
-    _crits4.push_back( new  Crit4_NoZigZag ( 1. , 1. ) );
-    _crits4.push_back( new  Crit4_RChange ( 1. , 1. ) );
-    for( unsigned i=0; i< _crits4.size(); i++ ) _crits4[i]->setSaveValues( true );
-    
-    
-    
-    
+   _nRun = 0 ;
+   _nEvt = 0 ;
+
+
+   //Initialise the TrackFitter of the tracks:
+   MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
+
+
+
+   //Add the criteria that will be checked
+   _crits2.push_back( new Crit2_RZRatio( 1. , 1. ) ); 
+   _crits2.push_back( new Crit2_StraightTrackRatio( 1. , 1. ) );
+   _crits2.push_back( new Crit2_HelixWithIP( 1. , 1. ) );
+   _crits2.push_back( new Crit2_DeltaRho( 0. , 0. ) );
+   _crits2.push_back( new Crit2_DeltaPhi( 0. , 0. ) );
+   for( unsigned i=0; i< _crits2.size(); i++ ) _crits2[i]->setSaveValues( true );
+
+   _crits3.push_back( new Crit3_ChangeRZRatio( 1. , 1. ) );
+   _crits3.push_back( new Crit3_PT (0. , 0.) );
+   _crits3.push_back( new Crit3_3DAngle (0. , 0.) );
+   _crits3.push_back( new Crit3_IPCircleDist (0. , 0.) );
+   _crits3.push_back( new Crit3_2DAngle( 0. , 0. ) );
+   for( unsigned i=0; i< _crits3.size(); i++ ) _crits3[i]->setSaveValues( true );
+
+
+   _crits4.push_back( new  Crit4_2DAngleChange ( 1. , 1. ) );
+   _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. , 1. ) );
+   _crits4.push_back( new  Crit4_DistToExtrapolation ( 1. , 1. ) );
+   _crits4.push_back( new  Crit4_DistOfCircleCenters ( 1. , 1. ) );
+   _crits4.push_back( new  Crit4_NoZigZag ( 1. , 1. ) );
+   _crits4.push_back( new  Crit4_RChange ( 1. , 1. ) );
+   for( unsigned i=0; i< _crits4.size(); i++ ) _crits4[i]->setSaveValues( true );
+
+
+
+   // TODO: get this from gear
+   unsigned int nLayers = 8; // layer 0 is for the IP
+   unsigned int nModules = 16;
+   unsigned int nSensors = 2;  
+
+   _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
+
+
 //      MarlinCED::init(this) ;
 
 }
@@ -299,7 +307,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       // Make authits from the trackerHits
       std::vector <AutHit*> autHits;
       
-      for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits.push_back( new AutHit( trackerHits[j] ) );
+      for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD) );
       
       
       MyTrack myTrack;
@@ -492,11 +500,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          
          
-         std::vector <AutHit*> autHits;
-         
-         
-         
-         
+         std::vector <IHit*> hits;
+        
          // check the chi2 of different lengths
          ///////////////////////////////////////
          
@@ -510,11 +515,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             for( unsigned j=0; j<2; j++ ){//add the first 2 hits
                
                
-               AutHit* autHit = new AutHit( cheatTrackHits[j] );
+               IHit* hit = new AutHit( cheatTrackHits[j] , _sectorSystemFTD );
                
-               autHits.push_back( autHit );
+               hits.push_back( hit );
                
-               myTrack.addHit( autHit );  
+               myTrack.addHit( hit );  
                
                
             }
@@ -526,11 +531,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                
                // add a hit and fit
                
-               AutHit* autHit = new AutHit( cheatTrackHits[j] );
+               IHit* hit = new AutHit( cheatTrackHits[j] , _sectorSystemFTD );
                
-               autHits.push_back( autHit );
+               hits.push_back( hit );
                
-               myTrack.addHit( autHit );  
+               myTrack.addHit( hit );  
                
                myTrack.fit();
                
@@ -600,15 +605,9 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          
          // Add the IP as a hit
-         TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
+         IHit* virtualIPHit = createVirtualIPHit(1 , _sectorSystemFTD );
+         hits.insert( hits.begin() , virtualIPHit );
          
-         double pos[] = {0. , 0. , 0.};
-         virtualIPHit->setPosition(  pos  ) ;
-         
-         cheatTrackHits.insert( cheatTrackHits.begin() , virtualIPHit );
-         
-         autHits.insert( autHits.begin() , new AutHit( virtualIPHit ) );
-
          
          // Now we have a vector of autHits starting with the IP followed by all the hits from the track.
          // So we now are able to build segments from them
@@ -617,48 +616,48 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          std::vector <Segment*> segments1;
          
-         for ( unsigned j=0; j < autHits.size(); j++ ){
+         for ( unsigned j=0; j < hits.size(); j++ ){
             
             
-            std::vector <AutHit*> segAutHits;
+            std::vector <IHit*> segHits; // the hits the segment will contain
             
             
-            segAutHits.push_back( autHits[j] ) ;
+            segHits.push_back( hits[j] );
             
-            segments1.push_back( new Segment( segAutHits ) );
+            segments1.push_back( new Segment( segHits ) );
             
          }
          
          
          std::vector <Segment*> segments2;
          
-         for ( unsigned j=0; j < autHits.size()-1; j++ ){
+         for ( unsigned j=0; j < hits.size()-1; j++ ){
             
             
-            std::vector <AutHit*> segAutHits;
+            std::vector <IHit*> segHits;
             
-            segAutHits.push_back( autHits[j+1] );
-            segAutHits.push_back( autHits[j] );
+            segHits.push_back( hits[j+1] );
+            segHits.push_back( hits[j] );
             
             
             
-            segments2.push_back( new Segment( segAutHits ) );
+            segments2.push_back( new Segment( segHits ) );
             
          }
          
          
          std::vector <Segment*> segments3;
          
-         for ( unsigned j=0; j < autHits.size()-2; j++ ){
+         for ( unsigned j=0; j < hits.size()-2; j++ ){
             
             
-            std::vector <AutHit*> segAutHits;
+            std::vector <IHit*> segHits;
             
-            segAutHits.push_back( autHits[j+2] );
-            segAutHits.push_back( autHits[j+1] );
-            segAutHits.push_back( autHits[j] );
+            segHits.push_back( hits[j+2] );
+            segHits.push_back( hits[j+1] );
+            segHits.push_back( hits[j] );
             
-            segments3.push_back( new Segment( segAutHits ) );
+            segments3.push_back( new Segment( segHits ) );
             
          }
          
@@ -818,10 +817,9 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          segments2.clear();
          for (unsigned j=0; j<segments3.size(); j++) delete segments3[j];
          segments3.clear();
-         for (unsigned j=0; j<autHits.size(); j++) delete autHits[j];
-         autHits.clear();
+         for (unsigned j=0; j<hits.size(); j++) delete hits[j];
+         hits.clear();
          
-         delete virtualIPHit;
          
          
          
@@ -848,7 +846,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             // Make authits from the trackerHits
             std::vector <AutHit*> autHits2;
             
-            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new AutHit( trackerHits[j] ) );
+            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD ) );
             
             MyTrack myTrack;
             for( unsigned j=0; j<autHits2.size(); j++ ) myTrack.addHit( autHits2[j] );
@@ -1028,13 +1026,17 @@ void TrackingFeedbackProcessor::check( LCEvent * evt ) {
 
 void TrackingFeedbackProcessor::end(){ 
 
-    //   streamlog_out( DEBUG ) << "MyProcessor::end()  " << name() 
-    // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-    // 	    << std::endl ;
-    
-    for (unsigned i=0; i<_crits2 .size(); i++) delete _crits2 [i];
-    for (unsigned i=0; i<_crits3 .size(); i++) delete _crits3 [i];
-    for (unsigned i=0; i<_crits4 .size(); i++) delete _crits4 [i];
+   
+   //   streamlog_out( DEBUG ) << "MyProcessor::end()  " << name() 
+   // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
+   // 	    << std::endl ;
+
+   for (unsigned i=0; i<_crits2 .size(); i++) delete _crits2 [i];
+   for (unsigned i=0; i<_crits3 .size(); i++) delete _crits3 [i];
+   for (unsigned i=0; i<_crits4 .size(); i++) delete _crits4 [i];
+
+   delete _sectorSystemFTD;
+   _sectorSystemFTD = NULL;
 
 }
 

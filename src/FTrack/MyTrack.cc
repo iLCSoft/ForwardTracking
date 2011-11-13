@@ -18,22 +18,44 @@ MyTrack::MyTrack(){
    _lcioTrack = new TrackImpl();
    
    
+}
+
+MyTrack::MyTrack( std::vector< IHit* > hits ){
    
+   
+   
+   _lcioTrack = new TrackImpl();
+   
+   for( unsigned i=0; i < hits.size(); i++ ){
+      
+      addHit( hits[i] );
+      
+      
+   }
    
 }
 
 
-void MyTrack::addHit( AutHit* hit ){
+
+void MyTrack::addHit( IHit* hit ){
+   
    
    
    // add the hit
-   _hits.push_back( hit );
+   AutHit* autHit = dynamic_cast< AutHit* >( hit );
    
-   // and sort the track again
-   sort( _hits.begin(), _hits.end(), compare_z ); //TODO: maybe make this more flexible for different sorting
-   
-   
-   _lcioTrack->addHit( hit->getTrackerHit() );
+   if ( autHit != NULL ){
+      
+      _hits.push_back( autHit );
+      
+      // and sort the track again
+      sort( _hits.begin(), _hits.end(), compare_z ); //TODO: maybe make this more flexible for different sorting
+      
+      
+      _lcioTrack->addHit( autHit->getTrackerHit() );
+      
+   }
+   //TODO: throw exception, if cast was not succesfull. Question: is there a better way of dealing with this?
    
 }
 

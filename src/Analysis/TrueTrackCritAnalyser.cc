@@ -116,7 +116,14 @@ void TrueTrackCritAnalyser::init() {
    // usually a good idea to
    printParameters() ;
    
-
+   
+   // TODO: get this from gear
+   unsigned int nLayers = 8; // layer 0 is for the IP
+   unsigned int nModules = 16;
+   unsigned int nSensors = 2;  
+   
+   _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
+   
    
    _nRun = 0 ;
    _nEvt = 0 ;
@@ -157,22 +164,18 @@ void TrueTrackCritAnalyser::init() {
    // Therefore first get all the possible names of the branches
    
    // create a virtual hit
-   TrackerHitPlaneImpl virtualHit;
-   double pos[] = {0. , 0. , 0.};
-   virtualHit.setPosition(  pos  ) ;
-    // create the AutHit and set its parameters
-   AutHit* virtualAutHit = new AutHit( &virtualHit );
-   virtualAutHit->setIsVirtual ( true );
+   IHit* virtualIPHit = createVirtualIPHit(1 , _sectorSystemFTD );
+
    
-   std::vector <AutHit*> autHitVec;
-   autHitVec.push_back( virtualAutHit );
+   std::vector <IHit*> hitVec;
+   hitVec.push_back( virtualIPHit );
    
    
    /**********************************************************************************************/
    /*                Set up the tree for the 1-segments (2 hit criteria)                         */
    /**********************************************************************************************/
    
-   Segment virtual1Segment( autHitVec );
+   Segment virtual1Segment( hitVec );
    
    
    for ( unsigned int i=0; i < _crits2 .size() ; i++ ){ //for all criteria
@@ -211,8 +214,8 @@ void TrueTrackCritAnalyser::init() {
    /*                Set up the tree for the 2-segments (3 hit criteria)                         */
    /**********************************************************************************************/
    
-   autHitVec.push_back( virtualAutHit );
-   Segment virtual2Segment( autHitVec );
+   hitVec.push_back( virtualIPHit );
+   Segment virtual2Segment( hitVec );
    
    
    for ( unsigned int i=0; i < _crits3 .size() ; i++ ){ //for all criteria
@@ -253,8 +256,8 @@ void TrueTrackCritAnalyser::init() {
    /*                Set up the tree for the 3-segments (4 hit criteria)                         */
    /**********************************************************************************************/
    
-   autHitVec.push_back( virtualAutHit );
-   Segment virtual3Segment( autHitVec );
+   hitVec.push_back( virtualIPHit );
+   Segment virtual3Segment( hitVec );
    
    
    for ( unsigned int i=0; i < _crits4 .size() ; i++ ){ //for all criteria
@@ -289,7 +292,7 @@ void TrueTrackCritAnalyser::init() {
    setUpRootFile( _rootFileName, _treeName4, branchNames4 , false );      //prepare the root file.
    
  
-   delete virtualAutHit;
+   delete virtualIPHit;
    
    
    
@@ -410,13 +413,13 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          // from inside out: from the IP into the distance.
         
          // Make authits from the trackerHits
-         std::vector <AutHit*> autHits;
+         std::vector <IHit*> hits;
          
-         for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits.push_back( new AutHit( trackerHits[j] ) );
+         for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD ) );
         
          
          MyTrack myTrack;
-         for( unsigned j=0; j<autHits.size(); j++ ) myTrack.addHit( autHits[j] );
+         for( unsigned j=0; j<hits.size(); j++ ) myTrack.addHit( hits[j] );
          
          myTrack.fit();
          
@@ -441,15 +444,9 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             
             // Add the IP as a hit
-            TrackerHitPlaneImpl* virtualIPHit = new TrackerHitPlaneImpl ;
-            
-            double pos[] = {0. , 0. , 0.};
-            virtualIPHit->setPosition(  pos  ) ;
-            
-            AutHit* virtualIPAutHit = new AutHit( virtualIPHit );
-            virtualIPAutHit->setLayer( 0 );
-            
-            autHits.insert( autHits.begin() , virtualIPAutHit );
+            IHit* virtualIPHit = createVirtualIPHit(1 , _sectorSystemFTD );
+           
+            hits.insert( hits.begin() , virtualIPHit );
             
            
             
@@ -462,42 +459,42 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             std::vector <Segment*> segments1;
             
-            for ( unsigned j=0; j < autHits.size(); j++ ){
+            for ( unsigned j=0; j < hits.size(); j++ ){
                
                
-               std::vector <AutHit*> segAutHits;
-               segAutHits.insert( segAutHits.begin() , autHits.begin()+j , autHits.begin()+j+1 );
+               std::vector <IHit*> segHits;
+               segHits.insert( segHits.begin() , hits.begin()+j , hits.begin()+j+1 );
                
-               segments1.push_back( new Segment( segAutHits ) );
+               segments1.push_back( new Segment( segHits ) );
                
             }
             
             std::vector <Segment*> segments2;
             
-            for ( unsigned j=0; j < autHits.size()-1; j++ ){
+            for ( unsigned j=0; j < hits.size()-1; j++ ){
                
                
-               std::vector <AutHit*> segAutHits;
+               std::vector <IHit*> segHits;
                
-               segAutHits.push_back( autHits[j+1] );
-               segAutHits.push_back( autHits[j] );
+               segHits.push_back( hits[j+1] );
+               segHits.push_back( hits[j] );
                
-               segments2.push_back( new Segment( segAutHits ) );
+               segments2.push_back( new Segment( segHits ) );
                
             }
             
             std::vector <Segment*> segments3;
             
-            for ( unsigned j=0; j < autHits.size()-2; j++ ){
+            for ( unsigned j=0; j < hits.size()-2; j++ ){
                
                
-               std::vector <AutHit*> segAutHits;
+               std::vector <IHit*> segHits;
                
-               segAutHits.push_back( autHits[j+2] );
-               segAutHits.push_back( autHits[j+1] );
-               segAutHits.push_back( autHits[j] );
+               segHits.push_back( hits[j+2] );
+               segHits.push_back( hits[j+1] );
+               segHits.push_back( hits[j] );
                
-               segments3.push_back( new Segment( segAutHits ) );
+               segments3.push_back( new Segment( segHits ) );
                
             }
             
@@ -532,7 +529,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
                rootData["MCP_pt"] = pt;
                rootData["MCP_distToIP"] = distToIP;
-               rootData["layers"] = child->getAutHits()[0]->getLayer() *10 + parent->getAutHits()[0]->getLayer();
+               rootData["layers"] = child->getHits()[0]->getLayer() *10 + parent->getHits()[0]->getLayer();
                
                rootDataVec2.push_back( rootData );
                
@@ -563,9 +560,9 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
                rootData["MCP_pt"] = pt;
                rootData["MCP_distToIP"] = distToIP;
-               rootData["layers"] = child->getAutHits()[1]->getLayer() *100 +
-                                    child->getAutHits()[0]->getLayer() *10 + 
-                                    parent->getAutHits()[0]->getLayer();
+               rootData["layers"] = child->getHits()[1]->getLayer() *100 +
+                                    child->getHits()[0]->getLayer() *10 + 
+                                    parent->getHits()[0]->getLayer();
                
                rootDataVec3.push_back( rootData );
                
@@ -596,10 +593,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
                rootData["MCP_pt"] = pt;
                rootData["MCP_distToIP"] = distToIP;
-               rootData["layers"] = child->getAutHits()[2]->getLayer() *1000 +
-                                    child->getAutHits()[1]->getLayer() *100 +
-                                    child->getAutHits()[0]->getLayer() *10 + 
-                                    parent->getAutHits()[0]->getLayer();
+               rootData["layers"] = child->getHits()[2]->getLayer() *1000 +
+                                    child->getHits()[1]->getLayer() *100 +
+                                    child->getHits()[0]->getLayer() *10 + 
+                                    parent->getHits()[0]->getLayer();
                
                rootDataVec4.push_back( rootData );
                
@@ -640,9 +637,13 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             /**********************************************************************************************/
             
             for (unsigned i=0; i<segments1.size(); i++) delete segments1[i];
+            segments1.clear();
             for (unsigned i=0; i<segments2.size(); i++) delete segments2[i];
+            segments2.clear();
             for (unsigned i=0; i<segments3.size(); i++) delete segments3[i];
-            for (unsigned i=0; i<autHits.size(); i++) delete autHits[i];
+            segments3.clear();
+            for (unsigned i=0; i<hits.size(); i++) delete hits[i];
+            hits.clear();
             
             delete virtualIPHit;
             
@@ -699,7 +700,9 @@ void TrueTrackCritAnalyser::end(){
    for (unsigned i=0; i<_crits2 .size(); i++) delete _crits2 [i];
    for (unsigned i=0; i<_crits3 .size(); i++) delete _crits3 [i];
    for (unsigned i=0; i<_crits4 .size(); i++) delete _crits4 [i];
-      
+   
+   delete _sectorSystemFTD;
+   _sectorSystemFTD = NULL;
    
    
 }

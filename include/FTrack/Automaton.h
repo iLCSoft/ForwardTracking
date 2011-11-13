@@ -125,19 +125,20 @@ namespace FTrack{
        * If we have for example a segment with 3 children, which each have 5 children, which each have 7 children,
        * we will get 1*3*5*7=105 tracks.
        * 
-       * @return All tracks that are possible with the given segments and their connections
+       * @return All tracks that are possible with the given segments and their connections. Tracks are returned
+       * as a vector of hits. So the output will be a vector of a vector of hits
        * 
        * @param minHits the minimum number of hits that a track needs to have. All possible tracks,
        * that have less won't be considered as tracks and won't be returned.
        * 
        */
-      std::vector <MyTrack*> getTracks( unsigned minHits = 3 );
+      std::vector < std::vector< IHit* > > getTracks( unsigned minHits = 3 );
       
       
       /**Returns all the tracks starting from this segment.
        * It is a recursive method and gets invoked by getTracks.
        */
-      std::vector <MyTrack*> getTracksOfSegment ( Segment* segment, std::vector< AutHit* > hits , unsigned minHits = 3 );
+      std::vector < std::vector< IHit* > > getTracksOfSegment ( Segment* segment, std::vector< IHit* > hits , unsigned minHits = 3 );
       
       
       /**

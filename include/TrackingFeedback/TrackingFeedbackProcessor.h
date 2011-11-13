@@ -79,6 +79,7 @@ class TrackingFeedbackProcessor : public Processor {
    bool _ElossOn ;
    bool _SmoothOn ;
    
+   const SectorSystemFTD* _sectorSystemFTD;
    
 } ;
 

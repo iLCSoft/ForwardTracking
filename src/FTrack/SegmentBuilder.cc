@@ -9,48 +9,46 @@
 
 using namespace FTrack;
 
-SegmentBuilder::SegmentBuilder(  FTDRepresentation* ftdRep){
+SegmentBuilder::SegmentBuilder(  std::map< int , std::vector< IHit* > > map_sector_hits ): 
    
-   
-   _FTDRep = ftdRep;
-   
-   
-}
+   _map_sector_hits( map_sector_hits){}
+
+
 
 
 Automaton SegmentBuilder::get1SegAutomaton(){
    
    
- 
+
    /**********************************************************************************************/
-   /*                                                                                            */
-   /*                Set up an FTDSegRrepresentation                                             */
-   /*                                                                                            */
+   /*                Create and fill a map for the segments                                      */
    /**********************************************************************************************/
    
-   // Construct it with the same AutCode as the FTDRepresentation has
-   FTDSegRepresentation ftdSegRep ( _FTDRep->getAutCode() );
    
-   
-   // get all the codes used in the FTDRepresentation
-   std::set <int> codes = _FTDRep->getCodes();
+   std::map< int , std::vector< IHit* > >::iterator itSecHit; // Sec = sector , Hit = hits
+   std::map< int , std::vector< Segment* > > map_sector_segments;
+   std::map< int , std::vector< Segment* > > ::iterator itSecSeg; // Sec = sector , Seg = segments
    
       
    unsigned nCreatedSegments=0;
    
-   for ( std::set<int>::iterator it = codes.begin(); it!=codes.end(); it++ ){ //over all codes
-
-      // All the autHits with the code
-      std::vector <AutHit*> autHits = _FTDRep->getHitsWithCode( *it );
    
-      for ( unsigned int i=0; i<autHits.size(); i++ ){ //over every hit with this code
+   for ( itSecHit = _map_sector_hits.begin(); itSecHit!=_map_sector_hits.end(); itSecHit++ ){ //over all sectors
+
+
+      // All the hits in the sector
+      int sector = itSecHit->first;
+      std::vector <IHit*> hits = itSecHit->second;
+   
+      for ( unsigned int i=0; i < hits.size(); i++ ){ //over every hit in the sector
 
 
          // create a Segment
-         Segment* segment = new Segment( autHits[i] );
+         Segment* segment = new Segment( hits[i] );
+         segment->setLayer( hits[i]->getLayer() );
          
-         // Add the segment to the FTDSegRepresentation
-         ftdSegRep.addSegment ( segment , *it );        // *it == the code
+         // Store the segment in its map
+         map_sector_segments[sector].push_back( segment );
          
          nCreatedSegments++;
          
@@ -65,10 +63,8 @@ Automaton SegmentBuilder::get1SegAutomaton(){
    
 
    /**********************************************************************************************/
-   /*                                                                                            */
-   /*                Now check all 1-Segments and connect them to others  4                      */
-   /*                And store them in an Automaton                                              */
-   /*                                                                                            */
+   /*                Now check all 1-Segments and connect them to others                         */
+   /*                Afterwards store them in an Automaton                                       */
    /**********************************************************************************************/
    
      
@@ -78,59 +74,52 @@ Automaton SegmentBuilder::get1SegAutomaton(){
    Automaton automaton;
    
    
-   // get all the codes used in the FTDSegRepresentation
-   codes = ftdSegRep.getCodes();
    
-   AutCode* autCode = _FTDRep->getAutCode(); //Needed to get the layer of the Hit
-
    
-   for ( std::set<int>::iterator it = codes.begin(); it!=codes.end(); it++ ){ // over all codes
+   for ( itSecSeg = map_sector_segments.begin(); itSecSeg != map_sector_segments.end(); itSecSeg++ ){ // over all sectors
 
       // All the segments with one certain code
-      int code = *it;
-      std::vector <Segment*> segments = ftdSegRep.getSegsWithCode( code );
-   
-
+      int sector = itSecSeg->first;
+      std::vector <Segment*> segments = itSecSeg->second;
+      
+      
       
       // Now find out, what the allowed codes to connect to are:
-      std::set <int> targetCodes;
-                  
-      for ( unsigned i=0; i < _hitConnectors.size(); i++ ){ // over all IHitConnectors we use
-      
+      std::set <int> targetSectors;
+    
+      for ( unsigned i=0; i < _hitConnectors.size(); i++ ){ // over all IHitConnectors
+         
          // get the allowed targets
-         std::set <int> newTargetCodes = _hitConnectors[i]->getTargetCode( code );
+         std::set <int> newTargetSectors = _hitConnectors[i]->getTargetSectors( sector );
          
          //insert them into our set
-         targetCodes.insert( newTargetCodes.begin() , newTargetCodes.end() );
+         targetSectors.insert( newTargetSectors.begin() , newTargetSectors.end() );
          
       }
       
       
-      for ( unsigned int i=0; i< segments.size(); i++ ){ //over all segments within the code
-
-            
+      for ( unsigned int i=0; i< segments.size(); i++ ){ //over all segments within the sector
+         
+         
          Segment* parent = segments[i]; 
          
-         //set its layer
-         parent->setLayer( autCode->getLayer( code ) ); //We need to set this before writing it to the automaton
-
-      
-         for ( std::set<int>::iterator itTarg = targetCodes.begin(); itTarg!=targetCodes.end(); itTarg++ ){ // over all target codes
          
-
+         for ( std::set<int>::iterator itTarg = targetSectors.begin(); itTarg!=targetSectors.end(); itTarg++ ){ // over all target codes
             
-            int targetCode = *itTarg;
-            std::vector <Segment*> targetSegments = ftdSegRep.getSegsWithCode( targetCode );
-     
             
-            for ( unsigned int j=0; j < targetSegments.size(); j++ ){ // over all segments with the target code
-
-
+          
+            int targetSector = *itTarg;
+            std::vector <Segment*> targetSegments = map_sector_segments[ targetSector ];
+            
+            
+            for ( unsigned int j=0; j < targetSegments.size(); j++ ){ // over all segments in the target sector
+               
+               
                Segment* child = targetSegments[j];
                
                if ( connectSegments( parent , child ) ){ //the connection was successful 
-               
-            
+                  
+                  
                   nConnections++;              
                   
                }                                    
@@ -138,15 +127,15 @@ Automaton SegmentBuilder::get1SegAutomaton(){
             }
             
          }
-
+         
          // Store the segment in the automaton
-
+         
          
          automaton.addSegment( parent );
          nStoredSegments++;
-
-
-
+         
+         
+         
       }      
       
    }

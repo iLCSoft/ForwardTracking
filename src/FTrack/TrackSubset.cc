@@ -11,13 +11,22 @@ using namespace FTrack;
 
 void TrackSubset::calculateBestSet(){
    
-   unsigned nTracks = _tracks.size();
+   
+   unsigned nAccepted=0;
+   unsigned nRejected=0;
+   unsigned nCompWithAll=0;
+   unsigned nIncompatible=0;
+   
+   
+   std::vector< ITrack* > tracks = _tracks;
+   
+   unsigned nTracks = tracks.size();
    
    // the information for the Hopfield Neural Network:
    
    std::vector < std::vector <bool> > G; // a matrix telling, if two neurons (tracks) are compatible
    G.resize( nTracks );
-   for (unsigned i=0; i<nTracks; i++) G[i].resize( nTracks );
+   for (unsigned i=0; i<nTracks; i++) G[i].resize( tracks.size() );
    
    std::vector < double > QI ; // the quality indicators of the neurons (tracks)
    QI.resize( nTracks );
@@ -39,10 +48,10 @@ void TrackSubset::calculateBestSet(){
    
    for ( unsigned i=0; i < nTracks ; i++){ //over all tracks
       
-      MyTrack* trackA = _tracks[i]; //the track we want to look at.
+      ITrack* trackA = tracks[i]; //the track we want to look at.
       
       // Get a qualitiy indicator for the track
-      QI[i] = getQI( trackA );
+      QI[i] = trackA->getQI();
       
       streamlog_out(DEBUG2) << "\n QI of track " << i << " = " << QI[i];
       
@@ -54,7 +63,7 @@ void TrackSubset::calculateBestSet(){
       // Fill the states in the G matrix. (whether two tracks are compatible or not
       for ( unsigned j=i+1; j < nTracks ; j++ ){ // over all tracks that come after the current one (TODO: explain, why not previous ones too)
          
-         MyTrack* trackB = _tracks[j]; // the track we check if it is in conflict with trackA
+         ITrack* trackB = tracks[j]; // the track we check if it is in conflict with trackA
    
          if ( areCompatible( trackA , trackB ) ){ 
             
@@ -90,98 +99,148 @@ void TrackSubset::calculateBestSet(){
       }
       
    }
-         
+   
    
    /**********************************************************************************************/
-   /*                2. Let the Neural Network perform to find the best subset                   */
+   /*                2. Save tracks, that are compatible with all others                         */
+   /**********************************************************************************************/
+   
+   for( unsigned i=0; i < tracks.size(); i++ ){
+      
+      
+      bool isCompatibleWithAll = true;
+      
+      //check if this track is compatible with all others
+      for( unsigned j=0; j < tracks.size(); j++){
+         
+         //G[i][j] == 0 i and j are compatible, if G[i][j] == 1 i and j are incompatible
+         if( (i != j) && G[i][j] ){
+            
+            isCompatibleWithAll = false;
+            break;
+            
+         }
+         
+         
+      }
+      
+      
+      if ( isCompatibleWithAll ){ //if it is compatible with all others, we don't need the Hopfield Neural Net, we can just save it
+         
+         
+         //add the track to the good ones
+         _bestSubsetTracks.push_back( tracks[i] );
+         nCompWithAll++;
+         
+         //And now erase it from the ones we will still check:
+         tracks.erase( tracks.begin() + i );
+         states.erase( states.begin() + i );
+         QI.erase( QI.begin() + i );
+         
+         for( unsigned j=0; j<G.size(); j++ ) G[j].erase( G[j].begin() + i );
+         G.erase( G.begin() + i );
+         
+         i--;
+         
+      }
+      else nIncompatible++;
+      
+   }
+      
+   streamlog_out( DEBUG3 ) << "\n " << nCompWithAll << " tracks are compatible with all others, " << nIncompatible
+                           << " tracks are interfering and will be checked for the best subset";
+   
+   /**********************************************************************************************/
+   /*                3. Let the Neural Network perform to find the best subset                   */
    /**********************************************************************************************/  
    
-   NeuralNet net( G , QI , states , omega);
+   if( !tracks.empty() ){
    
-   net.setT (2.1);
-   net.setTInf(0.1);
-   net.setLimitForStable(0.01);
-   
-   unsigned nIterations=1;
-   
-   streamlog_out(DEBUG1) << "\nstates: ( ";
-   for ( unsigned int i=0; i< states.size(); i++) streamlog_out(DEBUG1) << states[i] << " "; 
-   streamlog_out(DEBUG1) << ")";
-   
-   while ( !net.doIteration() ){ // while the Neural Net is not (yet) stable
+      NeuralNet net( G , QI , states , omega);
       
-      nIterations++;
+      net.setT (2.1);
+      net.setTInf(0.1);
+      net.setLimitForStable(0.01);
       
-      std::vector <double> newStates = net.getStates();
-    
-      streamlog_out(DEBUG1) << "\nstates: ( ";      
+      unsigned nIterations=1;
       
-      for ( unsigned int i=0; i< newStates.size(); i++) streamlog_out(DEBUG1) << newStates[i] << " "; 
-                     
+      streamlog_out(DEBUG1) << "\nstates: ( ";
+      for ( unsigned int i=0; i< states.size(); i++) streamlog_out(DEBUG1) << states[i] << " "; 
       streamlog_out(DEBUG1) << ")";
       
-   }
-   
-     
-
-   streamlog_out( DEBUG3 ) << "\n Hopfield Neural Network is stable after " << nIterations << " iterations.";
-   
-   
-   
-  
-   /**********************************************************************************************/
-   /*                3. Now just sort the tracks into accepted and rejected ones                 */
-   /**********************************************************************************************/  
-
-   
-   states = net.getStates();
-   
-   double activationMin = 0.75; // the minimal value of state to be accepted
-   
-   
-   unsigned nAccepted=0;
-   unsigned nRejected=0;
-   
-   for ( unsigned i=0; i < states.size(); i++ ){
+      while ( !net.doIteration() ){ // while the Neural Net is not (yet) stable
+         
+         nIterations++;
+         
+         std::vector <double> newStates = net.getStates();
       
-      
-      if ( states[i] >= activationMin ){
+         streamlog_out(DEBUG1) << "\nstates: ( ";      
          
-         _bestSubsetTracks.push_back( _tracks[i] );
-         nAccepted++;
-         
-      }
-      else{
-         
-         _rejectedTracks.push_back( _tracks[i] );
-         nRejected++;
+         for ( unsigned int i=0; i< newStates.size(); i++) streamlog_out(DEBUG1) << newStates[i] << " "; 
+                        
+         streamlog_out(DEBUG1) << ")";
          
       }
       
+      
+      
+      streamlog_out( DEBUG3 ) << "\n Hopfield Neural Network is stable after " << nIterations << " iterations.";
+      
+      
+      
+      
+      /**********************************************************************************************/
+      /*                4. Now just sort the tracks into accepted and rejected ones                 */
+      /**********************************************************************************************/  
+      
+      
+      states = net.getStates();
+      
+      double activationMin = 0.75; // the minimal value of state to be accepted
+      
+      
+      
+      
+      for ( unsigned i=0; i < states.size(); i++ ){
+         
+         
+         if ( states[i] >= activationMin ){
+            
+            _bestSubsetTracks.push_back( tracks[i] );
+            nAccepted++;
+            
+         }
+         else{
+            
+            _rejectedTracks.push_back( tracks[i] );
+            nRejected++;
+            
+         }
+         
+      }
+      
+      
+      streamlog_out( DEBUG3 ) << "\n\t Hopfield Neural Network accepted " << nAccepted 
+                              << " tracks and rejected " << nRejected << " tracks of all in all " 
+                              << nAccepted + nRejected << "incomaptible tracks.";
+      
+      
    }
    
-   
-   streamlog_out( DEBUG3 ) << "\n Hopfield Neural Network found the best subset of " << nAccepted 
-                           << " tracks and rejected " << nRejected << " tracks";
-   
+ 
+      streamlog_out( DEBUG3 )   << "\n So in sum " << nAccepted + nCompWithAll
+                                << " tracks survived and " << nRejected << " tracks got rejected.";
    
 }
 
 
-double TrackSubset::getQI( MyTrack* track ){
-   
-   
 
-   
-   return track->getChi2Prob();  
-   
-}
 
-bool TrackSubset::areCompatible( MyTrack* trackA , MyTrack* trackB ){
+bool TrackSubset::areCompatible( ITrack* trackA , ITrack* trackB ){
    
    
-   std::vector< AutHit*> hitsA = trackA->getHits();
-   std::vector< AutHit*> hitsB = trackB->getHits();
+   std::vector< IHit*> hitsA = trackA->getHits();
+   std::vector< IHit*> hitsB = trackB->getHits();
    
 
    for( unsigned i=0; i < hitsA.size(); i++){

@@ -1,7 +1,7 @@
 /** Executable, that just uses the criteria and executes them as often as the passed argument
  * or 1 time by default. 
- * The sense is to use this executable together with a profile to see how time consuming the 
- * different criteria are
+ * The sense is to use this executable together with a profiler to see how time consuming the 
+ * different criteria are.
  */
 
 #include <cstdlib>
@@ -9,7 +9,7 @@
 
 
 #include "Criteria.h"
-#include <IMPL/TrackerHitPlaneImpl.h>
+#include "SimpleHit.h"
 
 
 using namespace FTrack;
@@ -21,7 +21,7 @@ void checkCrits( std::vector< ICriterion* > critVec, Segment* parent, Segment* c
    for( unsigned i=0; i<critVec.size(); i++){
       
       critVec[i]->areCompatible( parent , child );
-   
+      
    }
  
    return;
@@ -82,47 +82,43 @@ int main(int argc,char *argv[]){
    /**********************************************************************************************/
    /*             Make the segments, the criteria can use                                        */
    /**********************************************************************************************/
-   
-   TrackerHitPlaneImpl trackerHit1;
-   TrackerHitPlaneImpl trackerHit2;
-   TrackerHitPlaneImpl trackerHit3;
-   TrackerHitPlaneImpl trackerHit4;
-   
-   double pos1[] = {0. , 0. , 0.}; // the values here are chosen quite randomly, they just should give something non trivial,
-   double pos2[] = {1. , 3. , 1.}; // so the criteria don't stop too early because, they can't check (for example if 3 hits 
-   double pos3[] = {4. , 7. , 2.}; // are on one line, a circle can't be calculated etc.
-   double pos4[] = {8. , 13. , 3.};
-   
-   trackerHit1.setPosition(  pos1  ) ;
-   trackerHit2.setPosition(  pos2  ) ;
-   trackerHit3.setPosition(  pos3  ) ;
-   trackerHit4.setPosition(  pos4  ) ;
-   
-   AutHit autHit1( &trackerHit1 );
-   AutHit autHit2( &trackerHit2 );
-   AutHit autHit3( &trackerHit3 );
-   AutHit autHit4( &trackerHit4 );
-   
-   std::vector< AutHit* > hitVecParent;
-   std::vector< AutHit* > hitVecChild;
+   const SectorSystemFTD sectorSystemFTD( 1 , 1 , 1 );
    
    
-   hitVecParent.push_back( &autHit4 );
-   hitVecChild.push_back( &autHit3 );
+   int side = 1;
+   unsigned layer = 0;
+   unsigned module = 0;
+   unsigned sensor = 0;
+   
+   SimpleHit hit1 ( 0.,0.,0., side , layer , module , sensor , &sectorSystemFTD );
+   SimpleHit hit2 ( 1.,3.,1., side , layer , module , sensor , &sectorSystemFTD );
+   SimpleHit hit3 ( 4.,7.,2., side , layer , module , sensor , &sectorSystemFTD );
+   SimpleHit hit4 ( 8.,13.,3., side , layer , module , sensor , &sectorSystemFTD );
+   // the values here are chosen quite randomly, they just should give something non trivial,
+   // so the criteria don't stop too early because, they can't check (for example if 3 hits 
+   // are on one line, a circle can't be calculated etc.
+  
+   
+   std::vector< IHit* > hitVecParent;
+   std::vector< IHit* > hitVecChild;
+   
+   
+   hitVecParent.push_back( &hit4 );
+   hitVecChild.push_back( &hit3 );
    
    Segment segment1Parent( hitVecParent );
    Segment segment1Child( hitVecChild );
    
    
-   hitVecParent.push_back( &autHit3 );
-   hitVecChild.push_back( &autHit2 );
+   hitVecParent.push_back( &hit3 );
+   hitVecChild.push_back( &hit2 );
    
    Segment segment2Parent( hitVecParent );
    Segment segment2Child( hitVecChild );   
    
    
-   hitVecParent.push_back( &autHit2 );
-   hitVecChild.push_back( &autHit1 );
+   hitVecParent.push_back( &hit2 );
+   hitVecChild.push_back( &hit1 );
    
    Segment segment3Parent( hitVecParent );
    Segment segment3Child( hitVecChild );   
@@ -168,3 +164,4 @@ int main(int argc,char *argv[]){
    
    
 }
+

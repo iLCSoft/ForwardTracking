@@ -110,6 +110,8 @@ protected:
    double _chi2ProbCut;
    int _nHitsMin;
    
+   const SectorSystemFTD* _sectorSystemFTD;
+   
 } ;
 
 #endif

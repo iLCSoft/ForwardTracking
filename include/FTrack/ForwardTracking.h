@@ -10,6 +10,7 @@
 
 #include <gear/BField.h>
 #include "Criteria.h"
+#include "SectorSystemFTD.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -113,6 +114,8 @@ class ForwardTracking : public Processor {
    /** Draws the FTD sensors in CED
     */
    void drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal);
+   
+
 
    std::vector< std::string > _criteriaNames;
    std::map< std::string , float > _critMinima;
@@ -123,6 +126,8 @@ class ForwardTracking : public Processor {
    std::vector <ICriterion*> _crit3Vec;
    std::vector <ICriterion*> _crit4Vec;
     
+   const SectorSystemFTD* _sectorSystemFTD;
+   
 } ;
 
 #endif

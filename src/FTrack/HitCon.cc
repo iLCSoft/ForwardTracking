@@ -1,34 +1,33 @@
 #include "HitCon.h"
 
 
-
 using namespace FTrack;
 
 
 
-HitCon::HitCon( AutCode* autCode ){
+HitCon::HitCon( const SectorSystemFTD* sectorSystemFTD ){
    
-   _autCode = autCode;
+   _sectorSystemFTD = sectorSystemFTD;
    
 }
 
 
 
-std::set< int > HitCon::getTargetCode ( int code ){
+std::set< int > HitCon::getTargetSectors ( int sector ){
    
    
    
-   std::set <int> targetCode;
+   std::set <int> targetSectors;
    
       
-   int side = _autCode->getSide( code );
-   unsigned layer = _autCode->getLayer( code );
-//    unsigned module = _autCode->getModule( code );
-//    unsigned sensor = _autCode->getSensor( code );
+   int side = _sectorSystemFTD->getSide( sector );
+   unsigned layer = _sectorSystemFTD->getLayer( sector );
+//    unsigned module = _sectorSystemFTD->getModule( sector );
+//    unsigned sensor = _sectorSystemFTD->getSensor( sector );
    
-//    unsigned nLayers = _autCode->getNLayers();
-   unsigned nModules = _autCode->getNModules();
-   unsigned nSensors = _autCode->getNSensors();
+//    unsigned nLayers = _sectorSystemFTD->getNumberOfLayers();
+   unsigned nModules = _sectorSystemFTD->getNumberOfModules();
+   unsigned nSensors = _sectorSystemFTD->getNumberOfSensors();
    
    
    //connect to the next layer
@@ -38,16 +37,16 @@ std::set< int > HitCon::getTargetCode ( int code ){
       unsigned layerTarget = layer - 1; //The next layer
       
       for ( unsigned iModule=0; iModule < nModules ; iModule++){ //over all modules
-
-         for ( unsigned iSensor=0; iSensor < nSensors ; iSensor++ ){ //over all sensors
-
-            
-            targetCode.insert( _autCode->getCode ( side , layerTarget , iModule , iSensor ) ); 
          
+         for ( unsigned iSensor=0; iSensor < nSensors ; iSensor++ ){ //over all sensors
+            
+            
+            targetSectors.insert( _sectorSystemFTD->getSector ( side , layerTarget , iModule , iSensor ) ); 
+            
          }
          
       }
-         
+     
    }
    
    //Allow jumping to layer 0 from layer 4 or less
@@ -57,11 +56,11 @@ std::set< int > HitCon::getTargetCode ( int code ){
       unsigned layerTarget = 0;
       
       for ( unsigned iModule=0; iModule < nModules ; iModule++){ //over all modules
-
+         
          for ( unsigned iSensor=0; iSensor < nSensors ; iSensor++ ){ //over all sensors
-
             
-            targetCode.insert( _autCode->getCode ( side , layerTarget , iModule , iSensor ) ); 
+            
+            targetSectors.insert( _sectorSystemFTD->getSector ( side , layerTarget , iModule , iSensor ) ); 
             
          }
          
@@ -69,11 +68,9 @@ std::set< int > HitCon::getTargetCode ( int code ){
       
    }
    
-   
-   
-   return targetCode;
-   
+   return targetSectors;
    
    
 }
+
 

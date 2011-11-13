@@ -2,9 +2,9 @@
 
 using namespace FTrack;
 
-Segment::Segment( std::vector <AutHit*> autHits){ 
+Segment::Segment( std::vector <IHit*> hits){ 
 
-   _autHits = autHits; 
+   _hits = hits; 
    
    _state.push_back(0); 
    
@@ -16,9 +16,9 @@ Segment::Segment( std::vector <AutHit*> autHits){
 
 
 
-Segment::Segment( AutHit* autHit){ 
+Segment::Segment( IHit* hit){ 
    
-   _autHits.push_back( autHit) ;
+   _hits.push_back( hit) ;
    _state.push_back(0); 
    _children.clear(); 
    _parents.clear();

@@ -27,14 +27,14 @@ bool Crit4_NoZigZag::areCompatible( Segment* parent , Segment* child )throw( Bad
    
    
    
-   if (( parent->getAutHits().size() == 3 )&&( child->getAutHits().size() == 3 )){ //this is a criterion for 3-segments
+   if (( parent->getHits().size() == 3 )&&( child->getHits().size() == 3 )){ //this is a criterion for 3-segments
       
 
 
-      AutHit* a = parent->getAutHits()[0];
-      AutHit* b = parent->getAutHits()[1];
-      AutHit* c = parent->getAutHits()[2];
-      AutHit* d = child-> getAutHits()[2];
+      IHit* a = parent->getHits()[0];
+      IHit* b = parent->getHits()[1];
+      IHit* c = parent->getHits()[2];
+      IHit* d = child-> getHits()[2];
       
       float ax = a->getX();
       float ay = a->getY();
@@ -88,8 +88,8 @@ bool Crit4_NoZigZag::areCompatible( Segment* parent , Segment* child )throw( Bad
    else{
       
       std::string s = "Crit4_NoZigZag::This criterion needs 2 segments with 3 hits each, passed was a "
-      +  intToString( parent->getAutHits().size() ) + " hit segment (parent) and a "
-      +  intToString( child->getAutHits().size() ) + " hit segment (child).";
+      +  intToString( parent->getHits().size() ) + " hit segment (parent) and a "
+      +  intToString( child->getHits().size() ) + " hit segment (child).";
       
       
       throw BadSegmentLength( s );

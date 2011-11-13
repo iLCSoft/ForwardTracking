@@ -5,8 +5,10 @@
 
 using namespace FTrack;
 
-AutHit::AutHit( TrackerHit* trackerHit ){
+AutHit::AutHit( TrackerHit* trackerHit , const SectorSystemFTD* const sectorSystemFTD ){
    
+   
+   _sectorSystemFTD = sectorSystemFTD;
    
    _trackerHit = trackerHit;
 
@@ -28,6 +30,9 @@ AutHit::AutHit( TrackerHit* trackerHit ){
    _module = cellID[ ILDCellID0::module ];
    _sensor = cellID[ ILDCellID0::sensor ];
  
+   
+   calculateSector();
+   
    
    //We assume a real hit. If it is virtual, this has to be set.
    _isVirtual = false;

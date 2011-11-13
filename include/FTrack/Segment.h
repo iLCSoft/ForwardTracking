@@ -48,8 +48,8 @@ namespace FTrack{
    
    public:
          
-         Segment( std::vector <AutHit*> autHits);
-         Segment( AutHit* autHit);
+         Segment( std::vector <IHit*> hits);
+         Segment( IHit* hit);
          
          
          void deleteParent ( Segment* delParent ){ _parents.remove( delParent );};
@@ -58,7 +58,7 @@ namespace FTrack{
    
          std::list <Segment*> getChildren() { return _children;};
          std::list <Segment*> getParents()  { return _parents;};
-         std::vector <AutHit*> getAutHits() {return _autHits;};
+         std::vector <IHit*> getHits() {return _hits;};
          
          void addChild( Segment* child ){ _children.push_back(child); };
          void addParent( Segment* parent ){ _parents.push_back(parent); };
@@ -86,7 +86,7 @@ namespace FTrack{
          
          
    
-         std::vector <AutHit*> _autHits;
+         std::vector <IHit*> _hits;
          
          std::vector<int> _state;
          

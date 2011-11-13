@@ -10,26 +10,27 @@
 namespace FTrack{
 
 
-   /** This classe builds the bridge between the Automaton and the FTDRepresentation.
+   /** This classe builds the cellular Automaton from the hits
     * 
-    * It can be used to take all the autHits stored in an FTDRepresentation and make
+    * It can be used to take all the autHits stored in a map< int , vector < IHits > > and makes
     * 1-segments out of them ( see the class Segment for more info on them ).
     * 
     * The created 1-segments then are connected.
     * 
     * For the rules of connecting criteria and hitConnectors can be added to the object:
     * 
-    * - a hitConnector takes a code of the segment ( for example a cellID0 or a layer number or an own code ) and returns
-    * all the codes we might connect to. So there we get the information like: "this segment can be connected
-    * to layer 3 and 4, module 7,8,9 inf forward direction".
+    * - a hitConnector takes the sector of the segment ( for example a cellID0 or a layer number or an own code ) and returns
+    * all the sectors we might connect to. So there we get the information like: "this segment can be connected
+    * to layer 3 and 4, module 7,8,9 in forward direction".
     * 
-    * - the criteria take two segments and return whether they are compatible. A criterion could check for anything
-    * that is stored in the segments. For example: if the line formed from two 1-segments passes close by the IP might
+    * - the criteria take two segments and return whether they are compatible or not. 
+    * A criterion could check for anything, that is stored in the segments. 
+    * For example: if the line formed from two 1-hit segments passes close by the IP might
     * be a criterion for very stiff tracks.
     * 
-    * So the hitConnectors tell us were to look and the criteria whether to connect. If two 1-segments are found,
-    * that compatible, they will be connected. Connected means: The inner 1-segment will save the outer one as a parent
-    * and the outer on will save the inner one as a child.
+    * So the hitConnectors tell us were to look and the criteria whether to connect. If two 1-hit segments are found,
+    * that are compatible, they will be connected. Connected means: The inner 1-segment will save the outer one as a parent
+    * and the outer one will save the inner one as a child.
     * 
     * All this (except adding hitConnectors and Criteria) is done in the method get1SegAutomaton.
     * 
@@ -44,7 +45,7 @@ namespace FTrack{
       /**
        * @param ftdRep the FTDRepresentation to take the autHits from
        */
-      SegmentBuilder(  FTDRepresentation* ftdRep);
+      SegmentBuilder(  std::map< int , std::vector< IHit* > > map_sector_hits );
       
       /** Adds a criterion. 
        */
@@ -72,7 +73,7 @@ namespace FTrack{
       std::vector <ICriterion* > _criteria;
       std::vector <IHitConnector* > _hitConnectors;
       
-      FTDRepresentation* _FTDRep;
+      std::map< int , std::vector< IHit* > > _map_sector_hits;
       
       /** Connects two segments, if they fulfill all the criteria
        * 
