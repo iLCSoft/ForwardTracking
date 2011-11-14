@@ -22,8 +22,6 @@
 
 #include "FTrackTools.h"
 #include "TrackSubset.h"
-#include "FTDRepresentation.h"
-#include "AutCode.h"
 
 #include "SegmentBuilder.h"
 #include "Automaton.h"

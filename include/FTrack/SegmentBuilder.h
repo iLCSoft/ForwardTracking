@@ -1,8 +1,6 @@
 #ifndef SegmentBuilder_h
 #define SegmentBuilder_h
 
-#include "FTDRepresentation.h"
-#include "FTDSegRepresentation.h"
 #include "ICriterion.h"
 #include "IHitConnector.h"
 #include "Automaton.h"

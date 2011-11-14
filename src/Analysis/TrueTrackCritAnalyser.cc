@@ -25,9 +25,7 @@
 
 
 #include "Criteria.h"
-#include "AutCode.h"
 #include "Automaton.h"
-#include "FTDRepresentation.h"
 #include "SegmentBuilder.h"
 #include "HitCon.h"
 #include "MyTrack.h"
