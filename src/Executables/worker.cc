@@ -74,7 +74,7 @@ int main(int argc,char *argv[]){
       std::ofstream myfile;
       myfile.open (FEEDBACK_FILE.c_str() , std::ios::app);
    
-      myfile << "value1";
+      myfile << "quantile size\t" << quantSize;
       
       myfile.close();
    

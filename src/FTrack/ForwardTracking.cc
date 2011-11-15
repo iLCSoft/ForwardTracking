@@ -391,13 +391,12 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new MyTrack( autTracks[i] ) );
       
-//       trackCandidates = autTrackCandidates;
-  
+      std::vector< ITrack* > tracks = autTrackCandidates;
       
       /**********************************************************************************************/
       /*                Fitting and erasing bad fits                                                */
       /**********************************************************************************************/
-      
+      /*
       std::vector< ITrack* > trackCandidates;
       
       unsigned nTracksRejected = 0;
@@ -440,12 +439,12 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
     
       
-      
+      */
       
       /**********************************************************************************************/
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
-     
+     /*
       
       // Make a TrackSubset
       TrackSubset subset;
@@ -464,7 +463,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
       }
       
-      
+      */
       
       /**********************************************************************************************/
       /*               finally: save the tracks                                                     */
