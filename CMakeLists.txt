@@ -116,6 +116,8 @@ TARGET_LINK_LIBRARIES( QuantileAnalyser ${PROJECT_NAME} )
 ADD_EXECUTABLE( CritRunner ./src/Executables/CritRunner.cc )
 TARGET_LINK_LIBRARIES( CritRunner ${PROJECT_NAME} )
 
+ADD_EXECUTABLE( worker ./src/Executables/worker.cc )
+TARGET_LINK_LIBRARIES( worker ${PROJECT_NAME} )
 
 ### TESTING #################################################################
 

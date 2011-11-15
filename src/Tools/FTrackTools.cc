@@ -106,12 +106,11 @@ void FTrack::saveToRoot( std::string rootFileName, std::string treeName , std::m
 
    for( it = map_name_data.begin() ; it != map_name_data.end() ; it++){
       
-
-        
+      
+      
       myTree->SetBranchAddress( it->first.c_str(), & it->second );   
-         
-                               
-                                    
+      
+      
    }
 
 

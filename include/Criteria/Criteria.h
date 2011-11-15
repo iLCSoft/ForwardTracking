@@ -73,6 +73,22 @@ namespace FTrack{
        */
       static ICriterion* createCriterion( std::string critName , float min=0. , float max=0. )throw (UnknownCriterion) ;
       
+      /**
+       * sets values for the passed referneced floats left and right. They indicate how
+       * the specified criterion should be cut if necessary. Say you want for example
+       * a 99% quantile, so that 99% of your true tracks are within it.
+       * A criterion like the angle between two segments then needs to define a boarder like:
+       * between an angle of 1° and of 9° there will be 99%.
+       * So 1% is outside. But should 1% be the ones with a bigger angle or with a smaller angle or should
+       * this be 50:50? 
+       * This is defined by left and right. Left is the proportion, that is taken away on the left side and
+       * right is the one that is taken away on the right side.
+       * In the case of an angle we will most probably have lots around 0° and a long tail to the right, so
+       * left = 0 and right = 1. seems like a good idea.
+       * Standard is of course 0.5 and 0.5
+       */
+      static void getLeftRight( std::string critName, float & left, float & right );
+      
    private:
       
       static std::set< std::string > _critNames;

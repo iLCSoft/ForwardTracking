@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <fstream>
 
 #include "TFile.h"
 #include "TTree.h"
@@ -66,6 +67,15 @@ int main(int argc,char *argv[]){
    std::string ROOT_FILE_PATH = "/scratch/ilcsoft/Steers/TrueTracksCritAnalysis.root";
    if( argc >= 3 ) ROOT_FILE_PATH = argv[2];
 
+   std::string OUTPUT_PATH = "quantile_analyser_output";
+   if( argc >= 4 ) OUTPUT_PATH = argv[3];
+   
+   
+   ofstream myfile;
+   myfile.open (OUTPUT_PATH.c_str() );
+   
+   
+   
 
    
    
@@ -124,7 +134,7 @@ int main(int argc,char *argv[]){
             
             tree -> SetBranchAddress ( branchName.c_str() , &(map_name_value[ critName ].back()) );
             
-             
+            
          }
        
          tree->GetEntry(j);
@@ -150,23 +160,33 @@ int main(int argc,char *argv[]){
          float min = 0.;
          float max = 0.;
          
-         calcMinMaxOfQuantile( values , min , max , quantile , 0.5 , 0.5 );
+         float left = 0.5;
+         float right = 0.5;
+         Criteria::getLeftRight( critName, left, right );
          
-         min -= 0.01*fabs(min); // So that the actual minimum is not the boarder, but inside by a little bit
-         max += 0.01*fabs(max);
+         calcMinMaxOfQuantile( values , min , max , quantile , left , right );
+         
+//          min -= 0.01*fabs(min); // So that the actual minimum is not the boarder, but inside by a little bit
+//          max += 0.01*fabs(max);
          
          std::cout << "\n" << critName << ": min = " << min << ", max = " << max;
          steerInfo += "\n<parameter name=\"" + critName + "_min\" type=\"float\">" + floatToString(min) + "</parameter>";
          steerInfo += "\n<parameter name=\"" + critName + "_max\" type=\"float\">" + floatToString(max) + "</parameter>";
          steerInfob += critName + "\n";
          
+         
+         myfile << "--MyForwardTracking." << critName << "_min=" << min << "   ";
+         myfile << "--MyForwardTracking." << critName << "_max=" << max << "   ";
+         
+         
+         
       }
       
-
-   steerInfo += "\n\n";
-
-
-   
+      
+      steerInfo += "\n\n";
+      
+      
+      
    }
    
    steerInfo += "<parameter name=\"Criteria\" type=\"StringVec\">";
@@ -178,7 +198,7 @@ int main(int argc,char *argv[]){
    delete rootFile;
    
 
-   
+   myfile.close();
    
 
    

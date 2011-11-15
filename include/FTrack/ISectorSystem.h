@@ -9,7 +9,7 @@ namespace FTrack{
    
    /** An interface for Sector Systems. 
     * 
-    * A sector system is able to take an integer, that represents a sector and gives back information
+    * A sector system is able to take an integer that represents a sector and gives back information
     * about it. This can be things like the number of the sensor or the rough distance from the IP or such
     * things. Or even neighbouring sectors. 
     * But this is all dependent on the circumstances of the detectors and their representation. In the interface

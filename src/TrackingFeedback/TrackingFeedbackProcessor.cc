@@ -1,37 +1,28 @@
 #include "TrackingFeedbackProcessor.h"
-#include <iostream>
 
-#include <EVENT/LCCollection.h>
-#include <EVENT/MCParticle.h>
+
+
 
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
 #include "HelixClass.h"
 
-#include <EVENT/LCRelation.h>
-#include <EVENT/Track.h>
-#include <EVENT/MCParticle.h>
-#include <IMPL/TrackImpl.h>
+
 #include <cmath>
-#include "TVector3.h"
-#include "fstream"
+#include <fstream>
 #include "SimpleCircle.h"
 #include <algorithm>
 
 #include "TROOT.h"
 #include "TTree.h"
 #include "TFile.h"
-// for calculating the chi2 probability. 
-#include "Math/ProbFunc.h"
+
 
 #include <sstream>
 #include <MarlinCED.h>
 #include "FTrackTools.h"
 #include "MyTrack.h"
-
-#include <IMPL/TrackerHitPlaneImpl.h>
-
 
 
 #include "Criteria.h"
@@ -46,26 +37,7 @@ using namespace FTrack;
 
 
 
-bool hitComp (TrackerHit* i, TrackerHit* j) {
-    
-   return ( fabs(i->getPosition()[2]) < fabs( j->getPosition()[2]) ); //compare their z values
 
-}
-
-
-
-const char* TRACK_TYPE_NAMES[] = {"COMPLETE" , "COMPLETE_PLUS" , "INCOMPLETE" , "INCOMPLETE_PLUS" , "GHOST" , "LOST"}; 
-enum TrackType { COMPLETE , COMPLETE_PLUS , INCOMPLETE , INCOMPLETE_PLUS , GHOST , LOST };
-
-struct MyRelation{
-   
-   LCRelation* lcRelation;
-   bool isLost;
-   bool isFoundCompletely;
-   std::map<Track*,TrackType> relatedTracks;
-   
-   MyRelation( LCRelation* rel ){isLost = true; isFoundCompletely = false; relatedTracks.clear(); lcRelation = rel;};
-};
 
 
 
@@ -201,7 +173,8 @@ void TrackingFeedbackProcessor::init() {
 
 void TrackingFeedbackProcessor::processRunHeader( LCRunHeader* run) { 
 
-    _nRun++ ;
+   _nRun++;
+   
 } 
 
 
@@ -212,261 +185,83 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 //-----------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
 
-  MarlinCED::newEvent(this , 0) ; 
+   MarlinCED::newEvent(this , 0) ; 
 
-  CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
 
-  pHandler.update(evt); 
+   pHandler.update(evt); 
 
 //-----------------------------------------------------------------------
 
+
+
    
-   ////////////////////////////////////////////////////////////////
-   //
-   //getting feedback data of the tracks
-   //
-   //////////////////////////////////////////////////////////////
-   
-     
-   
-   int nComplete = 0;         // complete tracks without extra points
-   int nCompletePlus = 0;     // complete tracks with extra points
-   int nLost = 0;             // lost tracks = tracks that do exist in reality (mcp), but are not represented in the tracksearch results  
-   int nIncomplete = 0;       // incomplete tracks without extra points. i.e.: tracks that are too short (for example 1 or 2 hits are still missing)
-   int nIncompletePlus = 0;   // incomplete tracks with extra points. the reconstructed track belongs to the true track that hold more than half of the points of the track
-   int nGhost = 0;            // ghost tracks = tracks that are reconstructed, but don't actually exist. Pure fiction. a ghost track 
-                              // is a track, where no real track owns more than half of the tracks hits.
-   int nFoundCompletely = 0;      // when a true track is found completely (restored track is a complete or complete plus track)
+   _nComplete = 0;         
+   _nCompletePlus = 0;     
+   _nLost = 0;             
+   _nIncomplete = 0;       
+   _nIncompletePlus = 0;   
+   _nGhost = 0;            
+   _nFoundCompletely = 0;
    
    LCCollection* col = evt->getCollection( _colNameMCTrueTracksRel ) ;
    
    int nMCTracks = col->getNumberOfElements();
-   std::vector<MyRelation*> myRelations; 
+   _myRelations.clear(); 
    
-   // fill the vector with the relations
+   
+   /**********************************************************************************************/
+   /*             Check the tracks, if they are of interest                                      */
+   /**********************************************************************************************/
+   
    for( int i=0; i < nMCTracks; i++){
       
-      bool isOfInterest = true;  // A bool to hold information whether this track we are looking at is interesting for us at all
-                                 // So we might apply different criteria to it.
-                                 // For example: if a track is very curly we might not want to consider it at all.
-                                 // So when we want to know how high the percentage of reconstructed tracks is, we might
-                                 // want to only consider certain true tracks 
+      
       
       LCRelation* rel = dynamic_cast <LCRelation*> (col->getElementAt(i) );
       MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );
       Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
       
       
-      //CED begin
-
-      
       MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
-
- 
-      //CED end
-      
-
-      
-      //////////////////////////////////////////////////////////////////////////////////
-      //If distance from origin is not too high      
-      double dist = sqrt(mcp->getVertex()[0]*mcp->getVertex()[0] + 
-                     mcp->getVertex()[1]*mcp->getVertex()[1] + 
-                     mcp->getVertex()[2]*mcp->getVertex()[2] );
-      
-      
-
-      if ( dist > _distToIPMax ) isOfInterest = false;   // exclude point too far away from the origin. Of course we want them reconstructed too,
-                                                // but at the moment we are only looking at the points that are reconstructed by a simple
-                                                // Cellular Automaton, which uses the point 0 as a point in the track
-      //
-      //////////////////////////////////////////////////////////////////////////////////
-      
-      //////////////////////////////////////////////////////////////////////////////////
-      //If pt is not too low
       
       double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
       
-      if ( pt < _ptMin ) isOfInterest = false;
-      //
-      //////////////////////////////////////////////////////////////////////////////////
-      
-      //////////////////////////////////////////////////////////////////////////////////
-      //If there are less than 4 hits in the track
-      
-      if ( (int) track->getTrackerHits().size() < _nHitsMin ) isOfInterest = false;
-      //
-      //////////////////////////////////////////////////////////////////////////////////
-      
-      //////////////////////////////////////////////////////////////////////////////////
-      //If the chi2 probability is too low
-      
-      //Fit the track
-      std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
-      // sort the hits in the track
-      
-      // Make authits from the trackerHits
-      std::vector <AutHit*> autHits;
-      
-      for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD) );
-      
-      
-      MyTrack myTrack;
-      for( unsigned j=0; j<autHits.size(); j++ ) myTrack.addHit( autHits[j] );
-      
-      myTrack.fit();
-      
-      if ( myTrack.getChi2Prob() < _chi2ProbCut ) isOfInterest = false;
-      
-      for( unsigned j=0; j<autHits.size(); j++ ) delete autHits[j];
-      
-      //
-      //////////////////////////////////////////////////////////////////////////////////
-      
-      if ( isOfInterest ) myRelations.push_back( new MyRelation( rel ) );
+      //Only store the good tracks
+      if (( getDistToIP( mcp ) < _distToIPMax )&&                       //distance to IP
+         ( pt > _ptMin )&&                                              //transversal momentum
+         ((int) track->getTrackerHits().size() >= _nHitsMin )&&         //number of hits in track        
+         ( getChi2Prob( track ) > _chi2ProbCut )){                      //chi2 probability
+        
+         _myRelations.push_back( new MyRelation( rel ) );
+         
+      }
       
    }
    
-   nMCTracks = myRelations.size();
+   nMCTracks = _myRelations.size();
    
+   //The restored tracks, that we want to check for how good they are
    col = evt->getCollection( _TrackCollection ) ;
 
    
    if( col != NULL ){
-
-      int nTracks = col->getNumberOfElements()  ;
-
-      //TODO: kann man das nicht einfacher gestalten??? eleganter? das sind schon wieder so viele for schleifen
       
-      for(int i=0; i< nTracks ; i++){ //over all tracks
+      int nTracks = col->getNumberOfElements()  ;
+      
+      //check all the reconstructed tracks
+      for(int i=0; i< nTracks ; i++){
          
          Track* track = dynamic_cast <Track*> ( col->getElementAt(i) ); 
-         TrackerHitVec hitVec = track->getTrackerHits();
+         checkTheTrack( track );
          
-         std::vector<MyRelation*> hitRelations; //containing all the true tracks (relations) that correspond to the hits of the track
-                                                //if for example a track consists of 3 points from one true track and two from another
-                                                //at the end this vector will have five entries: 3 times one true track and 3 times the other.
-                                                //so at the end, all we have to do is to count them.
-         
-         for( unsigned int j=0; j < hitVec.size(); j++ ){ //over all hits in the track
-            
-            for( unsigned int k=0; k < myRelations.size(); k++){ //check all relations if they correspond 
-            
-               
-               Track* trueTrack = dynamic_cast <Track*>  ( myRelations[k]->lcRelation->getFrom() ); //get the true track
-         
-               if ( find (trueTrack->getTrackerHits().begin() , trueTrack->getTrackerHits().end() , hitVec[j] ) 
-                     !=  trueTrack->getTrackerHits().end()) // if the hit is contained in this truetrack
-                        hitRelations.push_back( myRelations[k] );//add the track (i.e. its relation) to the vector hitRelations
-            }
-                    
-         } 
-         
-
-         // After those two for loops we have the vector hitRelations filled with all the true track (relations) that correspond
-         // to our reconstructed track. Ideally this vector would now only consist of the same true track again and again.
-         //
-         // Before we can check what kind of track we have here, we have to get some data.
-         // We wanna know the most represented true track:
-         
-         int nHitsOneTrack = 0;          //number of most true hits corresponding to ONE true track 
-         MyRelation* dominantTrueTrack = NULL;    //the true track most represented in the track 
-         
-        
-         sort ( hitRelations.begin() , hitRelations.end()); //Sorting, so all the same elements are at one place
-         
-         int n=0;                         // number of hits from one track
-         MyRelation* previousRel = NULL;  // used to store the previous relation, so we can compare, if there was a change. at first we don't have
-                                          // a previous one, so we set it NULL
-         for (unsigned int j=0; j< hitRelations.size(); j++){ 
-         
-            if ( hitRelations[j] == previousRel ) n++;   //for every repeating element count 1. (that's the reason we sorted before, so we can just count them like this)
-            else n = 1; //previous was different --> we start again with 1
-            
-            previousRel = hitRelations[j];
-            
-            if (n > nHitsOneTrack){ //we have a new winner (a true track) with (currently) the most hits in this track
-                             
-               nHitsOneTrack = n;
-               dominantTrueTrack = hitRelations[j];
-               
-            }
-            
-         }
-         
-         int nHitsTrack = hitVec.size();   //number of hits of the reconstructed track
-         int nHitsTrueTrack = 0;           //number of hits of the true track
-         
-         if (dominantTrueTrack != NULL ){ 
-            Track* trueTrack = dynamic_cast <Track*> ( dominantTrueTrack->lcRelation->getFrom() );
-            nHitsTrueTrack = trueTrack->getTrackerHits().size();  
-            
-         }
-                                         
-                 
-                
-         
-         //So now we have all the values we need to know to tell, what kind of track we have here.
-         
-         if ( nHitsOneTrack <= nHitsTrack/2. ){  // less than half the points at maximum correspond to one track, this is not a real track, but
-            nGhost++;                           // a ghost track
-                     
-         }
-         else{                                   // more than half of the points form a true track!
-            
-            TrackType trackType;
-            
-           
-            
-            if (nHitsOneTrack > nHitsTrueTrack/2.) //If more than half of the points from the true track are covered
-               dominantTrueTrack->isLost = false;  // this is guaranteed no lost track  
-            
-            if (nHitsOneTrack < nHitsTrueTrack)    // there are too few good hits,, something is missing --> incomplete
-               
-               if (nHitsOneTrack < nHitsTrack){       // besides the hits from the true track there are also additional ones-->
-                  nIncompletePlus++;                  // incomplete with extra points
-                  trackType = INCOMPLETE_PLUS;
-               }   
-               else{                                   // the hits from the true track fill the entire track, so its an
-                  nIncomplete++;                      // incomplete with no extra points
-                  trackType = INCOMPLETE;
-               }
-               
-            else{                                   // there are as many good hits as there are hits in the true track
-                                                   // i.e. the true track is represented entirely in this track
-               dominantTrueTrack->isFoundCompletely = true;
-               
-               
-               if (nHitsOneTrack < nHitsTrack){       // there are still additional hits stored in the track, it's a
-                  nCompletePlus++;                    // complete track with extra points
-                  trackType = COMPLETE_PLUS;
-               }
-               else{                                   // there are no additional points, finally, this is the perfect
-                  nComplete++;                        // complete track
-                  trackType= COMPLETE;
-               }
-            }
-               
-               //we want the true track to know all reconstructed tracks containing him
-               dominantTrueTrack->relatedTracks.insert( std::pair<Track*, TrackType> ( track ,trackType ) );  
-               
-         }   
-         
-               
       }
       
-      // So now we checked all the values. But really all?
-      // No, there is a little value that resisted us so far:
-      // The lost tracks. We couldn't raise the value nLost on the go because we could only see which ones are not lost
-      // and there is no 1:1 relationship.
-      // But therefore we used the struct MyRelation and marked all of their isLost booleans
-      // to false if we found a corresponding track.
-      // so all we have to do is count how many with isLost == true are left.
-      
-      for( unsigned int i=0; i < myRelations.size(); i++){
-         if ( myRelations[i]->isLost == true ) nLost++;
-         if ( myRelations[i]->isFoundCompletely ==true ) nFoundCompletely++;
+      //check the relations for lost ones and completes
+      for( unsigned int i=0; i < _myRelations.size(); i++){
+         if ( _myRelations[i]->isLost == true ) _nLost++;
+         if ( _myRelations[i]->isFoundCompletely ==true ) _nFoundCompletely++;
       }
-                  
       
       
       /**********************************************************************************************/
@@ -476,10 +271,10 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       streamlog_out( DEBUG ).precision (8);
       
       
-      for( unsigned int i=0; i < myRelations.size(); i++){ // for all relations
+      for( unsigned int i=0; i < _myRelations.size(); i++){ // for all relations
          
-         MCParticle* mcp = dynamic_cast <MCParticle*> (myRelations[i]->lcRelation->getTo());
-         Track* cheatTrack = dynamic_cast<Track*>  (myRelations[i]->lcRelation->getFrom());      
+         MCParticle* mcp = dynamic_cast <MCParticle*> (_myRelations[i]->lcRelation->getTo());
+         Track* cheatTrack = dynamic_cast<Track*>  (_myRelations[i]->lcRelation->getFrom());      
          
          double mcpPt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );    
          double mcpP= sqrt( mcpPt*mcpPt + mcp->getMomentum()[2]*mcp->getMomentum()[2] );
@@ -490,15 +285,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          streamlog_out( MESSAGE0 ) << "PDG= " << mcp->getPDG() << std::endl;
          streamlog_out( MESSAGE0 ) << "x= " << mcp->getVertex()[0] << " y= " <<  mcp->getVertex()[1] << " z= " <<  mcp->getVertex()[2] << std::endl;
          streamlog_out( MESSAGE0 ) << "/gun/direction " << mcp->getMomentum()[0]/mcpP << " " <<  mcp->getMomentum()[1]/mcpP << " " <<  mcp->getMomentum()[2]/mcpP << std::endl;
-
+         
          
          std::vector<TrackerHit*> cheatTrackHits = cheatTrack->getTrackerHits(); // we write it into an own vector so wen can sort it
          sort (cheatTrackHits.begin() , cheatTrackHits.end() , compare_TrackerHit_z );
          // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
          // So the direction of the hits when following the index from 0 on is:
          // from inside out: from the IP into the distance.
-         
-         
          
          std::vector <IHit*> hits;
         
@@ -523,10 +316,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                
                
             }
-            
-            
-            
-            
+              
             for( unsigned j=2; j<cheatTrackHits.size(); j++ ){ //for 3 hits plus (enough to fit)
                
                // add a hit and fit
@@ -573,16 +363,15 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                                    << ",  Omega = " << helixClass.getOmega()
                                    << ",  Z0 = " << helixClass.getZ0()
                                    << ",  tan(Lambda) = " << helixClass.getTanLambda();
-
          
-         
+        
          for (unsigned int j=0; j< cheatTrackHits.size(); j++){ //over all Hits in the track
-                        
+             
             
             double x = cheatTrackHits[j]->getPosition()[0];
             double y = cheatTrackHits[j]->getPosition()[1];
             double z = cheatTrackHits[j]->getPosition()[2];
-   
+            
             float mcpHelixPoint[3] = {0.,0.,0.};
             helixClass.getPointInZ( z , vertex, mcpHelixPoint);
             
@@ -591,7 +380,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             
             double dist = sqrt( xDist*xDist + yDist*yDist );
             
-
+            
             streamlog_out( MESSAGE0 )  << "\n( "  
                   << x << " , " 
                   << y << " , " 
@@ -826,14 +615,14 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          // Print out, if this track is lost or not found completely
          
-         if (myRelations[i]->isLost == true) streamlog_out( MESSAGE0 ) << "LOST\n" <<std::endl;
-         if (myRelations[i]->isFoundCompletely== false) streamlog_out( MESSAGE0 ) << "NOT FOUND COMPLETELY\n";
+         if (_myRelations[i]->isLost == true) streamlog_out( MESSAGE0 ) << "LOST\n" <<std::endl;
+         if (_myRelations[i]->isFoundCompletely== false) streamlog_out( MESSAGE0 ) << "NOT FOUND COMPLETELY\n";
          
          
          
          // Print out all the tracks associated to the true one:
          
-         std::map<Track*,TrackType> relTracks = myRelations[i]->relatedTracks;
+         std::map<Track*,TrackType> relTracks = _myRelations[i]->relatedTracks;
          for (std::map<Track*,TrackType>::const_iterator it = relTracks.begin(); it != relTracks.end(); ++it)
          {
             streamlog_out( MESSAGE0 ) << TRACK_TYPE_NAMES[it->second] << "\t";
@@ -878,6 +667,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 
       }
       
+      _nLostSum += _nLost;
+      _nGhostSum += _nGhost;
+      _nTrueTracksSum += nMCTracks;
+      _nRecoTracksSum += nTracks; 
+      
       
       //The statistics:
       
@@ -886,27 +680,27 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       float pComplete=-1.;
       float pFoundCompletely=-1.;
       
-      if (nMCTracks > 0) pLost = 100.* nLost/nMCTracks;           //percentage of true tracks that are lost
+      if (nMCTracks > 0) pLost = 100.* _nLost/nMCTracks;           //percentage of true tracks that are lost
 
-      if (nTracks > 0) pGhost = 100.* nGhost/nTracks;             //percentage of found tracks that are ghosts
+      if (nTracks > 0) pGhost = 100.* _nGhost/nTracks;             //percentage of found tracks that are ghosts
       
-      if (nMCTracks > 0) pComplete = 100. * nComplete/nMCTracks;  //percentage of true tracks that where found complete with no extra points
+      if (nMCTracks > 0) pComplete = 100. * _nComplete/nMCTracks;  //percentage of true tracks that where found complete with no extra points
    
-      if (nMCTracks > 0) pFoundCompletely = 100. * nFoundCompletely/nMCTracks;
+      if (nMCTracks > 0) pFoundCompletely = 100. * _nFoundCompletely/nMCTracks;
       
       streamlog_out( MESSAGE0 ) << std::endl;
       streamlog_out( MESSAGE0 ) << std::endl;
       streamlog_out( MESSAGE0 ) << "nMCTracks = " << nMCTracks <<std::endl;
       streamlog_out( MESSAGE0 ) << "nTracks = " << nTracks <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nFoundCompletely = " << nFoundCompletely << " , " << pFoundCompletely << "%" <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nLost = " << nLost << " , " << pLost << "%" << std::endl;
-      streamlog_out( MESSAGE0 ) << "nGhost = " << nGhost << " , " << pGhost << "%" << std::endl;   
+      streamlog_out( MESSAGE0 ) << "nFoundCompletely = " << _nFoundCompletely << " , " << pFoundCompletely << "%" <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nLost = " << _nLost << " , " << pLost << "%" << std::endl;
+      streamlog_out( MESSAGE0 ) << "nGhost = " << _nGhost << " , " << pGhost << "%" << std::endl;   
       
-      streamlog_out( MESSAGE0 ) << "nComplete = " << nComplete << " , " << pComplete << "%" <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nCompletePlus = " << nCompletePlus <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nComplete = " << _nComplete << " , " << pComplete << "%" <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nCompletePlus = " << _nCompletePlus <<std::endl;
       
-      streamlog_out( MESSAGE0 ) << "nIncomplete = " << nIncomplete <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nIncompletePlus = " << nIncompletePlus <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nIncomplete = " << _nIncomplete <<std::endl;
+      streamlog_out( MESSAGE0 ) << "nIncompletePlus = " << _nIncompletePlus <<std::endl;
       
       streamlog_out( MESSAGE0 ) << std::endl;
       
@@ -924,18 +718,18 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       
       myfile << std::endl;
-      myfile << "nFoundCompletely\t" << nFoundCompletely << "\t\t" << pFoundCompletely << "\t%\t\t";
-      myfile << "nLost\t" << nLost << "\t\t" << pLost << "\t%" << "\t\t";
-      myfile << "nGhost\t" << nGhost << "\t\t" << pGhost << "\t%" << "\t\t"; 
+      myfile << "nFoundCompletely\t" << _nFoundCompletely << "\t\t" << pFoundCompletely << "\t%\t\t";
+      myfile << "nLost\t" << _nLost << "\t\t" << pLost << "\t%" << "\t\t";
+      myfile << "nGhost\t" << _nGhost << "\t\t" << pGhost << "\t%" << "\t\t"; 
       
       myfile << "nMCTracks\t" << nMCTracks <<"\t\t";
       myfile << "nTracks\t" << nTracks <<"\t\t";
       
-      myfile << "nComplete\t" << nComplete << "\t" << pComplete << "%\t\t";
-      myfile << "nCompletePlus\t" << nCompletePlus <<"\t\t\t";
+      myfile << "nComplete\t" << _nComplete << "\t" << pComplete << "%\t\t";
+      myfile << "nCompletePlus\t" << _nCompletePlus <<"\t\t\t";
       
-      myfile << "nIncomplete\t" << nIncomplete <<"\t\t\t";
-      myfile << "nIncompletePlus\t" << nIncompletePlus <<"\t\t\t";
+      myfile << "nIncomplete\t" << _nIncomplete <<"\t\t\t";
+      myfile << "nIncompletePlus\t" << _nIncompletePlus <<"\t\t\t";
       
       myfile.close();
 
@@ -948,13 +742,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             
       rootData.insert ( std::pair < std::string , int> ( "nMCTracks" ,          nMCTracks ) );
       rootData.insert ( std::pair < std::string , int> ( "nRecoTracks" ,        nTracks ) );
-      rootData.insert ( std::pair < std::string , int> ( "nFoundCompletely" ,   nFoundCompletely ) );
-      rootData.insert ( std::pair < std::string , int> ( "nLost" ,              nLost ) );
-      rootData.insert ( std::pair < std::string , int> ( "nGhost" ,             nGhost ) );
-      rootData.insert ( std::pair < std::string , int> ( "nComplete" ,          nComplete ) );
-      rootData.insert ( std::pair < std::string , int> ( "nCompletePlus" ,      nCompletePlus ) );
-      rootData.insert ( std::pair < std::string , int> ( "nIncomplete" ,        nIncomplete ) );
-      rootData.insert ( std::pair < std::string , int> ( "nIncompletePlus" ,    nIncompletePlus ) );
+      rootData.insert ( std::pair < std::string , int> ( "nFoundCompletely" ,   _nFoundCompletely ) );
+      rootData.insert ( std::pair < std::string , int> ( "nLost" ,              _nLost ) );
+      rootData.insert ( std::pair < std::string , int> ( "nGhost" ,             _nGhost ) );
+      rootData.insert ( std::pair < std::string , int> ( "nComplete" ,          _nComplete ) );
+      rootData.insert ( std::pair < std::string , int> ( "nCompletePlus" ,      _nCompletePlus ) );
+      rootData.insert ( std::pair < std::string , int> ( "nIncomplete" ,        _nIncomplete ) );
+      rootData.insert ( std::pair < std::string , int> ( "nIncompletePlus" ,    _nIncompletePlus ) );
       
         
       std::map < std::string , double > rootDataDouble;
@@ -1003,18 +797,19 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    }
    
    
-    //-- note: this will not be printed if compiled w/o MARLINMESSAGE0=1 !
+   //-- note: this will not be printed if compiled w/o MARLINMESSAGE0=1 !
 
-    streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
-        << "   in run:  " << evt->getRunNumber() << std::endl ;
+   streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
+                        << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
-     MarlinCED::draw(this); //CED
-     
-     
-     for( unsigned int k=0; k < myRelations.size(); k++) delete myRelations[k];
-        
-    _nEvt ++ ;
+   MarlinCED::draw(this); //CED
+
+
+   for( unsigned int k=0; k < _myRelations.size(); k++) delete _myRelations[k];
+   _myRelations.clear();
+
+   _nEvt ++ ;
 }
 
 
@@ -1037,6 +832,179 @@ void TrackingFeedbackProcessor::end(){
 
    delete _sectorSystemFTD;
    _sectorSystemFTD = NULL;
+   
+   
+   
+   ofstream myfile;
+   myfile.open ("FeedbackSum.csv" , std::ios::app);
+   
+   
+   double efficiency = double( _nTrueTracksSum - _nLostSum ) / double( _nTrueTracksSum );
+   double ghostrate = double( _nGhostSum ) / double( _nRecoTracksSum );
+   
+   myfile << "\n";
+   myfile << "Efficiency\t" << efficiency << "\t\t";
+   myfile << "ghostrate\t"  << ghostrate  << "\t\t";
+   
+   
+   myfile.close();
+   
+
+   
+   
 
 }
 
+
+double TrackingFeedbackProcessor::getDistToIP( MCParticle* mcp ){
+   
+   double dist = sqrt(mcp->getVertex()[0]*mcp->getVertex()[0] + 
+   mcp->getVertex()[1]*mcp->getVertex()[1] + 
+   mcp->getVertex()[2]*mcp->getVertex()[2] );
+
+   return dist;
+   
+}
+
+double TrackingFeedbackProcessor::getChi2Prob( Track* track ){
+   
+   
+   std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
+   
+   // Make authits from the trackerHits
+   std::vector <IHit*> hits;
+   
+   for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD) );
+   
+   
+   MyTrack myTrack( hits );
+   
+   myTrack.fit();
+   
+   double chi2Prob = myTrack.getChi2Prob();
+   
+   for( unsigned j=0; j < hits.size(); j++ ) delete hits[j];
+   
+   
+   return chi2Prob;   
+   
+   
+}
+ 
+ 
+ 
+void TrackingFeedbackProcessor::checkTheTrack( Track* track ){ 
+ 
+   
+   std::vector <TrackerHit*> hitVec = track->getTrackerHits();
+
+   std::vector<MyRelation*> hitRelations; //to contain all the true tracks relations that correspond to the hits of the track
+                                          //if for example a track consists of 3 points from one true track and two from another
+                                          //at the end this vector will have five entries: 3 times one true track and 3 times the other.
+                                          //so at the end, all we have to do is to count them.
+
+   for( unsigned int j=0; j < hitVec.size(); j++ ){ //over all hits in the track
+      
+      
+      for( unsigned int k=0; k < _myRelations.size(); k++){ //check all relations if they correspond 
+         
+         
+         Track* trueTrack = dynamic_cast <Track*>  ( _myRelations[k]->lcRelation->getFrom() ); //get the true track
+         
+         if ( find (trueTrack->getTrackerHits().begin() , trueTrack->getTrackerHits().end() , hitVec[j] ) 
+            !=  trueTrack->getTrackerHits().end())      // if the hit is contained in this truetrack
+         hitRelations.push_back( _myRelations[k] );     //add the track (i.e. its relation) to the vector hitRelations
+      }
+      
+   } 
+
+
+   // After those two for loops we have the vector hitRelations filled with all the true track (relations) that correspond
+   // to our reconstructed track. Ideally this vector would now only consist of the same true track again and again.
+   //
+   // Before we can check what kind of track we have here, we have to get some data.
+   // We wanna know the most represented true track:
+
+   unsigned nHitsOneTrack = 0;              //number of most true hits corresponding to ONE true track 
+   MyRelation* dominantTrueTrack = NULL;    //the true track most represented in the track 
+
+   sort ( hitRelations.begin() , hitRelations.end()); //Sorting, so all the same elements are at one place
+
+   unsigned n = 0;                  // number of hits from one track
+   MyRelation* previousRel = NULL;  // used to store the previous relation, so we can compare, if there was a change. at first we don't have
+   // a previous one, so we set it NULL
+   for (unsigned int j=0; j< hitRelations.size(); j++){ 
+      
+      if ( hitRelations[j] == previousRel ) n++;   //for every repeating element count 1. (that's the reason we sorted before, so we can just count them like this)
+               else n = 1; //previous was different --> we start again with 1
+               
+               previousRel = hitRelations[j];
+      
+      if (n > nHitsOneTrack){ //we have a new winner (a true track) with (currently) the most hits in this track
+                              
+                  nHitsOneTrack = n;
+                  dominantTrueTrack = hitRelations[j];
+                  
+      }
+      
+   }
+
+   unsigned nHitsTrack = hitVec.size();   //number of hits of the reconstructed track
+   unsigned nHitsTrueTrack = 0;           //number of hits of the true track
+
+   if (dominantTrueTrack != NULL ){ 
+      Track* trueTrack = dynamic_cast <Track*> ( dominantTrueTrack->lcRelation->getFrom() );
+      nHitsTrueTrack = trueTrack->getTrackerHits().size();  
+      
+   }
+
+
+
+
+   //So now we have all the values we need to know to tell, what kind of track we have here.
+
+   if ( nHitsOneTrack <= nHitsTrack/2. ){  // less than half the points at maximum correspond to one track, this is not a real track, but
+      _nGhost++;                           // a ghost track
+     
+   }
+   else{                                   // more than half of the points form a true track!
+      
+      TrackType trackType;
+      
+      if (nHitsOneTrack > nHitsTrueTrack/2.) //If more than half of the points from the true track are covered
+         dominantTrueTrack->isLost = false;  // this is guaranteed no lost track  
+         
+      if (nHitsOneTrack < nHitsTrueTrack){    // there are too few good hits,, something is missing --> incomplete
+      
+         if (nHitsOneTrack < nHitsTrack){       // besides the hits from the true track there are also additional ones-->
+            _nIncompletePlus++;                 // incomplete with extra points
+            trackType = INCOMPLETE_PLUS;
+         }   
+         else{                                   // the hits from the true track fill the entire track, so its an
+            _nIncomplete++;                      // incomplete with no extra points
+            trackType = INCOMPLETE;
+         }
+      
+      }
+      else{                                  // there are as many good hits as there are hits in the true track
+                                             // i.e. the true track is represented entirely in this track
+         dominantTrueTrack->isFoundCompletely = true;
+         
+         
+         if (nHitsOneTrack < nHitsTrack){       // there are still additional hits stored in the track, it's a
+            _nCompletePlus++;                    // complete track with extra points
+            trackType = COMPLETE_PLUS;
+         }
+         else{                                   // there are no additional points, finally, this is the perfect
+            _nComplete++;                        // complete track
+            trackType= COMPLETE;
+         }
+      }
+      
+      //we want the true track to know all reconstructed tracks containing him
+      dominantTrueTrack->relatedTracks.insert( std::pair<Track*, TrackType> ( track ,trackType ) );  
+      
+   }   
+ 
+ 
+}

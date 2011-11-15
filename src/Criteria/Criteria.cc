@@ -147,6 +147,7 @@ ICriterion* Criteria::createCriterion( std::string critName, float min , float m
 }
 
 
+
 std::vector< std::string > Criteria::getAllCriteriaNamesVec(){
    
    std::vector < std::string > allCriteriaNamesVec;
@@ -165,5 +166,47 @@ std::vector< std::string > Criteria::getAllCriteriaNamesVec(){
 }
 
 
-
+void Criteria::getLeftRight( std::string critName, float & left, float & right ){
+   
+   
+   if ( critName == "Crit2_RZRatio" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit2_RZRatio" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit2_StraightTrackRatio" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit2_DeltaPhi" ) { left = 0.; right = 1.; }
+   
+   else if ( critName == "Crit2_HelixWithIP" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit2_DeltaRho" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit3_ChangeRZRatio" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit3_PT" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit3_2DAngle" ) { left = 0.; right = 1.; }
+   
+   else if ( critName == "Crit3_3DAngle" ) { left = 0.; right = 1.; }
+   
+   else if ( critName == "Crit3_IPCircleDist" ) { left = 0.; right = 1.; }
+   
+   else if ( critName == "Crit4_2DAngleChange" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit4_3DAngleChange" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit4_DistToExtrapolation" ) { left = 0.; right = 1.; }
+   
+   else if ( critName == "Crit4_PhiZRatioChange" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit4_DistOfCircleCenters" ) { left = 0.; right = 1.; }
+   
+   else if ( critName == "Crit4_NoZigZag" ) { left = 0.5; right = 0.5; }
+   
+   else if ( critName == "Crit4_RChange" ) { left = 0.5; right = 0.5; }
+     
+   else { left = 0.5; right = 0.5; }
+   
+}
+   
 
