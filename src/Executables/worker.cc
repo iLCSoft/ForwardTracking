@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include "FTrackTools.h"
+#include "Timer.h"
 
 /**
  * This small executable is there to automically run Marlin for different values of the 
@@ -20,7 +21,10 @@ int main(int argc,char *argv[]){
    const std::string QUANTILE_ANALYSER_OUTPUT = "/scratch/ilcsoft/Steers/quantile_analyser_output";
    
    
-   for( float quantSize = 0.9; quantSize <= 1.0 ; quantSize += 0.01 ){
+   for( float quantSize = 0.9; quantSize <= 1.0 ; quantSize += 0.1 ){
+      
+      
+      FTrack::Timer::start_counter();
       
       /**********************************************************************************************/
       /*               Get the ranges of the quantiles                                              */
@@ -74,7 +78,12 @@ int main(int argc,char *argv[]){
       std::ofstream myfile;
       myfile.open (FEEDBACK_FILE.c_str() , std::ios::app);
    
-      myfile << "quantile size\t" << quantSize;
+      
+      myfile << "quantile size\t" << quantSize << "\t\t";
+      
+      
+      myfile << "elapsed time\t" << FTrack::Timer::lap();
+      
       
       myfile.close();
    
