@@ -60,13 +60,10 @@ namespace FTrack{
       
       /** @return all criteria
        */
-      static std::set< std::string > getAllCriteriaNames(){ return _critNames; }
+      static std::set< std::string > getAllCriteriaNames();
       
       static std::vector< std::string > getAllCriteriaNamesVec();
       
-      /** Needs to be calles before the class can be used.
-       */
-      static void init();
       
       /**
        * Creates a criterion with the name and the min and max values
@@ -89,9 +86,7 @@ namespace FTrack{
        */
       static void getLeftRight( std::string critName, float & left, float & right );
       
-   private:
-      
-      static std::set< std::string > _critNames;
+   
       
    };
 

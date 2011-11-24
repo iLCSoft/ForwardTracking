@@ -5,8 +5,9 @@
 #include <map>
 #include <set>
 #include "EVENT/TrackerHit.h"
-#include "AutHit.h"
+#include "IHit.h"
 #include <cmath>
+#include "FTDHitSimple.h"
 
 namespace FTrack{
 
@@ -62,10 +63,10 @@ namespace FTrack{
     * @return true if |a.z| < |b.z| , i.e. true if a is nearer to z=0 than b is
     */
    bool compare_TrackerHit_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b );
-   bool compare_z( AutHit* a, AutHit* b );   
+   bool compare_z( IHit* a, IHit* b );   
    
    
-   IHit* createVirtualIPHit( int side , const SectorSystemFTD* sectorSystemFTD );
+   FTDHitSimple* createVirtualIPHit( int side , const SectorSystemFTD* sectorSystemFTD );
 
 }
 

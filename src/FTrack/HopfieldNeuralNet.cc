@@ -1,11 +1,11 @@
-#include "NeuralNet.h"
+#include "HopfieldNeuralNet.h"
 #include <cmath>
 #include <iostream>
 #include <algorithm>
 
 using namespace FTrack;
 
-NeuralNet::NeuralNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega){
+HopfieldNeuralNet::HopfieldNeuralNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega){
 
    unsigned int nNeurons = G.size();
 
@@ -76,7 +76,7 @@ NeuralNet::NeuralNet( std::vector < std::vector <bool> > G , std::vector < doubl
 
 
 
-double NeuralNet::activationFunction ( double state , double T ){
+double HopfieldNeuralNet::activationFunction ( double state , double T ){
    
        
     double y = 1;
@@ -92,7 +92,7 @@ double NeuralNet::activationFunction ( double state , double T ){
 
 
 
-bool NeuralNet::doIteration(){
+bool HopfieldNeuralNet::doIteration(){
       
    _isStable = true;
       

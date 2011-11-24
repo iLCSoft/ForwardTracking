@@ -1,5 +1,5 @@
-#ifndef SimpleHit_h
-#define SimpleHit_h
+#ifndef FTDHitSimple_h
+#define FTDHitSimple_h
 
 #include "IHit.h"
 
@@ -12,12 +12,12 @@ namespace FTrack{
    
    /** A hit 
     */   
-   class SimpleHit : public IHit{
+   class FTDHitSimple : public IHit{
       
       
    public:
       
-      SimpleHit( float x , float y , float z , int side, unsigned layer , unsigned module, unsigned sensor, const SectorSystemFTD* const sectorSystemFTD );
+      FTDHitSimple( float x , float y , float z , int side, unsigned layer , unsigned module, unsigned sensor, const SectorSystemFTD* const sectorSystemFTD );
       
       
       

@@ -128,6 +128,8 @@ class ForwardTracking : public Processor {
     
    const SectorSystemFTD* _sectorSystemFTD;
    
+   bool _useCED;
+   
 } ;
 
 #endif

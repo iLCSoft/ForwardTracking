@@ -4,7 +4,7 @@
 #include "marlin/VerbosityLevels.h"
 
 
-#include "NeuralNet.h"
+#include "HopfieldNeuralNet.h"
 
 using namespace FTrack;
 
@@ -156,7 +156,7 @@ void TrackSubset::calculateBestSet(){
    
    if( !tracks.empty() ){
    
-      NeuralNet net( G , QI , states , omega);
+      HopfieldNeuralNet net( G , QI , states , omega);
       
       net.setT (2.1);
       net.setTInf(0.1);

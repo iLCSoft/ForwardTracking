@@ -6,7 +6,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include "SimpleHit.h"
+
 
 using namespace FTrack;
 
@@ -164,7 +164,7 @@ bool FTrack::compare_TrackerHit_z( EVENT::TrackerHit* a, EVENT::TrackerHit* b ){
    
 }
 
-bool FTrack::compare_z( AutHit* a, AutHit* b ){
+bool FTrack::compare_z( IHit* a, IHit* b ){
    
    return ( fabs( a->getZ() ) < fabs( b->getZ() ) ); //compare their z values
    
@@ -173,12 +173,12 @@ bool FTrack::compare_z( AutHit* a, AutHit* b ){
 
 
 
-IHit* FTrack::createVirtualIPHit( int side , const SectorSystemFTD* sectorSystemFTD ){
+FTDHitSimple* FTrack::createVirtualIPHit( int side , const SectorSystemFTD* sectorSystemFTD ){
    
    unsigned layer = 0;
    unsigned module = 0;
    unsigned sensor = 0;
-   SimpleHit* virtualIPHit = new SimpleHit( 0.,0.,0., side , layer , module , sensor , sectorSystemFTD );
+   FTDHitSimple* virtualIPHit = new FTDHitSimple( 0.,0.,0., side , layer , module , sensor , sectorSystemFTD );
    
    
    virtualIPHit->setIsVirtual ( true );

@@ -25,10 +25,8 @@
 
 
 #include "Criteria.h"
-#include "Automaton.h"
-#include "SegmentBuilder.h"
-#include "HitCon.h"
-#include "MyTrack.h"
+#include "FTDTrack.h"
+#include "FTDHit00.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -317,7 +315,7 @@ void TrueTrackCritAnalyser::init() {
    
    
    //Initialise the TrackFitter of the tracks:
-   MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
+   FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
    
    
 }
@@ -410,13 +408,13 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          // So the direction of the hits when following the index from 0 on is:
          // from inside out: from the IP into the distance.
         
-         // Make authits from the trackerHits
+         
          std::vector <IHit*> hits;
          
-         for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD ) );
+         for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit00( trackerHits[j] , _sectorSystemFTD ) );
         
          
-         MyTrack myTrack;
+         FTDTrack myTrack;
          for( unsigned j=0; j<hits.size(); j++ ) myTrack.addHit( hits[j] );
          
          myTrack.fit();

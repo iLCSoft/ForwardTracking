@@ -1,4 +1,4 @@
-#include "MyTrack.h"
+#include "FTDTrack.h"
 #include "FTrackTools.h"
 
 // Root, for calculating the chi2 probability. 
@@ -9,9 +9,9 @@
 using namespace FTrack;
 
 
-MarlinTrk::IMarlinTrkSystem* MyTrack::_trkSystem ;
+MarlinTrk::IMarlinTrkSystem* FTDTrack::_trkSystem ;
 
-MyTrack::MyTrack(){
+FTDTrack::FTDTrack(){
    
    
  
@@ -20,7 +20,7 @@ MyTrack::MyTrack(){
    
 }
 
-MyTrack::MyTrack( std::vector< IHit* > hits ){
+FTDTrack::FTDTrack( std::vector< IHit* > hits ){
    
    
    
@@ -37,22 +37,22 @@ MyTrack::MyTrack( std::vector< IHit* > hits ){
 
 
 
-void MyTrack::addHit( IHit* hit ){
+void FTDTrack::addHit( IHit* hit ){
    
    
    
    // add the hit
-   AutHit* autHit = dynamic_cast< AutHit* >( hit );
+   IFTDHit* ftdHit = dynamic_cast< IFTDHit* >( hit );
    
-   if ( autHit != NULL ){
+   if ( ftdHit != NULL ){
       
-      _hits.push_back( autHit );
+      _hits.push_back( ftdHit );
       
       // and sort the track again
       sort( _hits.begin(), _hits.end(), compare_z ); //TODO: maybe make this more flexible for different sorting
       
       
-      _lcioTrack->addHit( autHit->getTrackerHit() );
+      _lcioTrack->addHit( ftdHit->getTrackerHit() );
       
    }
    //TODO: throw exception, if cast was not succesfull. Question: is there a better way of dealing with this?
@@ -61,7 +61,7 @@ void MyTrack::addHit( IHit* hit ){
 
 
 
-void MyTrack::initialiseFitter( const std::string& systemType,  
+void FTDTrack::initialiseFitter( const std::string& systemType,  
                                const gear::GearMgr* mgr , 
                                const std::string& options ,
                                const bool MSOn ,
@@ -88,7 +88,7 @@ void MyTrack::initialiseFitter( const std::string& systemType,
 
 
 
-void MyTrack::fit(){
+void FTDTrack::fit(){
    
 
    

@@ -5,7 +5,7 @@
 #include "Segment.h"
 #include "ICriterion.h"
 
-#include "MyTrack.h"
+
 
 namespace FTrack{
    

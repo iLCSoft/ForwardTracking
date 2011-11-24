@@ -22,12 +22,18 @@
 #include <sstream>
 #include <MarlinCED.h>
 #include "FTrackTools.h"
-#include "MyTrack.h"
+#include "FTDTrack.h"
+#include "FTDHit01.h"
 
 
 #include "Criteria.h"
 
 
+#include <gear/GEAR.h>
+#include <gear/GearParameters.h>
+#include <gear/BField.h>
+#include "gear/FTDParameters.h"
+#include "gear/FTDLayerLayout.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -128,7 +134,7 @@ void TrackingFeedbackProcessor::init() {
 
 
    //Initialise the TrackFitter of the tracks:
-   MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
+   FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
 
 
 
@@ -158,11 +164,30 @@ void TrackingFeedbackProcessor::init() {
 
 
 
-   // TODO: get this from gear
    unsigned int nLayers = 8; // layer 0 is for the IP
-   unsigned int nModules = 16;
-   unsigned int nSensors = 2;  
-
+   unsigned int nModules = 1;
+   unsigned int nSensors = 2; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
+   
+   
+   try {
+      
+      const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
+      const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
+      streamlog_out( MESSAGE ) << "  TrackingFeedbackProcessor - Use FTDLayerLayout" << std::endl ;
+      
+      nLayers = 2*ftdLayers.getNLayers() + 1; //TODO: explain
+      nModules = ftdLayers.getNPetals(0); // TODO: this is just taking the petals from the first disk -> should this be more general?
+      
+      
+   } catch (gear::UnknownParameterException& e) {
+      
+      streamlog_out( MESSAGE ) << "  TrackingFeedbackProcessor - Use Loi style FTDParameters" << std::endl ;
+      
+      const gear::GearParameters& pFTD = Global::GEAR->getGearParameters("FTD");
+      
+      nLayers = pFTD.getDoubleVals( "FTDZCoordinate" ).size() + 1;
+   }
+   
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
 
 
@@ -185,11 +210,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 //-----------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
 
-   MarlinCED::newEvent(this , 0) ; 
-
-   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
-
-   pHandler.update(evt); 
+//    MarlinCED::newEvent(this , 0) ; 
+// 
+//    CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+// 
+//    pHandler.update(evt); 
 
 //-----------------------------------------------------------------------
 
@@ -208,7 +233,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    
    int nMCTracks = col->getNumberOfElements();
    _myRelations.clear(); 
-   
+   streamlog_out( MESSAGE0 ) << "\nNumber of MCP Track Relations: " << nMCTracks;
    
    /**********************************************************************************************/
    /*             Check the tracks, if they are of interest                                      */
@@ -223,7 +248,10 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
       
       
-      MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
+//       MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
+      
+      streamlog_out( MESSAGE0 ) << "\nNumber of hits: " << track->getTrackerHits().size();
+      
       
       double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
       
@@ -302,13 +330,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          if( cheatTrackHits.size() >= 3 ){
             
             
-            MyTrack myTrack;
+            FTDTrack myTrack;
             
            
             for( unsigned j=0; j<2; j++ ){//add the first 2 hits
                
                
-               IHit* hit = new AutHit( cheatTrackHits[j] , _sectorSystemFTD );
+               IHit* hit = new FTDHit01( cheatTrackHits[j] , _sectorSystemFTD );
                
                hits.push_back( hit );
                
@@ -321,7 +349,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                
                // add a hit and fit
                
-               IHit* hit = new AutHit( cheatTrackHits[j] , _sectorSystemFTD );
+               IHit* hit = new FTDHit01( cheatTrackHits[j] , _sectorSystemFTD );
                
                hits.push_back( hit );
                
@@ -633,11 +661,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             // sort the hits in the track
             
             // Make authits from the trackerHits
-            std::vector <AutHit*> autHits2;
+            std::vector <FTDHit01*> autHits2;
             
-            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD ) );
+            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new FTDHit01( trackerHits[j] , _sectorSystemFTD ) );
             
-            MyTrack myTrack;
+            FTDTrack myTrack;
             for( unsigned j=0; j<autHits2.size(); j++ ) myTrack.addHit( autHits2[j] );
             
             myTrack.fit();
@@ -803,7 +831,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                         << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
-   MarlinCED::draw(this); //CED
+//    MarlinCED::draw(this); //CED
 
 
    for( unsigned int k=0; k < _myRelations.size(); k++) delete _myRelations[k];
@@ -874,10 +902,10 @@ double TrackingFeedbackProcessor::getChi2Prob( Track* track ){
    // Make authits from the trackerHits
    std::vector <IHit*> hits;
    
-   for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new AutHit( trackerHits[j] , _sectorSystemFTD) );
+   for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit01( trackerHits[j] , _sectorSystemFTD) );
    
    
-   MyTrack myTrack( hits );
+   FTDTrack myTrack( hits );
    
    myTrack.fit();
    

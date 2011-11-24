@@ -85,7 +85,8 @@ protected:
    
    std::string _rootFileName;
    std::string _treeName;
-
+   std::string _treeName2;
+   
    std::string _colNameMCTrueTracksRel;
    
   

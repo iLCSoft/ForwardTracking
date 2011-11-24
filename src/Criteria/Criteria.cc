@@ -2,51 +2,45 @@
 
 using namespace FTrack;
 
+std::set< std::string > Criteria::getAllCriteriaNames(){
 
-std::set< std::string > Criteria::_critNames;
-
-
-void Criteria::init(){
    
+   std::set< std::string > critNames;
    
-   _critNames.insert( "Crit2_RZRatio" );
-   _critNames.insert( "Crit2_StraightTrackRatio" );
-   _critNames.insert( "Crit2_DeltaPhi" );
-   _critNames.insert( "Crit2_HelixWithIP" );
-   _critNames.insert( "Crit2_DeltaRho" );
-   
-   _critNames.insert( "Crit3_ChangeRZRatio" );
-   _critNames.insert( "Crit3_PT" );
-   _critNames.insert( "Crit3_2DAngle" );
-   _critNames.insert( "Crit3_3DAngle" );
-   _critNames.insert( "Crit3_IPCircleDist" );
+   critNames.insert( "Crit2_RZRatio" );
+   critNames.insert( "Crit2_StraightTrackRatio" );
+   critNames.insert( "Crit2_DeltaPhi" );
+   critNames.insert( "Crit2_HelixWithIP" );
+   critNames.insert( "Crit2_DeltaRho" );
 
-   _critNames.insert( "Crit4_2DAngleChange" );
-   _critNames.insert( "Crit4_3DAngleChange" );
-   _critNames.insert( "Crit4_DistToExtrapolation" );
-   _critNames.insert( "Crit4_PhiZRatioChange" );
-   _critNames.insert( "Crit4_DistOfCircleCenters" );
-   _critNames.insert( "Crit4_NoZigZag" );
-   _critNames.insert( "Crit4_RChange" );
+   critNames.insert( "Crit3_ChangeRZRatio" );
+   critNames.insert( "Crit3_PT" );
+   critNames.insert( "Crit3_2DAngle" );
+   critNames.insert( "Crit3_3DAngle" );
+   critNames.insert( "Crit3_IPCircleDist" );
 
+   critNames.insert( "Crit4_2DAngleChange" );
+   critNames.insert( "Crit4_3DAngleChange" );
+   critNames.insert( "Crit4_DistToExtrapolation" );
+   critNames.insert( "Crit4_PhiZRatioChange" );
+   critNames.insert( "Crit4_DistOfCircleCenters" );
+   critNames.insert( "Crit4_NoZigZag" );
+   critNames.insert( "Crit4_RChange" );
+
+   return critNames;
 
 }
 
 
-
-
-
-
-
 std::set < std::string > Criteria::getTypes(){
  
-   
+   std::set< std::string > critNames = getAllCriteriaNames();
    std::set< std::string > types;
    
    std::set< std::string >::iterator it;
    
    
-   for( it = _critNames.begin(); it != _critNames.end(); it++ ){
+   for( it = critNames.begin(); it != critNames.end(); it++ ){
       
       
       ICriterion* crit = Criteria::createCriterion( *it );
@@ -68,11 +62,12 @@ std::set< std::string > Criteria::getCriteriaNames( std::string type ){
    
    
    std::set< std::string > criteria;
+   std::set< std::string > critNames = getAllCriteriaNames();
    
    
    std::set< std::string >::iterator it;
    
-   for( it = _critNames.begin(); it != _critNames.end(); it++ ){
+   for( it = critNames.begin(); it != critNames.end(); it++ ){
       
       
       ICriterion* crit = Criteria::createCriterion( *it );
@@ -151,10 +146,12 @@ ICriterion* Criteria::createCriterion( std::string critName, float min , float m
 std::vector< std::string > Criteria::getAllCriteriaNamesVec(){
    
    std::vector < std::string > allCriteriaNamesVec;
+   std::set< std::string > critNames = getAllCriteriaNames();
+   
    
    std::set< std::string >::iterator it;
    
-   for( it = _critNames.begin(); it != _critNames.end(); it++ ){
+   for( it = critNames.begin(); it != critNames.end(); it++ ){
    
       
       allCriteriaNamesVec.push_back( *it );

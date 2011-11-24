@@ -8,10 +8,10 @@
 namespace FTrack{
 
 
-   /** This classe builds the cellular Automaton from the hits
+   /** This classe builds the Cellular Automaton from the hits
     * 
     * It can be used to take all the autHits stored in a map< int , vector < IHits > > and makes
-    * 1-segments out of them ( see the class Segment for more info on them ).
+    * 1-hit-segments out of them ( see the class Segment for more info on them ).
     * 
     * The created 1-segments then are connected.
     * 

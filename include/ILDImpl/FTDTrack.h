@@ -1,5 +1,5 @@
-#ifndef MyTrack_h
-#define MyTrack_h
+#ifndef FTDTrack_h
+#define FTDTrack_h
 
 // framework dependent
 #include "IMPL/TrackImpl.h"
@@ -11,19 +11,19 @@
 #include <vector>
 
 // FTrack
-#include "AutHit.h"
+#include "IFTDHit.h"
 #include "ITrack.h"
 
 
 namespace FTrack{
 
 
-   class MyTrack : public ITrack {
+   class FTDTrack : public ITrack {
       
    public:
       
-      MyTrack();
-      MyTrack( std::vector< IHit* > hits );
+      FTDTrack();
+      FTDTrack( std::vector< IHit* > hits );
       
       /** @return a track in the lcio format
        */
@@ -58,13 +58,13 @@ namespace FTrack{
        */
       virtual void fit();
       
-      ~MyTrack(){ delete _lcioTrack; }
+      ~FTDTrack(){ delete _lcioTrack; }
       
    protected:
       
       /** the hits the track consists of
        */
-      std::vector< AutHit* > _hits;
+      std::vector< IFTDHit* > _hits;
 
       
       IMPL::TrackImpl* _lcioTrack;

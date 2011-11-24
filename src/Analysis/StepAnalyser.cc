@@ -14,8 +14,6 @@
 #include <algorithm>
 #include "UTIL/ILDConf.h"
 
-#include "TVector3.h"
-
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -90,7 +88,7 @@ void StepAnalyser::init() {
    // Set up the root file
    // Therefore first set all the possible names of the branches
    
-   branchNames.insert( "path" );
+
    branchNames.insert( "lastLayerBeforeIP" );
    branchNames.insert( "nHits" );
    branchNames.insert( "pt" );  
@@ -100,7 +98,17 @@ void StepAnalyser::init() {
    setUpRootFile( _rootFileName, _treeName, branchNames );      //prepare the root file.
    
    
+   branchNames.clear();
+   branchNames.insert( "LayerA" );
+   branchNames.insert( "LayerB" );
+   branchNames.insert( "ModuleA" );
+   branchNames.insert( "ModuleB" );
+   branchNames.insert( "SensorA" );
+   branchNames.insert( "SensorB" );
+   branchNames.insert("pt");
    
+   _treeName2 = "hitPairs";
+   setUpRootFile( _rootFileName, _treeName2, branchNames , false );   
    
    
    
@@ -125,7 +133,8 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
    
    int nMCTracks = col->getNumberOfElements();
 
-   
+   std::vector < std::map < std::string , float > > rootDataVec;
+   std::vector < std::map < std::string , float > > rootDataVec2;
    
    for( int i=0; i < nMCTracks; i++){ //over all tracks
       
@@ -134,61 +143,66 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
       MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );             // the monte carlo particle
       Track*    track = dynamic_cast <Track*>      (rel->getFrom() );           // the track
       
+      double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] ); //transversal momentum
       
       std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
       
       //sort the hits
       sort( trackerHits.begin(), trackerHits.end(), compare_TrackerHit_z ); 
       
-      int path = 0; // An integer encoding the path of the particle: 5432 = a hit moving from layer 2 to layer 3, 4 and then 5
-                    // 542 is the same track, but skipping layer 3.
-                    // Layers 0..6 are used at the moment in the FTD so those numbers will be contained in the int.
-                    // For the case that the track cheater also takes tracks entering the TPC or other detectors,
-                    // a hit which does not belong to the FTD is marked with the number 9.
-                    // Additionally the integer gets a signs for its direction
-                    
-      int side = 0;
-      int layer = 0;
+
+      int lastLayerBeforeIP = 0;
+      int prevLayer = 0;
+      int prevModule = 0;
+      int prevSensor = 0;
       
-      for( int j =  trackerHits.size() -1; j >= 0 ; j-- ){ // over all hits (start with the outer ones)
+      for( unsigned j = 0; j < trackerHits.size() ; j++ ){ // over all hits (start with the outer ones)
       
-        
          
-         //get the layer
          BitField64  cellID( ILDCellID0::encoder_string );
          
          cellID.setValue( trackerHits[j]->getCellID0() );
          
-         int detector = cellID[ ILDCellID0::subdet ];
-         side         = cellID[ ILDCellID0::side   ];
-         layer        = cellID[ ILDCellID0::layer  ];
-//          int module   = cellID[ ILDCellID0::module ];
-//          int sensor   = cellID[ ILDCellID0::sensor ];
+//          int detector = cellID[ ILDCellID0::subdet ];
+//          int side         = cellID[ ILDCellID0::side   ];
+         int layer        = cellID[ ILDCellID0::layer  ];
+         int module   = cellID[ ILDCellID0::module ];
+         int sensor   = cellID[ ILDCellID0::sensor ];
          
-         if ( detector != ILDDetID::FTD ) layer=9; //a 9 marks a hit from a different detector
+         if (j == 0) lastLayerBeforeIP = layer;
          
-         
-         path *= 10; 
-         path += layer;
+         if( j >= 1){
             
-
+            std::map < std::string , float > rootData;
+            rootData["LayerA"] = prevLayer;
+            rootData["LayerB"] = layer;
+            rootData["ModuleA"] = prevModule;
+            rootData["ModuleB"] = module;
+            rootData["SensorA"] = prevSensor;
+            rootData["SensorB"] = sensor;
+            rootData["pt"] = pt;
+            rootDataVec2.push_back( rootData );
+         }
+         
+         prevLayer = layer;
+         prevModule = module;
+         prevSensor = sensor;
+         
       }
       
-      int lastLayerBeforeIP = layer; //The last layer before the IP
       int nHits = trackerHits.size(); //Number of hits in the track
-      double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] ); //transversal momentum
       
-      path *= side;
+      
       
       
       // Store the data in a root file
       std::map < std::string , float > rootData;
-      rootData.insert( std::pair< std::string , float >( "path" , path ) );
-      rootData.insert( std::pair< std::string , float >( "lastLayerBeforeIP" , lastLayerBeforeIP ) );
-      rootData.insert( std::pair< std::string , float >( "nHits" , nHits ) );
-      rootData.insert( std::pair< std::string , float >( "pt" , pt ) );
+      rootData["lastLayerBeforeIP"] = lastLayerBeforeIP;
+      rootData["nHits"] = nHits;
+      rootData["pt"] = pt;
+      rootDataVec.push_back( rootData );
       
-      saveToRoot( _rootFileName, _treeName , rootData );
+
 
 
       
@@ -196,7 +210,10 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
       
  
    
- 
+   streamlog_out(DEBUG) << "Saving " << rootDataVec2.size() << "\n";
+
+   saveToRoot( _rootFileName, _treeName , rootDataVec );
+   saveToRoot( _rootFileName, _treeName2 , rootDataVec2 );
 
 
    //-- note: this will not be printed if compiled w/o MARLINDEBUG4=1 !

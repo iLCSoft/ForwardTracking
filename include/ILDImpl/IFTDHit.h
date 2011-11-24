@@ -1,5 +1,5 @@
-#ifndef AutHit_h
-#define AutHit_h
+#ifndef IFTDHit_h
+#define IFTDHit_h
 
 #include "IHit.h"
 #include "EVENT/TrackerHit.h"
@@ -12,14 +12,12 @@ using namespace lcio;
 namespace FTrack{
    
    
-   /** A hit using an lcio TrackerHit as basis.
+   /** An interface for a hit using an lcio TrackerHit as basis.
     */   
-   class AutHit : public IHit{
+   class IFTDHit : public IHit{
       
       
    public:
-      
-      AutHit( TrackerHit* trackerHit , const SectorSystemFTD* const sectorSystemFTD );
       
       
       TrackerHit* getTrackerHit() { return _trackerHit; };
@@ -38,7 +36,7 @@ namespace FTrack{
       
       virtual const ISectorSystem* getSectorSystem() const { return _sectorSystemFTD; };
       
-   private:
+   protected:
       
       TrackerHit* _trackerHit;
       
@@ -53,7 +51,7 @@ namespace FTrack{
       /** Calculates and sets the sector number
        */
       void calculateSector(){ _sector = _sectorSystemFTD->getSector( _side, _layer , _module , _sensor ); }
-   
+      
    };
    
 }

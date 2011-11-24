@@ -1,11 +1,11 @@
 /**
- * Represents a neuronal network
+ * Represents a hopfield neuronal network
  * 
  * Author: Robin Glattauer
  */
  
-#ifndef NeuralNet_h
-#define NeuralNet_h
+#ifndef HopfieldNeuralNet_h
+#define HopfieldNeuralNet_h
  
  
 #include <vector>
@@ -13,7 +13,7 @@
 
 namespace FTrack{
 
-   class NeuralNet {
+   class HopfieldNeuralNet {
 
 
       public:
@@ -29,7 +29,7 @@ namespace FTrack{
          * 
          * @param omega controls the influence of the quality indicator on the  activation of the neuron
          */
-         NeuralNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega);
+         HopfieldNeuralNet( std::vector < std::vector <bool> > G , std::vector < double > QI , std::vector < double > states , double omega);
                
                
          /** Does one iteration of the neuronal network.

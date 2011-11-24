@@ -12,13 +12,17 @@
 
 #include <MarlinCED.h>
 
-
+#include <gear/GEAR.h>
+#include <gear/GearParameters.h>
+#include <gear/BField.h>
+#include "gear/FTDParameters.h"
+#include "gear/FTDLayerLayout.h"
 
 
 //--------------------------------------------------------------
 //My own classes begin
 
-#include "MyTrack.h"
+#include "FTDTrack.h"
 
 #include "FTrackTools.h"
 #include "TrackSubset.h"
@@ -26,8 +30,8 @@
 #include "SegmentBuilder.h"
 #include "Automaton.h"
 
-#include "AutHit.h"
-#include "SimpleHit.h"
+#include "FTDHit01.h"
+
 
 
 
@@ -98,7 +102,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
    // Test
    
 
-   Criteria::init();
+   
    std::vector< std::string > allCriteria = Criteria::getAllCriteriaNamesVec();
    
    
@@ -148,21 +152,48 @@ void ForwardTracking::init() {
    _nRun = 0 ;
    _nEvt = 0 ;
 
-
-   MarlinCED::init(this) ;    //CED
+   _useCED = true;
+   if( _useCED )MarlinCED::init(this) ;    //CED
    
 
+   // Get data from gear
 
-   // TODO: get this from gear
    unsigned int nLayers = 8; // layer 0 is for the IP
-   unsigned int nModules = 16;
-   unsigned int nSensors = 2;  
+   unsigned int nModules = 1;
+   unsigned int nSensors = 2; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
+
+   
+   
+   try {
+      
+      const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
+      const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
+      streamlog_out( MESSAGE ) << "  ForwardTracking - Use FTDLayerLayout" << std::endl ;
+      
+      nLayers = 2*ftdLayers.getNLayers() + 1; //TODO: explain
+      nModules = ftdLayers.getNPetals(0); // TODO: this is just taking the petals from the first disk -> should this be more general?
+      
+      
+   } catch (gear::UnknownParameterException& e) {
+      
+      streamlog_out( MESSAGE ) << "  ForwardTracking - Use Loi style FTDParameters" << std::endl ;
+      
+      const gear::GearParameters& pFTD = Global::GEAR->getGearParameters("FTD");
+      
+      nLayers = pFTD.getDoubleVals( "FTDZCoordinate" ).size() + 1;
+   }
+
+   streamlog_out( DEBUG4 ) << "using " << nLayers - 1 << " layers, " << nModules << " petals and " << nSensors << " sensors.\n";
+
+   _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
+  
+ 
 
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
 
 
    //Initialise the TrackFitter of the tracks:
-   MyTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
+   FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
 
 
 
@@ -219,11 +250,15 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 //--CED---------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
 
-//   MarlinCED::newEvent(this , 0) ; 
-
-//   CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
-
-//   pHandler.update(evt); 
+   if( _useCED ){
+      
+      MarlinCED::newEvent(this , 0) ; 
+      
+      CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+      
+      pHandler.update(evt); 
+   
+   }
 
 //-----------------------------------------------------------------------
   
@@ -232,7 +267,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 //    drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
 
 
-   _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
+   
   
 
    LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
@@ -256,7 +291,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       streamlog_out( MESSAGE0 ) << "\n\nNumber of hits on the FTDs: " << nHits <<"\n";
-      streamlog_out( MESSAGE0 ) << "\n--FTDRepresentation--" ;
+
       
       // A map to store the hits according to their sectors
       std::map< int , std::vector< IHit* > > map_sector_hits;
@@ -269,11 +304,11 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          TrackerHit* trkHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
          
-         //Make an AutHit from the TrackerHit 
-         AutHit* autHit = new AutHit ( trkHit , _sectorSystemFTD );
-         hitsTBD.push_back(autHit);
+         //Make an FTDHit01 from the TrackerHit 
+         FTDHit01* ftdHit = new FTDHit01 ( trkHit , _sectorSystemFTD );
+         hitsTBD.push_back(ftdHit);
        
-         map_sector_hits[ autHit->getSector() ].push_back( autHit );         
+         map_sector_hits[ ftdHit->getSector() ].push_back( ftdHit );         
          
         
       }
@@ -321,7 +356,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       streamlog_out( MESSAGE0 ) << "\n--Automaton--" ;
       
-//       automaton.drawSegments();
+      if( _useCED ) automaton.drawSegments();
       
       
       automaton.clearCriteria();
@@ -389,7 +424,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       std::vector < std::vector< IHit* > > autTracks = automaton.getTracks(); //TODO: the method should have a different name
       std::vector <ITrack*> autTrackCandidates;
       
-      for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new MyTrack( autTracks[i] ) );
+      for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new FTDTrack( autTracks[i] ) );
       
       std::vector< ITrack* > tracks = autTrackCandidates;
       
@@ -472,7 +507,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
       for (unsigned int i=0; i < tracks.size(); i++){
          
-         MyTrack* myTrack = dynamic_cast< MyTrack* >( tracks[i] );
+         FTDTrack* myTrack = dynamic_cast< FTDTrack* >( tracks[i] );
          
          if( myTrack != NULL ) trkCol->addElement( myTrack->getLcioTrack() );
          
@@ -503,7 +538,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 
 
-//    MarlinCED::draw(this);
+   if( _useCED ) MarlinCED::draw(this);
 
        
        

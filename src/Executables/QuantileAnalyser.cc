@@ -85,9 +85,9 @@ int main(int argc,char *argv[]){
    /**********************************************************************************************/
    
    TFile* rootFile = new TFile( ROOT_FILE_PATH.c_str() , "READ"); 
-    
+
    
-   Criteria::init();
+
    std::set< std::string > critTypes = Criteria::getTypes();
    
    std::set< std::string >::iterator iType;

@@ -6,7 +6,7 @@
 
 #include <vector>
 #include <list>
-#include "AutHit.h"
+#include "IHit.h"
 
 namespace FTrack{
 

@@ -9,7 +9,7 @@
 
 
 #include "Criteria.h"
-#include "SimpleHit.h"
+#include "FTDHitSimple.h"
 
 
 using namespace FTrack;
@@ -90,10 +90,10 @@ int main(int argc,char *argv[]){
    unsigned module = 0;
    unsigned sensor = 0;
    
-   SimpleHit hit1 ( 0.,0.,0., side , layer , module , sensor , &sectorSystemFTD );
-   SimpleHit hit2 ( 1.,3.,1., side , layer , module , sensor , &sectorSystemFTD );
-   SimpleHit hit3 ( 4.,7.,2., side , layer , module , sensor , &sectorSystemFTD );
-   SimpleHit hit4 ( 8.,13.,3., side , layer , module , sensor , &sectorSystemFTD );
+   FTDHitSimple hit1 ( 0.,0.,0., side , layer , module , sensor , &sectorSystemFTD );
+   FTDHitSimple hit2 ( 1.,3.,1., side , layer , module , sensor , &sectorSystemFTD );
+   FTDHitSimple hit3 ( 4.,7.,2., side , layer , module , sensor , &sectorSystemFTD );
+   FTDHitSimple hit4 ( 8.,13.,3., side , layer , module , sensor , &sectorSystemFTD );
    // the values here are chosen quite randomly, they just should give something non trivial,
    // so the criteria don't stop too early because, they can't check (for example if 3 hits 
    // are on one line, a circle can't be calculated etc.
