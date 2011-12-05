@@ -68,6 +68,8 @@ namespace FTrack{
       unsigned getNumberOfModules() const { return _nModules; }
       unsigned getNumberOfSensors() const { return _nSensors; }
       
+      virtual ~SectorSystemFTD(){}
+      
    private:
       
       unsigned _nModules;

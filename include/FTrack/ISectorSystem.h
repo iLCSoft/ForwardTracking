@@ -29,6 +29,8 @@ namespace FTrack{
       
       unsigned getNumberOfLayers() const { return _nLayers; };
       
+      virtual ~ISectorSystem(){}
+      
    protected:
       
       

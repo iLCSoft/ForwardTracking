@@ -130,7 +130,7 @@ int main(int argc,char *argv[]){
    /**********************************************************************************************/
    
    
-   unsigned nRuns = 1.;
+   unsigned nRuns = 1;
    
    if( argc >= 2 ) nRuns = atoi( argv[1] );
    

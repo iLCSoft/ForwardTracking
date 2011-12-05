@@ -29,6 +29,8 @@ namespace FTrack{
       
       float distTo( IHit* otherHit );
       
+      virtual ~IHit(){}
+      
    protected:
       
             
@@ -45,10 +47,12 @@ namespace FTrack{
    };
    
    
-   
+      
 }
 
 
 #endif
+
+
 
 

@@ -23,6 +23,8 @@ namespace FTrack{
       
       virtual const ISectorSystem* getSectorSystem() const { return _sectorSystemFTD; };
       
+      virtual ~FTDHitSimple(){}
+      
    private:
       
       int _side;

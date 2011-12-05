@@ -23,6 +23,8 @@ namespace FTrack{
       virtual double getChi2() const = 0;
       virtual double getChi2Prob() const = 0;
       
+      virtual ~ITrack(){}
+      
    };
 
 

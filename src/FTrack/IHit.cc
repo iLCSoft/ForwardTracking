@@ -14,4 +14,11 @@ float IHit::distTo( IHit* otherHit ){
    return sqrt( dx*dx + dy*dy + dz*dz );
    
 }
+
+
+
+ 
+
+
+
    

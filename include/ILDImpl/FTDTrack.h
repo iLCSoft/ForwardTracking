@@ -61,7 +61,7 @@ namespace FTrack{
        */
       virtual void fit();
       
-      ~FTDTrack(){ delete _lcioTrack; }
+      virtual ~FTDTrack(){ delete _lcioTrack; }
       
    protected:
       
