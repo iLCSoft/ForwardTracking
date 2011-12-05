@@ -1,5 +1,4 @@
-#include "ForwardTracking.h"
-
+#include "ForwardTracking00.h"
 #include <algorithm>
 
 #include <EVENT/TrackerHit.h>
@@ -7,6 +6,8 @@
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
 
+
+// ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
 #include <MarlinCED.h>
@@ -19,14 +20,26 @@
 
 
 //--------------------------------------------------------------
+//My own classes begin
+
 #include "FTDTrack.h"
+
 #include "FTrackTools.h"
 #include "TrackSubset.h"
+
 #include "SegmentBuilder.h"
 #include "Automaton.h"
-#include "FTDHit01.h"
-#include "FTDNeighborPetalHitCon.h"
-#include "FTDHitCon01.h"
+
+#include "FTDHit00.h"
+
+
+
+
+// the hit connectors
+#include "FTDHitCon00.h"
+
+
+//My own classe end
 //--------------------------------------------------------------
 
 
@@ -39,13 +52,13 @@ using namespace MarlinTrk ;
 
 
 
-ForwardTracking aForwardTracking ;
+ForwardTracking00 aForwardTracking00 ;
 
 
-ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
+ForwardTracking00::ForwardTracking00() : Processor("ForwardTracking00") {
 
    // modify processor description
-   _description = "ForwardTracking reconstructs tracks through the FTDs" ;
+   _description = "ForwardTracking00 tests the Cellular Automaton" ;
 
 
    // register steering parameters: name, description, class-variable, default value
@@ -64,7 +77,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
 
    
    registerProcessorParameter("Chi2ProbCut",
-                              "The chi2 probability value below which tracks will be cut",
+                              "The chi2 value below which tracks will be cut",
                               _chi2ProbCut,
                               double(0.005));
    
@@ -86,7 +99,9 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               bool(false));
    
    /////////////////////////////////////////////////////////////////////////////////
-   // The Criteria for the Cellular Automaton
+   // Test
+   
+
    
    std::vector< std::string > allCriteria = Criteria::getAllCriteriaNamesVec();
    
@@ -116,15 +131,18 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
       
    
    }
+      
    
    /////////////////////////////////////////////////////////////////////////////////
    
+                                
+                                
 }
 
 
 
 
-void ForwardTracking::init() { 
+void ForwardTracking00::init() { 
 
    streamlog_out(DEBUG) << "   init called  " << std::endl ;
 
@@ -139,19 +157,24 @@ void ForwardTracking::init() {
    
 
    // Get data from gear
+
    unsigned int nLayers = 8; // layer 0 is for the IP
    unsigned int nModules = 1;
-   unsigned int nSensors = 2; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
-  
-   const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
-   const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
-   nLayers = ftdLayers.getNLayers() + 1;
-   nModules = ftdLayers.getNPetals(0); 
+   unsigned int nSensors = 1; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
+
+   streamlog_out( MESSAGE ) << "  ForwardTracking00 - Use Loi style FTDParameters" << std::endl ;
    
+   const gear::GearParameters& pFTD = Global::GEAR->getGearParameters("FTD");
+   
+   nLayers = pFTD.getDoubleVals( "FTDZCoordinate" ).size() + 1;
+   
+
    streamlog_out( DEBUG4 ) << "using " << nLayers - 1 << " layers, " << nModules << " petals and " << nSensors << " sensors.\n";
 
    _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
   
+ 
+
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
 
 
@@ -160,7 +183,7 @@ void ForwardTracking::init() {
 
 
 
-   // store the criteria 
+   // store the criteria where they belong
    for( unsigned i=0; i<_criteriaNames.size(); i++ ){
       
       std::string critName = _criteriaNames[i];
@@ -200,14 +223,14 @@ void ForwardTracking::init() {
 }
 
 
-void ForwardTracking::processRunHeader( LCRunHeader* run) { 
+void ForwardTracking00::processRunHeader( LCRunHeader* run) { 
 
     _nRun++ ;
 } 
 
 
 
-void ForwardTracking::processEvent( LCEvent * evt ) { 
+void ForwardTracking00::processEvent( LCEvent * evt ) { 
 
 
 //--CED---------------------------------------------------------------------
@@ -220,13 +243,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
       
       pHandler.update(evt); 
-      
+   
    }
 
 //-----------------------------------------------------------------------
   
-//    const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
-//    drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
+  //get FTD geometry info
+  if( _useCED ){
+      const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
+      drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
+  }
 
    
   
@@ -251,8 +277,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       unsigned nHits = col->getNumberOfElements()  ;
       
       
-      streamlog_out( DEBUG4 ) << "Number of hits on the FTDs: " << nHits <<"\n";
-      
+      streamlog_out( MESSAGE0 ) << "\n\nNumber of hits on the FTDs: " << nHits <<"\n";
+
       
       // A map to store the hits according to their sectors
       std::map< int , std::vector< IHit* > > map_sector_hits;
@@ -265,8 +291,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          TrackerHit* trkHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
          
-         //Make an FTDHit01 from the TrackerHit 
-         FTDHit01* ftdHit = new FTDHit01 ( trkHit , _sectorSystemFTD );
+         //Make an FTDHit00 from the TrackerHit 
+         FTDHit00* ftdHit = new FTDHit00 ( trkHit , _sectorSystemFTD );
          hitsTBD.push_back(ftdHit);
        
          map_sector_hits[ ftdHit->getSector() ].push_back( ftdHit );         
@@ -284,18 +310,13 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
       
       
-      /**********************************************************************************************/
-      /*                Check the possible connections of hits on overlapping petals                */
-      /**********************************************************************************************/
-      
-      std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack = getOverlapConnectionMap( map_sector_hits, _sectorSystemFTD, 3.5);
       
       /**********************************************************************************************/
       /*                Build the segments                                                          */
       /**********************************************************************************************/
       
       
-      streamlog_out( DEBUG4 ) << "\t\t---SegementBuilder---\n" ;
+      streamlog_out( MESSAGE0 ) << "\n--SegementBuilder--" ;
       
       //Create a segmentbuilder
       SegmentBuilder segBuilder( map_sector_hits );
@@ -305,7 +326,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       segBuilder.addCriteria ( _crit2Vec );
       
       //Also load hit connectors
-      FTDHitCon01 hitCon( _sectorSystemFTD , 3 , 8 );
+      FTDHitCon00 hitCon( _sectorSystemFTD );
       
       
       segBuilder.addHitConnector ( & hitCon );
@@ -321,23 +342,28 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
-      streamlog_out( DEBUG4 ) << "\t\t---Automaton---\n" ;
+      streamlog_out( MESSAGE0 ) << "\n--Automaton--" ;
       
       if( _useCED ) automaton.drawSegments();
       
-      /*******************************/
-      /*      2-hit segments         */
-      /*******************************/
-      streamlog_out( DEBUG4 ) << "\t\t--2-hit-Segments--\n" ;
       
       automaton.clearCriteria();
       automaton.addCriteria( _crit3Vec );  
       
       
       // Let the automaton lengthen its 1-segments to 2-segments
+      // Because for 1-segments (== single hits) and automaton isn't very useful. TODO: verify this hyphothesis
       automaton.lengthenSegments();
       
+      
+      
+      /*******************************/
+      /*      2-hit segments         */
+      /*******************************/
+      
+      
       // So now we have 2-segments and are ready to perform the cellular automaton.
+
       
       // Perform the automaton
       automaton.doAutomaton();
@@ -355,7 +381,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*******************************/
       /*      3-hit segments         */
       /*******************************/
-      streamlog_out( DEBUG4 ) << "\t\t--3-hit-Segments--\n" ;
+      
       
       
       automaton.clearCriteria();
@@ -380,116 +406,72 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
+      
+      
+      
+      //Get the track candidates
+      std::vector < std::vector< IHit* > > autTracks = automaton.getTracks(); //TODO: the method should have a different name
+      std::vector <ITrack*> autTrackCandidates;
+      
+      for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new FTDTrack( autTracks[i] ) );
+      
+//       for( unsigned i=0; i < autTrackCandidates.size(); i++ ) drawTrack( autTrackCandidates[i] , 0x00ffff , 3 );
+//       std::vector< ITrack* > tracks = autTrackCandidates;
+      
       /**********************************************************************************************/
-      /*                Add the overlapping hits                                                    */
+      /*                Fitting and erasing bad fits                                                */
       /**********************************************************************************************/
       
+      std::vector< ITrack* > trackCandidates;
       
-      streamlog_out( DEBUG4 ) << "\t\t---Add hits from overlapping petals + fit + chi2prob Cuts---" ;
+      unsigned nTracksRejected = 0;
+      unsigned nTracksKept = 0;
       
-      std::vector < rawTrack > autRawTracks = automaton.getTracks(3);
-      std::vector <ITrack*> trackCandidates;
-      
-      
-      // for all raw tracks
-      for( unsigned i=0; i < autRawTracks.size(); i++){
-         
-         std::vector <ITrack*> overlappingTrackCands;
-         std::vector< IHit* > trackHits = autRawTracks[i];
-         
-         std::vector < rawTrack > autRawTracksPlus;          // the tracks plus the overlapping hits
-         autRawTracksPlus.push_back( trackHits );            // add the basic track
+      for ( unsigned i=0; i < autTrackCandidates.size(); i++ ){
+       
+         ITrack* track = autTrackCandidates[i];
          
          
-         // for all hits in the track
-         for( unsigned j=0; j<trackHits.size(); j++ ){
+         // fit the track
+         track->fit();
+         
+         
+         streamlog_out( DEBUG2 ) << "\n Track " << i 
+                                 << " chi2Prob = " << track->getChi2Prob() 
+                                 << "( chi2=" << track->getChi2() 
+                                 <<", Ndf=" << track->getNdf() << " )";
+       
+         
+         if ( track->getChi2Prob() > _chi2ProbCut ){ //chi2 prob is okay
             
-            IHit* hit = trackHits[j];
             
-            //get all the possible overlapping hits
-            std::map< IHit* , std::vector< IHit* > >::iterator it;
+            trackCandidates.push_back( track );         
+            nTracksKept++;
+            
+         }
+         else{ // chi2 prob is too low
             
             
-            it = map_hitFront_hitsBack.find( hit );
-            
-            if( it == map_hitFront_hitsBack.end() ) continue; // if there are no hits to be added
-            
-            std::vector< IHit* > overlappingHits = it->second; 
-            
-            //for all hits to be added
-            for( unsigned k=0; k<overlappingHits.size(); k++ ){
-               
-               
-               IHit* oHit = overlappingHits[k];
-               
-               //for all tracks we have so far create an additional track with the hit
-               unsigned nAutTrackHitsPlus = autRawTracksPlus.size();
-               for( unsigned l=0; l<nAutTrackHitsPlus; l++ ){
-                  
-                  std::vector< IHit* > newTrackHits = autRawTracksPlus[l];
-                  newTrackHits.push_back( oHit );
-                  autRawTracksPlus.push_back( newTrackHits );
-                  
-               }
-               
-            }
+            nTracksRejected++;
+            delete track; //Not needed anymore --> therefore delete it
             
          }
          
-         /**********************************************************************************************/
-         /*                Make track candidates, fit them and throw away bad ones                     */
-         /**********************************************************************************************/
          
-         for( unsigned j=0; j < autRawTracksPlus.size(); j++ ){
-            
-            
-            ITrack* trackCand = new FTDTrack( autRawTracksPlus[j] );
-            trackCand->fit();
-            
-            streamlog_out( DEBUG2 ) << " Track " << trackCand 
-                                    << " chi2Prob = " << trackCand->getChi2Prob() 
-                                    << "( chi2=" << trackCand->getChi2() 
-                                    <<", Ndf=" << trackCand->getNdf() << " )\n";
-            
-            
-            if ( trackCand->getChi2Prob() > _chi2ProbCut ){
-               
-               overlappingTrackCands.push_back( trackCand );
-               
-            }
-            else{
-               
-               delete trackCand;
-               
-            }
-            
-         }
-         
-         /**********************************************************************************************/
-         /*                Take the best version of the track                                          */
-         /**********************************************************************************************/
-        
-         if( !overlappingTrackCands.empty() ){
-            
-            ITrack* bestTrack = overlappingTrackCands[0];
-            
-            for( unsigned j=1; j < overlappingTrackCands.size(); j++ ){
-               
-               if( overlappingTrackCands[j]->getQI() > bestTrack->getQI() ) bestTrack = overlappingTrackCands[j];
-               
-            }
-            
-            trackCandidates.push_back( bestTrack );
-            
-         }
-         
-      }
+      }      
+   
+   
+      streamlog_out (MESSAGE0)   << "\n Kept " <<  nTracksKept 
+                                 << " tracks with good chi2Prob, and rejected " << nTracksRejected << "\n";
+      
+    
+      
       
       
       /**********************************************************************************************/
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
-      streamlog_out( DEBUG4 ) << "\t\t---Get best subset of tracks---\n" ;
+     
       
       // Make a TrackSubset
       TrackSubset subset;
@@ -500,7 +482,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       std::vector< ITrack* > tracks = subset.getBestTrackSubset();
       std::vector< ITrack* > rejectedTracks = subset.getRejectedTracks();
-
+//       for( unsigned i=0; i < tracks.size(); i++ ) drawTrack( tracks[i], 0x00ff00 , 2 );
+      
+//       ///////////////////
+//       std::vector< ITrack* > incompatibleTracks = subset.getIncompatilbeTracks();      
+//       std::vector< ITrack* > compatibleTracks = subset.getCompatilbeTracks();    
+//       
+//       for( unsigned i=0; i < incompatibleTracks.size(); i++ ) drawTrack( incompatibleTracks[i], 0xff8888 , 1 );
+//       for( unsigned i=0; i < compatibleTracks.size(); i++ ) drawTrack( compatibleTracks[i], 0x00F5FF , 1 );
+      ////////////////////
+      
       // immediately delete the rejected ones
       for ( unsigned i=0; i<rejectedTracks.size(); i++){
          
@@ -511,9 +502,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       /**********************************************************************************************/
-      /*               Finally: save the tracks                                                     */
+      /*               finally: save the tracks                                                     */
       /**********************************************************************************************/
-      streamlog_out( DEBUG4 ) << "\t\t---Save Tracks---\n" ;
       
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
       for (unsigned int i=0; i < tracks.size(); i++){
@@ -528,7 +518,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
-      streamlog_out (MESSAGE0) << "\nForward Tracking found and saved " << tracks.size() << " tracks.\n"; 
+      streamlog_out (MESSAGE0) << "\n\n Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
       
       
       /**********************************************************************************************/
@@ -544,26 +534,26 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
-   }
+  }
 
 
 
 
    if( _useCED ) MarlinCED::draw(this);
 
-
-   _nEvt ++ ;
-   
+       
+       
+    _nEvt ++ ;
 }
 
 
 
 
 
-void ForwardTracking::check( LCEvent * evt ) {}
+void ForwardTracking00::check( LCEvent * evt ) {}
 
 
-void ForwardTracking::end(){
+void ForwardTracking00::end(){
    
    for ( unsigned i=0; i< _crit2Vec.size(); i++) delete _crit2Vec[i];
    for ( unsigned i=0; i< _crit3Vec.size(); i++) delete _crit3Vec[i];
@@ -577,7 +567,7 @@ void ForwardTracking::end(){
    
 }
 
-void ForwardTracking::drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal){
+void ForwardTracking00::drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal){
    
 
    
@@ -647,82 +637,19 @@ void ForwardTracking::drawFTDSensors ( const gear::GearParameters& paramFTD , un
    
 }
 
-
-
-std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMap( 
-            std::map< int , std::vector< IHit* > > & map_sector_hits, 
-            const SectorSystemFTD* secSysFTD,
-            float distMax){
+void ForwardTracking00::drawTrack( ITrack* track, unsigned color , unsigned width ){
    
+   std::vector< IHit*> hits = track->getHits(); 
    
-   unsigned nConnections=0;
-
-   
-   std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack;
-   std::map< int , std::vector< IHit* > >::iterator it;
-   
-   //for every sector
-   for ( it= map_sector_hits.begin() ; it != map_sector_hits.end(); it++ ){
+   for ( unsigned i=1; i < hits.size(); i++ ){
       
-     
-      std::vector< IHit* > hitVecA = it->second;
-      int sector = it->first;
-      // get the neighbouring petals
-      FTDNeighborPetalHitCon hitCon( secSysFTD );
-      std::set< int > targetSectors = hitCon.getTargetSectors( sector );
-      
-      
-      //for all neighbouring petals
-      for ( std::set<int>::iterator itTarg = targetSectors.begin(); itTarg!=targetSectors.end(); itTarg++ ){
+      IHit* a = hits[i-1];
+      IHit* b = hits[i];
          
-         
-         std::vector< IHit* > hitVecB = map_sector_hits[ *itTarg ];
-         
-         for ( unsigned j=0; j < hitVecA.size(); j++ ){
-            
-            
-            IHit* hitA = hitVecA[j];
-            
-            for ( unsigned k=0; k < hitVecB.size(); k++ ){
-               
-               
-               IHit* hitB = hitVecB[k];
-               
-               
-               float dx = hitA->getX() - hitB->getX();
-               float dy = hitA->getY() - hitB->getY();
-               float dz = hitA->getZ() - hitB->getZ();
-               float dist = sqrt( dx*dx + dy*dy + dz*dz );
-               
-               if (( dist < distMax )&& ( fabs( hitB->getZ() ) > fabs( hitA->getZ() ) )  ){
-                  
-                  
-                  streamlog_out( DEBUG2 ) << "Connected: (" << hitA->getX() << "," << hitA->getY() << "," << hitA->getZ() << ")-->("
-                                          << hitB->getX() << "," << hitB->getY() << "," << hitB->getZ() << ")\n";
-                  
-                  map_hitFront_hitsBack[ hitA ].push_back( hitB );
-                  nConnections++;
-                  
-               }
-               
-            }
-            
-         } 
-         
-      }
-     
+      ced_line_ID( a->getX() ,a->getY() , a->getZ() , b->getX() ,b->getY() , b->getZ() , 2 , width , color, 0);
+   
    }
-   
-   streamlog_out( DEBUG3 ) << "Connected " << map_hitFront_hitsBack.size() << " hits with " << nConnections << " possible overlapping hits\n";
-   
-   
-   return map_hitFront_hitsBack;
-   
-   
-   
+
 }
-
-
-
 
 

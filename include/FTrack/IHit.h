@@ -27,6 +27,8 @@ namespace FTrack{
       bool isVirtual() const { return _isVirtual; };
       void setIsVirtual( bool isVirtual ){ _isVirtual = isVirtual; };
       
+      float distTo( IHit* otherHit );
+      
    protected:
       
             

@@ -163,7 +163,7 @@ void Automaton::lengthenSegments(){
 
    }
 
-   streamlog_out(DEBUG4) << "\n Made " << nLongerSegments << " longer segments from " << nShorterSegments << " shorter segments.\n";
+   streamlog_out(DEBUG4) << " Made " << nLongerSegments << " longer segments from " << nShorterSegments << " shorter segments.\n";
 
 
    //----------------------------------------------------------------------------------------------//
@@ -238,7 +238,7 @@ void Automaton::lengthenSegments(){
 
    }
 
-   streamlog_out (DEBUG4) << "\n Made " << nConnections << " of " << nPossibleConnections
+   streamlog_out (DEBUG4) << " Made " << nConnections << " of " << nPossibleConnections
                           << " possible connections \n";
 
 
@@ -340,7 +340,7 @@ void Automaton::doAutomaton(){
    }
 
 
-   streamlog_out(DEBUG4) << "\n Automaton performed using " << nIterations << " iterations.\n";
+   streamlog_out(DEBUG4) << " Automaton performed using " << nIterations << " iterations.\n";
 
 
 
@@ -407,8 +407,8 @@ void Automaton::cleanBadStates(){
    }
 
 
-   streamlog_out( DEBUG4 ) << "\n Erased segments because of bad states= " << nErasedSegments << "\n";
-   streamlog_out( DEBUG4 ) << "\n Kept segments because of good states= " << nKeptSegments << "\n";
+   streamlog_out( DEBUG4 ) << " Erased segments because of bad states= " << nErasedSegments << "\n";
+   streamlog_out( DEBUG4 ) << " Kept segments because of good states= " << nKeptSegments << "\n";
 
 
 
@@ -505,8 +505,8 @@ void Automaton::cleanBadConnections(){
    }
 
 
-   streamlog_out( DEBUG4 ) << "\n Erased bad connections= " << nConnectionsErased << "\n";
-   streamlog_out( DEBUG4 ) << "\n Kept good connections= " << nConnectionsKept << "\n";
+   streamlog_out( DEBUG4 ) << " Erased bad connections= " << nConnectionsErased << "\n";
+   streamlog_out( DEBUG4 ) << " Kept good connections= " << nConnectionsKept << "\n";
 
 
 
@@ -614,7 +614,7 @@ std::vector < std::vector< IHit* > > Automaton::getTracks( unsigned minHits ){
 
 
 
-   streamlog_out( DEBUG4 ) << "\n Created " << tracks.size() << " tracks.\n";
+   streamlog_out( DEBUG4 ) << " Created " << tracks.size() << " tracks.\n";
 
    return tracks;
 
@@ -643,7 +643,7 @@ std::vector <Segment*> Automaton::getSegments(){
    
 }
 
-
+//TODO: this should not be in here as this is framework specific
 void Automaton::drawSegments(){
    
    

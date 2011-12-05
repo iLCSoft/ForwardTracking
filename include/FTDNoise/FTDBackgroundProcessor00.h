@@ -1,5 +1,5 @@
-#ifndef FTDNoiseProcessor_h
-#define FTDNoiseProcessor_h 1
+#ifndef FTDBackgroundProcessor00_h
+#define FTDBackgroundProcessor00_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -47,14 +47,14 @@ using namespace marlin ;
 
 
 
-class FTDNoiseProcessor : public Processor {
+class FTDBackgroundProcessor00 : public Processor {
   
  public:
   
-    virtual Processor*  newProcessor() { return new FTDNoiseProcessor ; }
+    virtual Processor*  newProcessor() { return new FTDBackgroundProcessor00 ; }
   
   
-    FTDNoiseProcessor() ;
+    FTDBackgroundProcessor00() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.

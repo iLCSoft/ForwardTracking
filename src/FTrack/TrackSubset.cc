@@ -35,7 +35,7 @@ void TrackSubset::calculateBestSet(){
    states.resize( nTracks );
    
    
-   double omega = 0.5;
+   double omega = 0.75;
    
    double initStateMin = 0.;
    double initStateMax = 0.1;
@@ -132,6 +132,8 @@ void TrackSubset::calculateBestSet(){
          _bestSubsetTracks.push_back( tracks[i] );
          nCompWithAll++;
          
+         _compatibleTracks.push_back( tracks[i] );
+         
          //And now erase it from the ones we will still check:
          tracks.erase( tracks.begin() + i );
          states.erase( states.begin() + i );
@@ -143,7 +145,12 @@ void TrackSubset::calculateBestSet(){
          i--;
          
       }
-      else nIncompatible++;
+      else{
+         
+         nIncompatible++;
+         _incompatibleTracks.push_back( tracks[i] );
+         
+      }
       
    }
       

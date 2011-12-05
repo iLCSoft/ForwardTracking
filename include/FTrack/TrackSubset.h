@@ -37,10 +37,16 @@ namespace FTrack {
       std::vector< ITrack* > getRejectedTracks(){ return _rejectedTracks;} ;
       
       
+      std::vector< ITrack* > getIncompatilbeTracks(){ return _incompatibleTracks;}
+      
+      std::vector< ITrack* > getCompatilbeTracks(){ return _compatibleTracks;} ;
+      
    
    private:
       
       std::vector< ITrack* > _tracks;
+      std::vector< ITrack* > _incompatibleTracks;
+      std::vector< ITrack* > _compatibleTracks;
       std::vector< ITrack* > _bestSubsetTracks;
       std::vector< ITrack* > _rejectedTracks;
       

@@ -1,4 +1,4 @@
-#include "FTDNoiseProcessor.h"
+#include "FTDBackgroundProcessor00.h"
 
 #include <iostream>
 
@@ -22,13 +22,13 @@ using namespace lcio ;
 using namespace marlin ;
 using namespace std ;
 
-FTDNoiseProcessor aFTDNoiseProcessor ;
+FTDBackgroundProcessor00 aFTDBackgroundProcessor00 ;
 
 
-FTDNoiseProcessor::FTDNoiseProcessor() : Processor("FTDNoiseProcessor") {
+FTDBackgroundProcessor00::FTDBackgroundProcessor00() : Processor("FTDBackgroundProcessor00") {
   
   // modify processor description
-   _description = "FTDNoiseProcessor should create noise hits in the FTD collection" ;
+   _description = "FTDBackgroundProcessor00 should create noise hits in the FTD collection" ;
   
   
   // register steering parameters: name, description, class-variable, default value
@@ -102,7 +102,7 @@ FTDNoiseProcessor::FTDNoiseProcessor() : Processor("FTDNoiseProcessor") {
 }
 
 
-void FTDNoiseProcessor::init() { 
+void FTDBackgroundProcessor00::init() { 
 
   // usually a good idea to
   printParameters() ;
@@ -122,11 +122,11 @@ void FTDNoiseProcessor::init() {
 }
 
 
-void FTDNoiseProcessor::processRunHeader( LCRunHeader* run) { 
+void FTDBackgroundProcessor00::processRunHeader( LCRunHeader* run) { 
   _nRun++ ;
 } 
 
-void FTDNoiseProcessor::processEvent( LCEvent * evt ) { 
+void FTDBackgroundProcessor00::processEvent( LCEvent * evt ) { 
 
   LCCollection* col = 0 ;
   
@@ -264,14 +264,14 @@ void FTDNoiseProcessor::processEvent( LCEvent * evt ) {
 
 
 
-  void FTDNoiseProcessor::check( LCEvent * evt ) { 
+  void FTDBackgroundProcessor00::check( LCEvent * evt ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
 
-void FTDNoiseProcessor::end(){ 
+void FTDBackgroundProcessor00::end(){ 
   
-   std::cout << "FTDNoiseProcessor::end()  " << name() 
+   std::cout << "FTDBackgroundProcessor00::end()  " << name() 
             << " processed " << _nEvt << " events in " << _nRun << " runs "
             << std::endl ;
 }

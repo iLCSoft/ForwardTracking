@@ -1,9 +1,5 @@
 #include "SegmentBuilder.h"
 
-
-
-
-
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 
@@ -57,7 +53,7 @@ Automaton SegmentBuilder::get1SegAutomaton(){
    }
       
      
-   streamlog_out(DEBUG4) << "\n Number of created 1-segments: " << nCreatedSegments <<"\n";
+   streamlog_out(DEBUG4) << " Number of created 1-segments: " << nCreatedSegments <<"\n";
 
 
    
@@ -141,9 +137,9 @@ Automaton SegmentBuilder::get1SegAutomaton(){
    }
    
    
-   streamlog_out(DEBUG4) << "\n Number of connections made " << nConnections <<"\n";
+   streamlog_out(DEBUG4) << " Number of connections made " << nConnections <<"\n";
 
-   streamlog_out( DEBUG4 ) << "\n Number of 1-segments, that got stored in the automaton: " << nStoredSegments <<"\n";
+   streamlog_out( DEBUG4 ) << " Number of 1-segments, that got stored in the automaton: " << nStoredSegments <<"\n";
  
    
   

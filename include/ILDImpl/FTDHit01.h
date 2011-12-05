@@ -26,8 +26,8 @@ namespace FTrack{
    public:
       
       FTDHit01( TrackerHit* trackerHit , const SectorSystemFTD* const sectorSystemFTD );
+       
       
-    
    };
    
 }

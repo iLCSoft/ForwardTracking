@@ -24,6 +24,9 @@ namespace FTrack{
       
       FTDTrack();
       FTDTrack( std::vector< IHit* > hits );
+      FTDTrack( const FTDTrack& f );
+      FTDTrack & operator= (const FTDTrack & f);
+      
       
       /** @return a track in the lcio format
        */
@@ -41,7 +44,7 @@ namespace FTrack{
          for(unsigned i=0; i<_hits.size();i++) hits.push_back( _hits[i] ); 
          return hits; }
       
-      virtual double getQI() const { return getChi2Prob(); }
+      virtual double getQI() const;
       
       /** For the fitting of a track an environment (containing detector information and so on) has to be set and this
        * is done via this method. It is static, as there is only one environment and therefore only one initilisation

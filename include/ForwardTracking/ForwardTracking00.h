@@ -1,5 +1,5 @@
-#ifndef ForwardTracking_h
-#define ForwardTracking_h 1
+#ifndef ForwardTracking00_h
+#define ForwardTracking00_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
@@ -12,15 +12,17 @@
 #include "Criteria.h"
 #include "SectorSystemFTD.h"
 
+#include "ITrack.h"
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace FTrack;
 
 
-typedef std::vector< IHit* > rawTrack;
 
 
-/**  Standallone Forward Tracking Processor for Marlin.
+
+/**  Standallone Forward Tracking Processor for marlin.
  * 
  * 
  *  <h4>Input - Prerequisites</h4>
@@ -33,7 +35,7 @@ typedef std::vector< IHit* > rawTrack;
  * 
  * @param ForwardTrackCollection Name of the Forward Tracking output collection
  * 
- * @param ptMin Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations. [GeV]
+ * @param ptMin Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations. Measured in GeV
  * 
  * @param MultipleScatteringOn Whether to take multiple scattering into account when fitting the tracks
  * 
@@ -43,20 +45,20 @@ typedef std::vector< IHit* > rawTrack;
  * 
  * @param Chi2ProbCut Tracks with a chi2 probability below this will get sorted out
  * 
- * @author Robin Glattauer HEPHY, Wien
+ * @author R. Glattauer HEPHY, Wien
  *
  */
 
 
 
-class ForwardTracking : public Processor {
+class ForwardTracking00 : public Processor {
   
  public:
   
-  virtual Processor*  newProcessor() { return new ForwardTracking ; }
+  virtual Processor*  newProcessor() { return new ForwardTracking00 ; }
   
   
-  ForwardTracking() ;
+  ForwardTracking00() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
@@ -115,13 +117,7 @@ class ForwardTracking : public Processor {
     */
    void drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal);
    
-   /**
-    *  @return a map that links hits with overlapping hits on the petals behind
-    */
-   std::map< IHit* , std::vector< IHit* > > getOverlapConnectionMap( 
-            std::map< int , std::vector< IHit* > > & map_sector_hits, 
-            const SectorSystemFTD* secSysFTD,
-            float distMax);
+   void drawTrack( ITrack* track, unsigned color , unsigned width = 1);
 
    std::vector< std::string > _criteriaNames;
    std::map< std::string , float > _critMinima;

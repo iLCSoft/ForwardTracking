@@ -7,6 +7,7 @@
 #include "marlin/VerbosityLevels.h"
 
 #include "HelixClass.h"
+#include "UTIL/ILDConf.h"
 
 
 #include <cmath>
@@ -23,7 +24,7 @@
 #include <MarlinCED.h>
 #include "FTrackTools.h"
 #include "FTDTrack.h"
-#include "FTDHit01.h"
+#include "FTDHit00.h"
 
 
 #include "Criteria.h"
@@ -166,32 +167,12 @@ void TrackingFeedbackProcessor::init() {
 
    unsigned int nLayers = 8; // layer 0 is for the IP
    unsigned int nModules = 1;
-   unsigned int nSensors = 2; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
-   
-   
-   try {
-      
-      const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
-      const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
-      streamlog_out( MESSAGE ) << "  TrackingFeedbackProcessor - Use FTDLayerLayout" << std::endl ;
-      
-      nLayers = 2*ftdLayers.getNLayers() + 1; //TODO: explain
-      nModules = ftdLayers.getNPetals(0); // TODO: this is just taking the petals from the first disk -> should this be more general?
-      
-      
-   } catch (gear::UnknownParameterException& e) {
-      
-      streamlog_out( MESSAGE ) << "  TrackingFeedbackProcessor - Use Loi style FTDParameters" << std::endl ;
-      
-      const gear::GearParameters& pFTD = Global::GEAR->getGearParameters("FTD");
-      
-      nLayers = pFTD.getDoubleVals( "FTDZCoordinate" ).size() + 1;
-   }
-   
+   unsigned int nSensors = 1; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
+     
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
 
 
-//      MarlinCED::init(this) ;
+//    MarlinCED::init(this) ;
 
 }
 
@@ -336,7 +317,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             for( unsigned j=0; j<2; j++ ){//add the first 2 hits
                
                
-               IHit* hit = new FTDHit01( cheatTrackHits[j] , _sectorSystemFTD );
+               IHit* hit = new FTDHit00( cheatTrackHits[j] , _sectorSystemFTD );
                
                hits.push_back( hit );
                
@@ -349,7 +330,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                
                // add a hit and fit
                
-               IHit* hit = new FTDHit01( cheatTrackHits[j] , _sectorSystemFTD );
+               IHit* hit = new FTDHit00( cheatTrackHits[j] , _sectorSystemFTD );
                
                hits.push_back( hit );
                
@@ -395,10 +376,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
         
          for (unsigned int j=0; j< cheatTrackHits.size(); j++){ //over all Hits in the track
              
+            TrackerHit* trackerHit = cheatTrackHits[j];
             
-            double x = cheatTrackHits[j]->getPosition()[0];
-            double y = cheatTrackHits[j]->getPosition()[1];
-            double z = cheatTrackHits[j]->getPosition()[2];
+            double x = trackerHit->getPosition()[0];
+            double y = trackerHit->getPosition()[1];
+            double z = trackerHit->getPosition()[2];
             
             float mcpHelixPoint[3] = {0.,0.,0.};
             helixClass.getPointInZ( z , vertex, mcpHelixPoint);
@@ -408,12 +390,22 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             
             double dist = sqrt( xDist*xDist + yDist*yDist );
             
-            
+            UTIL::BitField64  cellID( ILDCellID0::encoder_string );
+            cellID.setValue( trackerHit->getCellID0() );
+            int side   = cellID[ ILDCellID0::side ];
+            int layer = cellID[ ILDCellID0::layer ];
+            int module = cellID[ ILDCellID0::module ];
+            int sensor = cellID[ ILDCellID0::sensor ];
+                        
             streamlog_out( MESSAGE0 )  << "\n( "  
                   << x << " , " 
                   << y << " , " 
-                  << z << " ) type: "
-                  << cheatTrackHits[j]->getType() << " , xy-dist to mcp-helix= "
+                  << z << " ) "
+                  << "s" << side
+                  << " l" << layer
+                  << " mo" << module
+                  << " se" << sensor
+                  << " , xy-dist to mcp-helix= "
                   << dist
                   << " , zDist= " << mcpHelixPoint[2]-z;
                   
@@ -661,9 +653,9 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
             // sort the hits in the track
             
             // Make authits from the trackerHits
-            std::vector <FTDHit01*> autHits2;
+            std::vector <FTDHit00*> autHits2;
             
-            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new FTDHit01( trackerHits[j] , _sectorSystemFTD ) );
+            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new FTDHit00( trackerHits[j] , _sectorSystemFTD ) );
             
             FTDTrack myTrack;
             for( unsigned j=0; j<autHits2.size(); j++ ) myTrack.addHit( autHits2[j] );
@@ -681,7 +673,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
                
             }
             
-            streamlog_out( MESSAGE0 )<<"chi2prob = " << myTrack.getChi2Prob() << "\n";
+            streamlog_out( MESSAGE0 )<<"chi2prob = " << myTrack.getChi2Prob() << ", QI = " << myTrack.getQI() <<"\n";
             
             
             
@@ -902,7 +894,7 @@ double TrackingFeedbackProcessor::getChi2Prob( Track* track ){
    // Make authits from the trackerHits
    std::vector <IHit*> hits;
    
-   for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit01( trackerHits[j] , _sectorSystemFTD) );
+   for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit00( trackerHits[j] , _sectorSystemFTD) );
    
    
    FTDTrack myTrack( hits );

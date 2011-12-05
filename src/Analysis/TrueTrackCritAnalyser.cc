@@ -198,7 +198,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames2.insert( "MCP_pt" ); //transversal momentum
    branchNames2.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    branchNames2.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
-   
+   branchNames2.insert( "distance" ); // the distance between two hits
    // Set up the root file with the tree and the branches
    _treeName2 = "2Hit";
    setUpRootFile( _rootFileName, _treeName2, branchNames2 );      //prepare the root file.
@@ -445,6 +445,27 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             hits.insert( hits.begin() , virtualIPHit );
             
            
+            /**********************************************************************************************/
+            /*                Manipulate the hits (for example erase some or add some)                    */
+            /**********************************************************************************************/
+            
+            float distMin = 5.;
+            //Erase hits that are too close. For those will be from overlapping petals
+            for ( unsigned j=1; j < hits.size() ; j++ ){
+               
+               IHit* hitA = hits[j-1];
+               IHit* hitB = hits[j];
+               
+               float dist = hitA->distTo( hitB );
+               
+               if( dist < distMin ){
+                  
+                  hits.erase( hits.begin() + j );
+                  j--;
+                  
+               }               
+               
+            }
             
             /**********************************************************************************************/
             /*                Build the segments                                                          */
@@ -526,6 +547,13 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                rootData["MCP_pt"] = pt;
                rootData["MCP_distToIP"] = distToIP;
                rootData["layers"] = child->getHits()[0]->getLayer() *10 + parent->getHits()[0]->getLayer();
+               
+               IHit* childHit = child->getHits()[0];
+               IHit* parentHit = parent->getHits()[0];
+               float dx = childHit->getX() - parentHit->getX();
+               float dy = childHit->getY() - parentHit->getY();
+               float dz = childHit->getZ() - parentHit->getZ();
+               rootData["distance"] = sqrt( dx*dx + dy*dy + dz*dz );
                
                rootDataVec2.push_back( rootData );
                
@@ -641,10 +669,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             for (unsigned i=0; i<hits.size(); i++) delete hits[i];
             hits.clear();
             
-            delete virtualIPHit;
             
             
-       
+            
+            
          }
        
       }

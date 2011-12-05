@@ -55,7 +55,14 @@ void calcMinMaxOfQuantile( std::vector< float > values, float &min, float &max, 
    
 }
 
-
+/**
+ * @param argv[1] quantile size
+ * 
+ * @param argv[2] root file path
+ * 
+ * @param argv[3] output path
+ * 
+ */
 int main(int argc,char *argv[]){
    
    

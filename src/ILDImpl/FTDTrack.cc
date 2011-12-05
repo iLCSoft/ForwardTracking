@@ -36,6 +36,32 @@ FTDTrack::FTDTrack( std::vector< IHit* > hits ){
 }
 
 
+FTDTrack::FTDTrack( const FTDTrack& f ){
+
+   //make a new copied lcio track
+   _lcioTrack = new TrackImpl( *f._lcioTrack );
+   
+   
+   _hits = f._hits;
+   _chi2Prob = f._chi2Prob;
+
+}
+
+FTDTrack & FTDTrack::operator= (const FTDTrack & f){
+   
+   
+   //make a new copied lcio track
+   _lcioTrack = new TrackImpl( *f._lcioTrack );
+   
+   
+   _hits = f._hits;
+   _chi2Prob = f._chi2Prob;
+   
+   return *this;
+   
+}
+
+
 
 void FTDTrack::addHit( IHit* hit ){
    
@@ -169,6 +195,19 @@ void FTDTrack::fit(){
    
 }
 
+
+double FTDTrack::getQI() const{
+  
+   
+   double QI = _chi2Prob * _hits.size() / 14.; // 14 for the largest possible number of hits on a FTDTrack. TODO: shouldn't be hardcoded
+   
+   // make sure QI is between 0 and 1
+   if (QI > 1. ) QI = 1.;
+   if (QI < 0. ) QI = 0.;
+   
+   return QI;
+   
+}
 
 
 

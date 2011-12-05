@@ -1,12 +1,10 @@
-#ifndef HitCon_h
-#define HitCon_h
+#ifndef FTDHitCon00_h
+#define FTDHitCon00_h
 
 #include "IHitConnector.h"
 
 #include "SectorSystemFTD.h"
 
-// TODO: rename
-// TODO: split this up into several hitconnectors: one for a fixed step size. one for hopping to layer 0 and so on.
 
 
 namespace FTrack{
@@ -19,16 +17,16 @@ namespace FTrack{
     * - going to next layer
     * 
     */   
-   class HitCon : public IHitConnector{
+   class FTDHitCon00 : public IHitConnector{
       
       
    public:
       
-      HitCon ( const SectorSystemFTD* sectorSystemFTD );
+      FTDHitCon00 ( const SectorSystemFTD* sectorSystemFTD );
       
       virtual std::set <int>  getTargetSectors ( int sector );
       
-      virtual ~HitCon(){};
+      virtual ~FTDHitCon00(){};
       
    private:
       
