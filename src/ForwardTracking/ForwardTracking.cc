@@ -6,6 +6,8 @@
 #include <EVENT/Track.h>
 #include <EVENT/LCCollection.h>
 #include <IMPL/LCCollectionVec.h>
+#include "IMPL/LCFlagImpl.h"
+
 
 #include "marlin/VerbosityLevels.h"
 
@@ -516,6 +518,11 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       streamlog_out( DEBUG4 ) << "\t\t---Save Tracks---\n" ;
       
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
+      
+      LCFlagImpl hitFlag(0) ;
+      hitFlag.setBit( LCIO::TRBIT_HITS ) ;
+      trkCol->setFlag( hitFlag.getFlag()  ) ;
+
       for (unsigned int i=0; i < tracks.size(); i++){
          
          FTDTrack* myTrack = dynamic_cast< FTDTrack* >( tracks[i] );

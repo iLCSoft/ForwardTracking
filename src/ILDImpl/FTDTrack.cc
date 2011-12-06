@@ -165,6 +165,9 @@ void FTDTrack::fit(){
          
          // propagate to the IP
          TrackStateImpl* trkState = new TrackStateImpl() ;
+
+	 trkState->setLocation( TrackState::AtIP ) ;
+	 
          int propagate_status = marlin_trk->propagate(IP, *trkState, chi2, Ndf ) ;
          
          
