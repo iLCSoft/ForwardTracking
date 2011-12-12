@@ -175,7 +175,16 @@ void FTDTrack::fit(){
             
           
             // Set the track state, chi2 and Ndf
-            _lcioTrack->addTrackState(trkState);
+            
+            
+            //check if this trackstate is already there
+            if( _lcioTrack->getTrackState( TrackState::AtIP ) == NULL ){
+               
+               _lcioTrack->addTrackState(trkState);
+               
+            }
+            
+            
             _lcioTrack->setChi2(chi2) ;
             _lcioTrack->setNdf(Ndf) ;
             

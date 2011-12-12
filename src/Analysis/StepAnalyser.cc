@@ -42,7 +42,7 @@ StepAnalyser aStepAnalyser ;
 StepAnalyser::StepAnalyser() : Processor("StepAnalyser") {
    
    // modify processor description
-   _description = "StepAnalyser: Analysis of different criteria for hits on the FTD" ;
+   _description = "StepAnalyser: Stores information about the path of a particle" ;
    
    
    // register steering parameters: name, description, class-variable, default value
@@ -101,10 +101,13 @@ void StepAnalyser::init() {
    branchNames.clear();
    branchNames.insert( "LayerA" );
    branchNames.insert( "LayerB" );
+   branchNames.insert( "LayerDist" );
    branchNames.insert( "ModuleA" );
    branchNames.insert( "ModuleB" );
+   branchNames.insert( "ModuleDist" );
    branchNames.insert( "SensorA" );
    branchNames.insert( "SensorB" );
+   branchNames.insert( "SensorDist" );
    branchNames.insert("pt");
    
    _treeName2 = "hitPairs";
@@ -176,10 +179,13 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
             std::map < std::string , float > rootData;
             rootData["LayerA"] = prevLayer;
             rootData["LayerB"] = layer;
+            rootData[ "LayerDist" ] = fabs( layer - prevLayer );
             rootData["ModuleA"] = prevModule;
             rootData["ModuleB"] = module;
+            rootData[ "ModuleDist" ] = fabs( module - prevModule );
             rootData["SensorA"] = prevSensor;
             rootData["SensorB"] = sensor;
+            rootData[ "SensorDist" ] = fabs( sensor - prevSensor );
             rootData["pt"] = pt;
             rootDataVec2.push_back( rootData );
          }
@@ -241,4 +247,7 @@ void StepAnalyser::end(){
    //      << std::endl ;
    
 }
+
+
+
 

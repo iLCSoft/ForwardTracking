@@ -285,6 +285,36 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       hitsTBD.push_back( virtualIPHitBackward );
       map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
       
+      ////////////////////////////////////////////////////
+      std::map< int , std::vector< IHit* > >::iterator it;
+      
+      for( it = map_sector_hits.begin(); it != map_sector_hits.end(); it++ ){
+         
+         
+         std::vector<IHit*> hits = it->second;
+         int sector = it->first;
+         
+         int side = _sectorSystemFTD->getSide( sector );
+         unsigned layer = _sectorSystemFTD->getLayer( sector );
+         unsigned module = _sectorSystemFTD->getModule( sector );
+         unsigned sensor = _sectorSystemFTD->getSensor( sector );
+         
+         streamlog_out( DEBUG2 ) << "\nSECTOR " << sector  << " ("
+                                 << side << ","
+                                 << layer << ","
+                                 << module << ","
+                                 << sensor << ") "
+                                 << " has " << hits.size() << " hits.";
+         
+//          for( unsigned i=0; i<hits.size(); i++){
+//             
+//             streamlog_out( DEBUG4 ) << "\n\t" << hits[i];
+//             
+//          }
+      
+      }
+      
+      /////////////////////////////////////////////////
       
       /**********************************************************************************************/
       /*                Check the possible connections of hits on overlapping petals                */
@@ -307,7 +337,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       segBuilder.addCriteria ( _crit2Vec );
       
       //Also load hit connectors
-      FTDHitCon01 hitCon( _sectorSystemFTD , 3 , 8 );
+      unsigned layerStepMax = 2; // how many layers to go at max
+      unsigned petalStepMax = 1; // how many petals to go at max
+      unsigned lastLayerToIP = 4;// layer 1,2...4 get connected directly to the IP
+      FTDHitCon01 hitCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
       
       
       segBuilder.addHitConnector ( & hitCon );

@@ -26,7 +26,7 @@ namespace FTrack{
        * @param layerRange how many layer the particle might go
        * @param lastLayerToIP the highest layer that is allowed to directly connect to the IP
        */
-      FTDHitCon01 ( const SectorSystemFTD* sectorSystemFTD , unsigned layerStepMax , unsigned lastLayerToIP);
+      FTDHitCon01 ( const SectorSystemFTD* sectorSystemFTD , unsigned layerStepMax , unsigned petalStepMax , unsigned lastLayerToIP);
       
       virtual std::set <int>  getTargetSectors ( int sector );
       
@@ -37,6 +37,7 @@ namespace FTrack{
       const SectorSystemFTD* _sectorSystemFTD;
       
       unsigned _layerStepMax;
+      unsigned _petalStepMax;
       unsigned _lastLayerToIP;
       
       
