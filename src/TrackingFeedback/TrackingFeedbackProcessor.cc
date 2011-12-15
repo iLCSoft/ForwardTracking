@@ -1,50 +1,24 @@
 #include "TrackingFeedbackProcessor.h"
 
 
-
-
-// ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
-
-#include "HelixClass.h"
-#include "UTIL/ILDConf.h"
 
 
 #include <cmath>
 #include <fstream>
-#include "SimpleCircle.h"
 #include <algorithm>
-
-#include "TROOT.h"
-#include "TTree.h"
-#include "TFile.h"
-
-
 #include <sstream>
+
+
 #include <MarlinCED.h>
 #include "FTrackTools.h"
-#include "FTDTrack.h"
-#include "FTDHit00.h"
+#include "Fitter.h"
 
 
-#include "Criteria.h"
-
-
-#include <gear/GEAR.h>
-#include <gear/GearParameters.h>
-#include <gear/BField.h>
-#include "gear/FTDParameters.h"
-#include "gear/FTDLayerLayout.h"
 
 using namespace lcio ;
 using namespace marlin ;
 using namespace FTrack;
-
-
-
-
-
-
 
 
 
@@ -73,12 +47,12 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                            _colNameMCTrueTracksRel,
                            std::string("TrueTracksMCP"));
    
-   registerProcessorParameter("RootFileName",
-                              "Name of the root file for saving the results (without .root) ",
-                              _rootFileName,
-                              std::string("FTrackFeedback.root") );
-      
-      
+   
+   registerProcessorParameter("TableFileName",
+                              "Name of the table file for saving the results ",
+                              _tableFileName,
+                              std::string("TrackingFeedback.csv") );   
+   
    registerProcessorParameter("PtMin",
                               "The minimum transversal momentum pt above which tracks are of interest in GeV ",
                               _ptMin,
@@ -114,7 +88,22 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               "Smooth All Measurement Sites in Fit",
                               _SmoothOn,
                               bool(false));
+   
+   registerProcessorParameter("DrawMCPTracks",
+                              "Draw the helices of the MCP (values at IP) in CED ",
+                              _drawMCPTracks,
+                              bool(false));
+   
+   registerProcessorParameter("SaveAllEventsSummary",
+                              "If true the results of all events are summed up and saved in the file specified under SummaryFileName ",
+                              _saveAllEventsSummary,
+                              bool(false));
 
+   registerProcessorParameter("SummaryFileName",
+                              "All events are summed up and saved in this file, if SaveAllEventsSummary == true",
+                              _summaryFileName,
+                              std::string("TrackingFeedbackSum.csv") );   
+   
 }
 
 
@@ -127,53 +116,26 @@ void TrackingFeedbackProcessor::init() {
    // usually a good idea to
    printParameters() ;
 
-   _treeName = "trackCands";
-   setUpRootFile(_rootFileName, _treeName);      //prepare the root file.
+  
 
    _nRun = 0 ;
    _nEvt = 0 ;
 
 
-   //Initialise the TrackFitter of the tracks:
-   FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
 
+   if ( _drawMCPTracks ) MarlinCED::init(this) ;
 
-
-   //Add the criteria that will be checked
-   _crits2.push_back( new Crit2_RZRatio( 1. , 1. ) ); 
-   _crits2.push_back( new Crit2_StraightTrackRatio( 1. , 1. ) );
-   _crits2.push_back( new Crit2_HelixWithIP( 1. , 1. ) );
-   _crits2.push_back( new Crit2_DeltaRho( 0. , 0. ) );
-   _crits2.push_back( new Crit2_DeltaPhi( 0. , 0. ) );
-   for( unsigned i=0; i< _crits2.size(); i++ ) _crits2[i]->setSaveValues( true );
-
-   _crits3.push_back( new Crit3_ChangeRZRatio( 1. , 1. ) );
-   _crits3.push_back( new Crit3_PT (0. , 0.) );
-   _crits3.push_back( new Crit3_3DAngle (0. , 0.) );
-   _crits3.push_back( new Crit3_IPCircleDist (0. , 0.) );
-   _crits3.push_back( new Crit3_2DAngle( 0. , 0. ) );
-   for( unsigned i=0; i< _crits3.size(); i++ ) _crits3[i]->setSaveValues( true );
-
-
-   _crits4.push_back( new  Crit4_2DAngleChange ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_DistToExtrapolation ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_DistOfCircleCenters ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_NoZigZag ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_RChange ( 1. , 1. ) );
-   for( unsigned i=0; i< _crits4.size(); i++ ) _crits4[i]->setSaveValues( true );
-
-
-
-   unsigned int nLayers = 8; // layer 0 is for the IP
-   unsigned int nModules = 1;
-   unsigned int nSensors = 1; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
-     
-   _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
-
-
-//    MarlinCED::init(this) ;
-
+   _nComplete_Sum            = 0;
+   _nCompletePlus_Sum        = 0; 
+   _nLost_Sum                = 0;
+   _nIncomplete_Sum          = 0;
+   _nIncompletePlus_Sum      = 0;
+   _nGhost_Sum               = 0;
+   _nFoundCompletely_Sum     = 0;
+   _nTrueTracks_Sum          = 0;
+   _nRecoTracks_Sum          = 0;
+   _nDismissedTrueTracks_Sum = 0; 
+   
 }
 
 
@@ -190,13 +152,14 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 
 //-----------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
-
-//    MarlinCED::newEvent(this , 0) ; 
-// 
-//    CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
-// 
-//    pHandler.update(evt); 
-
+   if ( _drawMCPTracks ){
+      
+      MarlinCED::newEvent(this , 0) ; 
+      
+      CEDPickingHandler &pHandler=CEDPickingHandler::getInstance();
+      
+      pHandler.update(evt); 
+   }
 //-----------------------------------------------------------------------
 
 
@@ -209,16 +172,21 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    _nIncompletePlus = 0;   
    _nGhost = 0;            
    _nFoundCompletely = 0;
+   _nTrueTracks = 0;          
+   _nRecoTracks = 0;          
+   _nDismissedTrueTracks = 0; 
    
    LCCollection* col = evt->getCollection( _colNameMCTrueTracksRel ) ;
    
    int nMCTracks = col->getNumberOfElements();
-   _myRelations.clear(); 
-   streamlog_out( MESSAGE0 ) << "\nNumber of MCP Track Relations: " << nMCTracks;
+   
+   streamlog_out( DEBUG4 ) << "Number of MCP Track Relations: " << nMCTracks << "\n";
+   
    
    /**********************************************************************************************/
-   /*             Check the tracks, if they are of interest                                      */
+   /*             Check the true tracks, if they are of interest                                 */
    /**********************************************************************************************/
+   _trueTracks.clear();
    
    for( int i=0; i < nMCTracks; i++){
       
@@ -229,37 +197,43 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
       
       
-//       MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
-      
-      streamlog_out( MESSAGE0 ) << "\nNumber of hits: " << track->getTrackerHits().size();
+      if ( _drawMCPTracks ) MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
       
       
       double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
+      Fitter fitter( track );
+      double chi2Prob = fitter.getChi2Prob();
       
       //Only store the good tracks
       if (( getDistToIP( mcp ) < _distToIPMax )&&                       //distance to IP
          ( pt > _ptMin )&&                                              //transversal momentum
          ((int) track->getTrackerHits().size() >= _nHitsMin )&&         //number of hits in track        
-         ( getChi2Prob( track ) > _chi2ProbCut )){                      //chi2 probability
+         ( chi2Prob > _chi2ProbCut )){                      //chi2 probability
         
-         _myRelations.push_back( new MyRelation( rel ) );
+         _trueTracks.push_back( new TrueTrack( track, mcp ) );
          
       }
+      else _nDismissedTrueTracks++;
       
    }
    
-   nMCTracks = _myRelations.size();
+   _nTrueTracks = _trueTracks.size();
    
    //The restored tracks, that we want to check for how good they are
    col = evt->getCollection( _TrackCollection ) ;
+   
 
+   /**********************************************************************************************/
+   /*              Check the reconstructed tracks (to what true tracks they belong)              */
+   /**********************************************************************************************/
+   
    
    if( col != NULL ){
       
-      int nTracks = col->getNumberOfElements()  ;
+      _nRecoTracks = col->getNumberOfElements()  ;
       
       //check all the reconstructed tracks
-      for(int i=0; i< nTracks ; i++){
+      for(unsigned i=0; i< _nRecoTracks ; i++){
          
          Track* track = dynamic_cast <Track*> ( col->getElementAt(i) ); 
          checkTheTrack( track );
@@ -267,567 +241,109 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       }
       
       //check the relations for lost ones and completes
-      for( unsigned int i=0; i < _myRelations.size(); i++){
-         if ( _myRelations[i]->isLost == true ) _nLost++;
-         if ( _myRelations[i]->isFoundCompletely ==true ) _nFoundCompletely++;
+      for( unsigned int i=0; i < _trueTracks.size(); i++){
+         if ( _trueTracks[i]->isLost == true ) _nLost++;
+         if ( _trueTracks[i]->isFoundCompletely ==true ) _nFoundCompletely++;
       }
       
       
       /**********************************************************************************************/
-      /*              Output the data                                                               */
+      /*              Print various information on the true track and related ones                  */
       /**********************************************************************************************/
       
-      streamlog_out( DEBUG ).precision (8);
+      streamlog_out( DEBUG4 ).precision (4);
       
-      
-      for( unsigned int i=0; i < _myRelations.size(); i++){ // for all relations
+      for( unsigned i=0; i < _trueTracks.size(); i++ ){
+       
          
-         MCParticle* mcp = dynamic_cast <MCParticle*> (_myRelations[i]->lcRelation->getTo());
-         Track* cheatTrack = dynamic_cast<Track*>  (_myRelations[i]->lcRelation->getFrom());      
+         TrueTrack* myRelation = _trueTracks[i];
          
-         double mcpPt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );    
-         double mcpP= sqrt( mcpPt*mcpPt + mcp->getMomentum()[2]*mcp->getMomentum()[2] );
+         streamlog_out( DEBUG4 ) << "\n\nTrue Track " << i << "\n";
+         std::string info = myRelation->getMCPInfo();
+         streamlog_out( DEBUG4 ) << info;
+         info = myRelation->getTrueTrackInfo();
+         streamlog_out( DEBUG4 ) << info;
+         info = myRelation->getFoundInfo();
+         streamlog_out( DEBUG4 ) << info;
+         info = myRelation->getRelatedTracksInfo();
+         streamlog_out( DEBUG4 ) << info;
          
-         
-         streamlog_out( MESSAGE0 ) << "\n\n\nTrue Track" << i << ": p= " << mcpP << "  pt= " << mcpPt << std::endl;
-         streamlog_out( MESSAGE0 ) << "px= " << mcp->getMomentum()[0] << " py= " <<  mcp->getMomentum()[1] << " pz= " <<  mcp->getMomentum()[2] << std::endl;
-         streamlog_out( MESSAGE0 ) << "PDG= " << mcp->getPDG() << std::endl;
-         streamlog_out( MESSAGE0 ) << "x= " << mcp->getVertex()[0] << " y= " <<  mcp->getVertex()[1] << " z= " <<  mcp->getVertex()[2] << std::endl;
-         streamlog_out( MESSAGE0 ) << "/gun/direction " << mcp->getMomentum()[0]/mcpP << " " <<  mcp->getMomentum()[1]/mcpP << " " <<  mcp->getMomentum()[2]/mcpP << std::endl;
-         
-         
-         std::vector<TrackerHit*> cheatTrackHits = cheatTrack->getTrackerHits(); // we write it into an own vector so wen can sort it
-         sort (cheatTrackHits.begin() , cheatTrackHits.end() , compare_TrackerHit_z );
-         // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
-         // So the direction of the hits when following the index from 0 on is:
-         // from inside out: from the IP into the distance.
-         
-         std::vector <IHit*> hits;
-        
-         // check the chi2 of different lengths
-         ///////////////////////////////////////
-         
-         
-         if( cheatTrackHits.size() >= 3 ){
-            
-            
-            FTDTrack myTrack;
-            
-           
-            for( unsigned j=0; j<2; j++ ){//add the first 2 hits
-               
-               
-               IHit* hit = new FTDHit00( cheatTrackHits[j] , _sectorSystemFTD );
-               
-               hits.push_back( hit );
-               
-               myTrack.addHit( hit );  
-               
-               
-            }
-              
-            for( unsigned j=2; j<cheatTrackHits.size(); j++ ){ //for 3 hits plus (enough to fit)
-               
-               // add a hit and fit
-               
-               IHit* hit = new FTDHit00( cheatTrackHits[j] , _sectorSystemFTD );
-               
-               hits.push_back( hit );
-               
-               myTrack.addHit( hit );  
-               
-               myTrack.fit();
-               
-               streamlog_out( MESSAGE0 )  << "\t" << j+1 << "-hit track: chi2Prob = " << myTrack.getChi2Prob() 
-               << "( chi2=" << myTrack.getChi2() <<", Ndf=" << myTrack.getNdf() << " )\n";
-               
-               
-               
-            }
-            
-            
-         }
-         
-         
-         ////////////////////////////////////////
-         
-         // Make a helix from the mcp
-         HelixClass helixClass;
-         
-         float vertex[3]; 
-         vertex[0] = mcp->getVertex()[0];
-         vertex[1] = mcp->getVertex()[1];
-         vertex[2] = mcp->getVertex()[2];
-         float momentum[3];
-         momentum[0] = mcp->getMomentum()[0];
-         momentum[1] = mcp->getMomentum()[1];
-         momentum[2] = mcp->getMomentum()[2];
-         
-         helixClass.Initialize_VP( vertex, momentum, mcp->getCharge(), 3.5);
-         
-         
-         streamlog_out( MESSAGE0 ) << "mcpHelix parameter: " 
-                                   << "D0 = " << helixClass.getD0()
-                                   << ",  Phi = " << helixClass.getPhi0()
-                                   << ",  Omega = " << helixClass.getOmega()
-                                   << ",  Z0 = " << helixClass.getZ0()
-                                   << ",  tan(Lambda) = " << helixClass.getTanLambda();
-         
-        
-         for (unsigned int j=0; j< cheatTrackHits.size(); j++){ //over all Hits in the track
-             
-            TrackerHit* trackerHit = cheatTrackHits[j];
-            
-            double x = trackerHit->getPosition()[0];
-            double y = trackerHit->getPosition()[1];
-            double z = trackerHit->getPosition()[2];
-            
-            float mcpHelixPoint[3] = {0.,0.,0.};
-            helixClass.getPointInZ( z , vertex, mcpHelixPoint);
-            
-            double xDist = mcpHelixPoint[0]-x;
-            double yDist = mcpHelixPoint[1]-y;
-            
-            double dist = sqrt( xDist*xDist + yDist*yDist );
-            
-            UTIL::BitField64  cellID( ILDCellID0::encoder_string );
-            cellID.setValue( trackerHit->getCellID0() );
-            int side   = cellID[ ILDCellID0::side ];
-            int layer = cellID[ ILDCellID0::layer ];
-            int module = cellID[ ILDCellID0::module ];
-            int sensor = cellID[ ILDCellID0::sensor ];
-                        
-            streamlog_out( MESSAGE0 )  << "\n( "  
-                  << x << " , " 
-                  << y << " , " 
-                  << z << " ) "
-                  << "s" << side
-                  << " l" << layer
-                  << " mo" << module
-                  << " se" << sensor
-                  << " , xy-dist to mcp-helix= "
-                  << dist
-                  << " , zDist= " << mcpHelixPoint[2]-z;
-                  
-                
-         }
-         
-         
-         // Add the IP as a hit
-         IHit* virtualIPHit = createVirtualIPHit(1 , _sectorSystemFTD );
-         hits.insert( hits.begin() , virtualIPHit );
-         
-         
-         // Now we have a vector of autHits starting with the IP followed by all the hits from the track.
-         // So we now are able to build segments from them
-         
-         
-         
-         std::vector <Segment*> segments1;
-         
-         for ( unsigned j=0; j < hits.size(); j++ ){
-            
-            
-            std::vector <IHit*> segHits; // the hits the segment will contain
-            
-            
-            segHits.push_back( hits[j] );
-            
-            segments1.push_back( new Segment( segHits ) );
-            
-         }
-         
-         
-         std::vector <Segment*> segments2;
-         
-         for ( unsigned j=0; j < hits.size()-1; j++ ){
-            
-            
-            std::vector <IHit*> segHits;
-            
-            segHits.push_back( hits[j+1] );
-            segHits.push_back( hits[j] );
-            
-            
-            
-            segments2.push_back( new Segment( segHits ) );
-            
-         }
-         
-         
-         std::vector <Segment*> segments3;
-         
-         for ( unsigned j=0; j < hits.size()-2; j++ ){
-            
-            
-            std::vector <IHit*> segHits;
-            
-            segHits.push_back( hits[j+2] );
-            segHits.push_back( hits[j+1] );
-            segHits.push_back( hits[j] );
-            
-            segments3.push_back( new Segment( segHits ) );
-            
-         }
-         
-         
-         // Now we have the segments of the track ( ordered) in the vector
-         
-         // Perform the checks on them:
-         
-         // the data that will get printed
-         std::map < std::string , std::vector<float> > crit2Data;
-         
-         for ( unsigned j=0; j < segments1.size()-1; j++ ){
-            
-
-            
-            //make the check on the segments, store it in the the map...
-            Segment* child = segments1[j];
-            Segment* parent = segments1[j+1];
-            
-            
-            for( unsigned iCrit=0; iCrit < _crits2 .size(); iCrit++){ // over all criteria
-
-               
-               //get the map
-               _crits2 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
-               
-               std::map < std::string , float > newMap = _crits2 [iCrit]->getMapOfValues(); //get the values that were calculated
-               
-               std::map < std::string , float >::iterator it;
-               
-               for ( it = newMap.begin() ; it != newMap.end(); it++) crit2Data[it->first].push_back( it->second );
-                  
-                              
-               
-            }
-            
-         }
-         
-         //print it
-         std::map < std::string , std::vector<float> >::iterator it;
-         
-         streamlog_out( MESSAGE0 ) << "\n  Crit2:";
-         
-         for ( it = crit2Data.begin() ; it != crit2Data.end() ; it++ ){
-            
-            streamlog_out( MESSAGE0 ) << "\n" << it->first;
-            
-            
-            std::vector<float> critValues = it->second;
-            
-            for ( unsigned j=0; j<critValues.size(); j++ ){
-               
-               streamlog_out( MESSAGE0 ) << "\t" << critValues[j];
-               
-            }
-            
-         }
-            
-         // the data that will get printed
-         std::map < std::string , std::vector<float> > crit3Data;
-         
-         for ( unsigned j=0; j < segments2.size()-1; j++ ){
-            
-   
-            //make the check on the segments, store it in the the map...
-            Segment* child = segments2[j];
-            Segment* parent = segments2[j+1];
-            
-            
-            for( unsigned iCrit=0; iCrit < _crits3 .size(); iCrit++){ // over all criteria
-
-               
-               //get the map
-               _crits3 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
-               
-               std::map < std::string , float > newMap = _crits3 [iCrit]->getMapOfValues(); //get the values that were calculated
-               
-               std::map < std::string , float >::iterator it;
-               for ( it = newMap.begin() ; it != newMap.end(); it++) crit3Data[it->first].push_back( it->second );
-               
-            }
-            
-            
-         }
-         
-         //print it
-                  
-         streamlog_out( MESSAGE0 ) << "\n  Crit3:";
-         
-         for ( it = crit3Data.begin() ; it != crit3Data.end() ; it++ ){
-            
-            streamlog_out( MESSAGE0 ) << "\n" << it->first;
-            
-            
-            std::vector<float> critValues = it->second;
-            
-            for ( unsigned j=0; j<critValues.size(); j++ ){
-               
-               streamlog_out( MESSAGE0 ) << "\t" << critValues[j];
-               
-            }
-            
-         }
-         
-         // the data that will get printed
-         std::map < std::string , std::vector<float> > crit4Data;
-         
-         for ( unsigned j=0; j < segments3.size()-1; j++ ){
-            
-           
-            //make the check on the segments, store it in the the map...
-            Segment* child = segments3[j];
-            Segment* parent = segments3[j+1];
-            
-            
-            for( unsigned iCrit=0; iCrit < _crits4 .size(); iCrit++){ // over all criteria
-
-               
-               //get the map
-               _crits4 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
-               
-               std::map < std::string , float > newMap = _crits4 [iCrit]->getMapOfValues(); //get the values that were calculated
-               
-               std::map < std::string , float >::iterator it;
-               for ( it = newMap.begin() ; it != newMap.end(); it++) crit4Data[it->first].push_back( it->second );
-               
-            }
-            
-           
-         }
-         
-         
-         //print it
-         
-         streamlog_out( MESSAGE0 ) << "\n  Crit4:";
-         
-         for ( it = crit4Data.begin() ; it != crit4Data.end() ; it++ ){
-            
-            streamlog_out( MESSAGE0 ) << "\n" << it->first;
-            
-            
-            std::vector<float> critValues = it->second;
-            
-            for ( unsigned j=0; j<critValues.size(); j++ ){
-               
-               streamlog_out( MESSAGE0 ) << "\t" << critValues[j];
-               
-            }
-            
-         }
-         
-         streamlog_out( MESSAGE0 ) << "\n";
-         
-         for (unsigned j=0; j<segments1.size(); j++) delete segments1[j];
-         segments1.clear();
-         for (unsigned j=0; j<segments2.size(); j++) delete segments2[j];
-         segments2.clear();
-         for (unsigned j=0; j<segments3.size(); j++) delete segments3[j];
-         segments3.clear();
-         for (unsigned j=0; j<hits.size(); j++) delete hits[j];
-         hits.clear();
-         
-         
-         
-         
-         
-         // Print out, if this track is lost or not found completely
-         
-         if (_myRelations[i]->isLost == true) streamlog_out( MESSAGE0 ) << "LOST\n" <<std::endl;
-         if (_myRelations[i]->isFoundCompletely== false) streamlog_out( MESSAGE0 ) << "NOT FOUND COMPLETELY\n";
-         
-         
-         
-         // Print out all the tracks associated to the true one:
-         
-         std::map<Track*,TrackType> relTracks = _myRelations[i]->relatedTracks;
-         for (std::map<Track*,TrackType>::const_iterator it = relTracks.begin(); it != relTracks.end(); ++it)
-         {
-            streamlog_out( MESSAGE0 ) << TRACK_TYPE_NAMES[it->second] << "\t";
-            
-            Track* track = it->first;
-            
-            std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
-            // sort the hits in the track
-            
-            // Make authits from the trackerHits
-            std::vector <FTDHit00*> autHits2;
-            
-            for ( unsigned j=0; j< trackerHits.size(); j++ ) autHits2.push_back( new FTDHit00( trackerHits[j] , _sectorSystemFTD ) );
-            
-            FTDTrack myTrack;
-            for( unsigned j=0; j<autHits2.size(); j++ ) myTrack.addHit( autHits2[j] );
-            
-            myTrack.fit();
-            
-           
-            
-            // print out the hits
-            for (unsigned int k = 0; k < track->getTrackerHits().size(); k++){
-               
-               streamlog_out( MESSAGE0 ) << "(" << track->getTrackerHits()[k]->getPosition()[0] << ","
-                     << track->getTrackerHits()[k]->getPosition()[1] << ","
-                     << track->getTrackerHits()[k]->getPosition()[2] << ")";
-               
-            }
-            
-            streamlog_out( MESSAGE0 )<<"chi2prob = " << myTrack.getChi2Prob() << ", QI = " << myTrack.getQI() <<"\n";
-            
-            
-            
-            for( unsigned j=0; j<autHits2.size(); j++ ) delete autHits2[j];
-            
-            
-         }
-         
-         
-         streamlog_out( MESSAGE0 )  << "\n\n";
-
       }
       
-      _nLostSum += _nLost;
-      _nGhostSum += _nGhost;
-      _nTrueTracksSum += nMCTracks;
-      _nRecoTracksSum += nTracks; 
       
+      /**********************************************************************************************/
+      /*              Print and save the summary of the feedback for this event                     */
+      /**********************************************************************************************/
+      
+      _nComplete_Sum            += _nComplete;            
+      _nCompletePlus_Sum        += _nCompletePlus;      
+      _nLost_Sum                += _nLost;               
+      _nIncomplete_Sum          += _nIncomplete;       
+      _nIncompletePlus_Sum      += _nIncompletePlus;   
+      _nGhost_Sum               += _nGhost;            
+      _nFoundCompletely_Sum     += _nFoundCompletely;     
+      _nTrueTracks_Sum          += _nTrueTracks;          
+      _nRecoTracks_Sum          += _nRecoTracks;          
+      _nDismissedTrueTracks_Sum += _nDismissedTrueTracks;
       
       //The statistics:
       
       float pLost=-1.;
-      float pGhost=-1.; 
+      float ghostrate=-1.; 
+      float efficiency = -1.;
       float pComplete=-1.;
       float pFoundCompletely=-1.;
       
-      if (nMCTracks > 0) pLost = 100.* _nLost/nMCTracks;           //percentage of true tracks that are lost
+      if (_nTrueTracks > 0) pLost = float(_nLost)/float(_nTrueTracks);           
+      if (_nTrueTracks > 0) efficiency = 1. - pLost;
+      if (_nRecoTracks > 0) ghostrate = float(_nGhost)/float(_nRecoTracks);             
+      if (_nTrueTracks > 0) pComplete = float(_nComplete)/float(_nTrueTracks);    
+      if (_nTrueTracks > 0) pFoundCompletely = float(_nFoundCompletely)/float(_nTrueTracks);
+      
+      // the data that will get stored
+      std::vector< std::pair < std::string , float > > data;
+      
+      data.push_back( std::make_pair( "efficiency" , efficiency ) );  
+      data.push_back( std::make_pair( "ghostrate" , ghostrate ) );  
+      data.push_back( std::make_pair( "pLost" , pLost ) );  
+      data.push_back( std::make_pair( "pComplete" , pComplete ) );  
+      data.push_back( std::make_pair( "pFoundCompletely" , pFoundCompletely ) );  
+      data.push_back( std::make_pair( "nComplete" , _nComplete ) );  
+      data.push_back( std::make_pair( "nCompletePlus" , _nCompletePlus ) );  
+      data.push_back( std::make_pair( "nLost" , _nLost ) );  
+      data.push_back( std::make_pair( "nIncomplete" , _nIncomplete ) );  
+      data.push_back( std::make_pair( "nIncompletePlus" , _nIncompletePlus ) );  
+      data.push_back( std::make_pair( "nGhost" , _nGhost ) );  
+      data.push_back( std::make_pair( "nFoundCompletely" , _nFoundCompletely ) );  
+      data.push_back( std::make_pair( "nTrueTracks" , _nTrueTracks ) );  
+      data.push_back( std::make_pair( "nRecoTracks" , _nRecoTracks ) );  
+      data.push_back( std::make_pair( "nDismissedTrueTracks" , _nDismissedTrueTracks ) );  
 
-      if (nTracks > 0) pGhost = 100.* _nGhost/nTracks;             //percentage of found tracks that are ghosts
-      
-      if (nMCTracks > 0) pComplete = 100. * _nComplete/nMCTracks;  //percentage of true tracks that where found complete with no extra points
-   
-      if (nMCTracks > 0) pFoundCompletely = 100. * _nFoundCompletely/nMCTracks;
-      
-      streamlog_out( MESSAGE0 ) << std::endl;
-      streamlog_out( MESSAGE0 ) << std::endl;
-      streamlog_out( MESSAGE0 ) << "nMCTracks = " << nMCTracks <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nTracks = " << nTracks <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nFoundCompletely = " << _nFoundCompletely << " , " << pFoundCompletely << "%" <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nLost = " << _nLost << " , " << pLost << "%" << std::endl;
-      streamlog_out( MESSAGE0 ) << "nGhost = " << _nGhost << " , " << pGhost << "%" << std::endl;   
-      
-      streamlog_out( MESSAGE0 ) << "nComplete = " << _nComplete << " , " << pComplete << "%" <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nCompletePlus = " << _nCompletePlus <<std::endl;
-      
-      streamlog_out( MESSAGE0 ) << "nIncomplete = " << _nIncomplete <<std::endl;
-      streamlog_out( MESSAGE0 ) << "nIncompletePlus = " << _nIncompletePlus <<std::endl;
-      
-      streamlog_out( MESSAGE0 ) << std::endl;
-      
-      
-      streamlog_out( MESSAGE0 ) << std::endl;
-      streamlog_out( MESSAGE0 ) << std::endl;
-      
-      ////
-      
-      ofstream myfile;
-      myfile.open ("Feedback.csv" , std::ios::app);
-      
-      if (isFirstEvent()) myfile << std::endl;
+      streamlog_out( MESSAGE0 ) << "\n\n";
+      for( unsigned i=0; i<data.size(); i++ ) streamlog_out( MESSAGE0 ) << data[i].first << "= " << data[i].second << "\n";      
+      streamlog_out( MESSAGE0 ) << "\n";
+
 
       
+      std::ofstream myfile;
+      myfile.open (_tableFileName.c_str() , std::ios::app);
       
-      myfile << std::endl;
-      myfile << "nFoundCompletely\t" << _nFoundCompletely << "\t\t" << pFoundCompletely << "\t%\t\t";
-      myfile << "nLost\t" << _nLost << "\t\t" << pLost << "\t%" << "\t\t";
-      myfile << "nGhost\t" << _nGhost << "\t\t" << pGhost << "\t%" << "\t\t"; 
-      
-      myfile << "nMCTracks\t" << nMCTracks <<"\t\t";
-      myfile << "nTracks\t" << nTracks <<"\t\t";
-      
-      myfile << "nComplete\t" << _nComplete << "\t" << pComplete << "%\t\t";
-      myfile << "nCompletePlus\t" << _nCompletePlus <<"\t\t\t";
-      
-      myfile << "nIncomplete\t" << _nIncomplete <<"\t\t\t";
-      myfile << "nIncompletePlus\t" << _nIncompletePlus <<"\t\t\t";
-      
+      if (isFirstEvent()) myfile << "\n";
+      myfile<< "\n";
+      for( unsigned i=0; i<data.size(); i++ ) myfile << data[i].first << "\t" << data[i].second << "\t\t";   
       myfile.close();
 
       
-      //Save it to a root file
-
-      std::map < std::string , int > rootData;
-      std::map < std::string , int >::iterator it;
-
-            
-      rootData.insert ( std::pair < std::string , int> ( "nMCTracks" ,          nMCTracks ) );
-      rootData.insert ( std::pair < std::string , int> ( "nRecoTracks" ,        nTracks ) );
-      rootData.insert ( std::pair < std::string , int> ( "nFoundCompletely" ,   _nFoundCompletely ) );
-      rootData.insert ( std::pair < std::string , int> ( "nLost" ,              _nLost ) );
-      rootData.insert ( std::pair < std::string , int> ( "nGhost" ,             _nGhost ) );
-      rootData.insert ( std::pair < std::string , int> ( "nComplete" ,          _nComplete ) );
-      rootData.insert ( std::pair < std::string , int> ( "nCompletePlus" ,      _nCompletePlus ) );
-      rootData.insert ( std::pair < std::string , int> ( "nIncomplete" ,        _nIncomplete ) );
-      rootData.insert ( std::pair < std::string , int> ( "nIncompletePlus" ,    _nIncompletePlus ) );
       
-        
-      std::map < std::string , double > rootDataDouble;
-      std::map < std::string , double >::iterator itD;
-      
-      rootDataDouble.insert ( std::pair < std::string , double> ( "pFoundCompletely" , pFoundCompletely ) );
-      rootDataDouble.insert ( std::pair < std::string , double> ( "pLost" , pLost ) );
-      rootDataDouble.insert ( std::pair < std::string , double> ( "pGhost" , pGhost ) );
-      rootDataDouble.insert ( std::pair < std::string , double> ( "pComplete" , pComplete ) );
-      
-      
-      TFile*   myRootFile = new TFile( _rootFileName.c_str(), "UPDATE"); //add values to the root file
-      TTree*   myTree = (TTree*) myRootFile->Get(_treeName.c_str());
-      
-      
-      
-      
-      for( it = rootData.begin() ; it != rootData.end() ; it++){
  
-         
-         if ( isFirstEvent() )  myTree->Branch( (*it).first.c_str(), & (*it).second  );
-            
-         else myTree->SetBranchAddress( (*it).first.c_str(), & (*it).second );   
-               
-         
-      }
-      
-      
-      for( itD = rootDataDouble.begin() ; itD != rootDataDouble.end() ; itD++){
- 
-        
-         if ( isFirstEvent() ) myTree->Branch( (*itD).first.c_str(), & (*itD).second  ); 
-       
-         else myTree->SetBranchAddress( (*itD).first.c_str(), & (*itD).second );  
-         
-         
-      }
-      
-      
-      myTree->Fill();
-      myTree->Write("",TObject::kOverwrite);
-      
-      myRootFile->Close();
-
-      ////
    }
    
-   
-   //-- note: this will not be printed if compiled w/o MARLINMESSAGE0=1 !
-
-   streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
-                        << "   in run:  " << evt->getRunNumber() << std::endl ;
+  
+   if ( _drawMCPTracks )   MarlinCED::draw(this); 
 
 
-//    MarlinCED::draw(this); //CED
-
-
-   for( unsigned int k=0; k < _myRelations.size(); k++) delete _myRelations[k];
-   _myRelations.clear();
+   for( unsigned int k=0; k < _trueTracks.size(); k++) delete _trueTracks[k];
+   _trueTracks.clear();
 
    _nEvt ++ ;
 }
@@ -841,36 +357,28 @@ void TrackingFeedbackProcessor::check( LCEvent * evt ) {
 
 void TrackingFeedbackProcessor::end(){ 
 
-   
-   //   streamlog_out( DEBUG ) << "MyProcessor::end()  " << name() 
-   // 	    << " processed " << _nEvt << " events in " << _nRun << " runs "
-   // 	    << std::endl ;
-
-   for (unsigned i=0; i<_crits2 .size(); i++) delete _crits2 [i];
-   for (unsigned i=0; i<_crits3 .size(); i++) delete _crits3 [i];
-   for (unsigned i=0; i<_crits4 .size(); i++) delete _crits4 [i];
-
-   delete _sectorSystemFTD;
-   _sectorSystemFTD = NULL;
-   
-   
-   
-   ofstream myfile;
-   myfile.open ("FeedbackSum.csv" , std::ios::app);
-   
-   
-   double efficiency = double( _nTrueTracksSum - _nLostSum ) / double( _nTrueTracksSum );
-   double ghostrate = double( _nGhostSum ) / double( _nRecoTracksSum );
-   
-   myfile << "\n";
-   myfile << "Efficiency\t" << efficiency << "\t\t";
-   myfile << "ghostrate\t"  << ghostrate  << "\t\t";
-   
-   
-   myfile.close();
-   
 
    
+ 
+   if( _saveAllEventsSummary ){
+      
+      std::ofstream myfile;
+      myfile.open ( _summaryFileName.c_str() , std::ios::app);
+      
+      
+      double efficiency = double( _nTrueTracks_Sum - _nLost_Sum ) / double( _nTrueTracks_Sum );
+      double ghostrate = double( _nGhost_Sum ) / double( _nRecoTracks_Sum );
+      double rateOfCompletes = double( _nComplete_Sum ) / double( _nTrueTracks_Sum );
+      
+      myfile << "\n";
+      myfile << "Efficiency\t" << efficiency << "\t\t";
+      myfile << "ghostrate\t"  << ghostrate  << "\t\t";
+      myfile << "rateOfCompletes\t"  << rateOfCompletes  << "\t\t";
+      
+      
+      myfile.close();
+      
+   }   
    
 
 }
@@ -886,30 +394,6 @@ double TrackingFeedbackProcessor::getDistToIP( MCParticle* mcp ){
    
 }
 
-double TrackingFeedbackProcessor::getChi2Prob( Track* track ){
-   
-   
-   std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
-   
-   // Make authits from the trackerHits
-   std::vector <IHit*> hits;
-   
-   for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit00( trackerHits[j] , _sectorSystemFTD) );
-   
-   
-   FTDTrack myTrack( hits );
-   
-   myTrack.fit();
-   
-   double chi2Prob = myTrack.getChi2Prob();
-   
-   for( unsigned j=0; j < hits.size(); j++ ) delete hits[j];
-   
-   
-   return chi2Prob;   
-   
-   
-}
  
  
  
@@ -918,7 +402,7 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
    
    std::vector <TrackerHit*> hitVec = track->getTrackerHits();
 
-   std::vector<MyRelation*> hitRelations; //to contain all the true tracks relations that correspond to the hits of the track
+   std::vector<TrueTrack*> hitRelations; //to contain all the true tracks relations that correspond to the hits of the track
                                           //if for example a track consists of 3 points from one true track and two from another
                                           //at the end this vector will have five entries: 3 times one true track and 3 times the other.
                                           //so at the end, all we have to do is to count them.
@@ -926,14 +410,14 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
    for( unsigned int j=0; j < hitVec.size(); j++ ){ //over all hits in the track
       
       
-      for( unsigned int k=0; k < _myRelations.size(); k++){ //check all relations if they correspond 
+      for( unsigned int k=0; k < _trueTracks.size(); k++){ //check all relations if they correspond 
          
          
-         Track* trueTrack = dynamic_cast <Track*>  ( _myRelations[k]->lcRelation->getFrom() ); //get the true track
+         const Track* trueTrack = _trueTracks[k]->getTrueTrack();
          
          if ( find (trueTrack->getTrackerHits().begin() , trueTrack->getTrackerHits().end() , hitVec[j] ) 
             !=  trueTrack->getTrackerHits().end())      // if the hit is contained in this truetrack
-         hitRelations.push_back( _myRelations[k] );     //add the track (i.e. its relation) to the vector hitRelations
+         hitRelations.push_back( _trueTracks[k] );     //add the track (i.e. its relation) to the vector hitRelations
       }
       
    } 
@@ -946,12 +430,12 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
    // We wanna know the most represented true track:
 
    unsigned nHitsOneTrack = 0;              //number of most true hits corresponding to ONE true track 
-   MyRelation* dominantTrueTrack = NULL;    //the true track most represented in the track 
+   TrueTrack* dominantTrueTrack = NULL;    //the true track most represented in the track 
 
    sort ( hitRelations.begin() , hitRelations.end()); //Sorting, so all the same elements are at one place
 
    unsigned n = 0;                  // number of hits from one track
-   MyRelation* previousRel = NULL;  // used to store the previous relation, so we can compare, if there was a change. at first we don't have
+   TrueTrack* previousRel = NULL;  // used to store the previous relation, so we can compare, if there was a change. at first we don't have
    // a previous one, so we set it NULL
    for (unsigned int j=0; j< hitRelations.size(); j++){ 
       
@@ -973,7 +457,7 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
    unsigned nHitsTrueTrack = 0;           //number of hits of the true track
 
    if (dominantTrueTrack != NULL ){ 
-      Track* trueTrack = dynamic_cast <Track*> ( dominantTrueTrack->lcRelation->getFrom() );
+      const Track* trueTrack = dominantTrueTrack->getTrueTrack();
       nHitsTrueTrack = trueTrack->getTrackerHits().size();  
       
    }
@@ -1018,11 +502,12 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
          else{                                   // there are no additional points, finally, this is the perfect
             _nComplete++;                        // complete track
             trackType= COMPLETE;
+            dominantTrueTrack->completeVersionExists = true;
          }
       }
       
       //we want the true track to know all reconstructed tracks containing him
-      dominantTrueTrack->relatedTracks.insert( std::pair<Track*, TrackType> ( track ,trackType ) );  
+      dominantTrueTrack->map_track_type.insert( std::pair<Track*, TrackType> ( track ,trackType ) );  
       
    }   
  
