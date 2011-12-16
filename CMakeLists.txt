@@ -134,6 +134,10 @@ TARGET_LINK_LIBRARIES( CritRunner ${PROJECT_NAME} )
 ADD_EXECUTABLE( worker ./src/Executables/worker.cc )
 TARGET_LINK_LIBRARIES( worker ${PROJECT_NAME} )
 
+ADD_EXECUTABLE( worker_time ./src/Executables/worker_time.cc )
+TARGET_LINK_LIBRARIES( worker_time ${PROJECT_NAME} )
+
+
 ### TESTING #################################################################
 
 MACRO( ADD_UNIT_TEST _name )

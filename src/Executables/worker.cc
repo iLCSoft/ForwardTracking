@@ -17,14 +17,13 @@ int main(int argc,char *argv[]){
    const std::string FEEDBACK_FILE = "/scratch/ilcsoft/Steers/FeedbackSum.csv";
    
    const std::string QUANTILE_ANALYSER_PATH = "/scratch/ilcsoft/trunk/ForwardTracking/trunk/build/bin/QuantileAnalyser";
-   const std::string QUANTILE_ANALYSER_TARGET = "/scratch/ilcsoft/TrueTracksCritAnalysis10000.root";
-   const std::string QUANTILE_ANALYSER_OUTPUT = "/scratch/ilcsoft/Steers/quantile_analyser_output";
+   const std::string QUANTILE_ANALYSER_TARGET = "/scratch/ilcsoft/Steers01/savedData/TrueTracksCritAnalysis_1000evts.root";
+   const std::string QUANTILE_ANALYSER_OUTPUT = "/scratch/ilcsoft/Steers01/quantile_analyser_output";
    
    
    for( float quantSize = 0.9; quantSize <= 1.0 ; quantSize += 0.1 ){
       
       
-      FTrack::Timer::start_counter();
       
       /**********************************************************************************************/
       /*               Get the ranges of the quantiles                                              */
