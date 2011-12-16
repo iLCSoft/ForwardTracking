@@ -40,6 +40,10 @@ using namespace marlin ;
  * is usually 1 and for Pixels a lot more.
  * (default values 100 100 1 1 1 1 1 )
  * 
+ * @param DensityRegulator Regulates all densities. So this can be used to dim or amplify all the background. 
+ * 1 means no change at all, 2 means background is doubled, 0.7 means only 70 percent of the background and so on.
+ * (default value 1. )
+ * 
  * @author Robin Glattauer, HEPHY
  */
 
@@ -78,16 +82,16 @@ class FTDBackgroundProcessor01 : public Processor {
 
  protected:
 
-  std::string _colNameFTD ;
+   std::string _colNameFTD ;
 
-  float _pointReso;
+   float _pointReso;
 
-  int _nRun ;
-  int _nEvt ;
+   int _nRun ;
+   int _nEvt ;
 
    unsigned _nLayers;
   
-   
+   float _densityRegulator;
    
    std::vector < float > _backgroundDensity;
    std::vector < float > _backgroundDensitySigma;

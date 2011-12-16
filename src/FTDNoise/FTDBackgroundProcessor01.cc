@@ -54,8 +54,13 @@ FTDBackgroundProcessor01::FTDBackgroundProcessor01() : Processor("FTDBackgroundP
                               "Point Resolution"  ,
                               _pointReso ,
                               (float)0.010 ) ; 
-                              
-                              
+   
+   registerProcessorParameter( "DensityRegulator",
+                               "Regulates all densities. So this can be used to dim or amplify all the background. 1 means no change at all",
+                               _densityRegulator,
+                               float( 1. ) );
+   
+   
    std::vector < float > defaultBgDensity;
    
    defaultBgDensity.push_back ( 0.013 );
@@ -184,7 +189,7 @@ void FTDBackgroundProcessor01::processEvent( LCEvent * evt ) {
             //generate a random density that's gaussian smeared around the average.
             //And of course multiply the density with the number of integrations. (If we do this later at nHits, we will
             //for lets say 100 integrations always a multiple of 100)
-            double density = CLHEP::RandGauss::shoot( _backgroundDensity[layer] * _integratedBX[ layer ] , _backgroundDensitySigma[layer] * _integratedBX[ layer ] );
+            double density = _densityRegulator * CLHEP::RandGauss::shoot( _backgroundDensity[layer] * _integratedBX[ layer ] , _backgroundDensitySigma[layer] * _integratedBX[ layer ] );
 
             //calculate the number of hits corresponding to the density on the disk.
             unsigned nHits = unsigned  ( round( fabs( area*density ) ) ); // hit = density * area
