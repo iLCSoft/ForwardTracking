@@ -1,4 +1,4 @@
-#include "TrackSubset.h"
+#include "TrackSubsetHopfieldNN.h"
 
 #include <CLHEP/Random/RandFlat.h>
 #include "marlin/VerbosityLevels.h"
@@ -9,7 +9,7 @@
 using namespace FTrack;
 
 
-void TrackSubset::calculateBestSet(){
+void TrackSubsetHopfieldNN::calculateBestSet(){
    
    
    unsigned nAccepted=0;
@@ -129,7 +129,7 @@ void TrackSubset::calculateBestSet(){
          
          
          //add the track to the good ones
-         _bestSubsetTracks.push_back( tracks[i] );
+         _acceptedTracks.push_back( tracks[i] );
          nCompWithAll++;
          
          _compatibleTracks.push_back( tracks[i] );
@@ -213,7 +213,7 @@ void TrackSubset::calculateBestSet(){
          
          if ( states[i] >= activationMin ){
             
-            _bestSubsetTracks.push_back( tracks[i] );
+            _acceptedTracks.push_back( tracks[i] );
             nAccepted++;
             
          }
@@ -243,7 +243,7 @@ void TrackSubset::calculateBestSet(){
 
 
 
-bool TrackSubset::areCompatible( ITrack* trackA , ITrack* trackB ){
+bool TrackSubsetHopfieldNN::areCompatible( ITrack* trackA , ITrack* trackB ){
    
    
    std::vector< IHit*> hitsA = trackA->getHits();

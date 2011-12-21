@@ -23,7 +23,8 @@
 //--------------------------------------------------------------
 #include "FTDTrack.h"
 #include "FTrackTools.h"
-#include "TrackSubset.h"
+#include "TrackSubsetHopfieldNN.h"
+#include "TrackSubsetSimple.h"
 #include "SegmentBuilder.h"
 #include "Automaton.h"
 #include "FTDHit01.h"
@@ -527,13 +528,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       streamlog_out( DEBUG4 ) << "\t\t---Get best subset of tracks---\n" ;
       
       // Make a TrackSubset
-      TrackSubset subset;
+//       TrackSubsetSimple subset;
+      TrackSubsetHopfieldNN subset;
       subset.addTracks( trackCandidates ); 
       
       //Calculate the best subset:
       subset.calculateBestSet();
       
-      std::vector< ITrack* > tracks = subset.getBestTrackSubset();
+      std::vector< ITrack* > tracks = subset.getAcceptedTracks();
       std::vector< ITrack* > rejectedTracks = subset.getRejectedTracks();
 
       // immediately delete the rejected ones
