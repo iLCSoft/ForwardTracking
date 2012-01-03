@@ -92,7 +92,8 @@ void Automaton::lengthenSegments(){
    //----------------------------------------------------------------------------------------------//
 
    std::vector < std::list < Segment* > > longerSegments;
-   longerSegments.resize ( _segments.size() -1 ); //This will have one layer less
+   
+   if( _segments.size() > 0 ) longerSegments.resize ( _segments.size() -1 ); //This will have one layer less  
 
    //----------------------------------------------------------------------------------------------//
    //                                                                                              //
@@ -175,14 +176,14 @@ void Automaton::lengthenSegments(){
    unsigned nConnections=0;
    unsigned nPossibleConnections=0;
 
-   for ( unsigned layer = 1; layer < _segments.size()-1; layer++ ){ // over all layers (of course the first and the last ones are spared out because there is nothing more above or below
-
-
+   for ( unsigned layer = 1; layer + 1 < _segments.size(); layer++ ){ // over all layers (of course the first and the last ones are spared out because there is nothing more above or below
+      
+      
       std::list<Segment*> segments = _segments[layer];
-
+      
       for ( std::list<Segment*>::iterator iSeg=segments.begin(); iSeg != segments.end(); iSeg++ ){ //over all (short) segments in this layer
-
-
+         
+         
          Segment* segment = *iSeg;
          
          std::list<Segment*> parents = segment->getParents();
@@ -232,8 +233,7 @@ void Automaton::lengthenSegments(){
 
          }
          
-         delete segment;
-
+         
       }
 
    }
@@ -244,10 +244,27 @@ void Automaton::lengthenSegments(){
 
    //----------------------------------------------------------------------------------------------//
    //                                                                                              //
-   //   Finally: replace the vector[][] of the old segments with the new one                       //
+   //   Finally: replace the vector<list<segment*>> of the old segments with the new one           //
    //                                                                                              //
    //----------------------------------------------------------------------------------------------//
 
+   //delete all old Segments:
+   for( unsigned i=0; i<_segments.size(); i++){
+      
+      std::list<Segment*>& segments = _segments[i];
+      
+      for ( std::list<Segment*>::iterator iSeg=segments.begin(); iSeg != segments.end(); iSeg++ ){
+         
+         Segment* segment = *iSeg;
+         delete segment;
+         
+      }
+    
+      segments.clear();
+    
+   }
+   
+  // And replace with the newer ones
    _segments = longerSegments;
 
 }
