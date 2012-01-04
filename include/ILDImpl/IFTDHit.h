@@ -12,7 +12,9 @@ using namespace lcio;
 namespace FTrack{
    
    
-   /** An interface for a hit using an lcio TrackerHit as basis.
+   /** An interface for a hit for the ILD using an lcio TrackerHit as basis.
+    * 
+    * It comes along with a side, layer, module and a sensor.
     */   
    class IFTDHit : public IHit{
       

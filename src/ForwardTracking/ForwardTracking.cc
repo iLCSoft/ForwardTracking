@@ -28,8 +28,8 @@
 #include "SegmentBuilder.h"
 #include "Automaton.h"
 #include "FTDHit01.h"
-#include "FTDNeighborPetalHitCon.h"
-#include "FTDHitCon01.h"
+#include "FTDNeighborPetalSecCon.h"
+#include "FTDSecCon01.h"
 //--------------------------------------------------------------
 
 
@@ -233,16 +233,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
    
   
-   LCCollection* col = NULL ;
 
-   try{
-    col = evt->getCollection( _FTDHitCollection ) ;
-   }
-   catch( lcio::DataNotAvailableException e )
-   {
-       streamlog_out(WARNING) << _FTDHitCollection << " collection not available" << std::endl;
-       col = NULL;
-   }
+   LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
 
   
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -349,10 +341,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       unsigned layerStepMax = 2; // how many layers to go at max
       unsigned petalStepMax = 1; // how many petals to go at max
       unsigned lastLayerToIP = 4;// layer 1,2...4 get connected directly to the IP
-      FTDHitCon01 hitCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
+      FTDSecCon01 secCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
       
       
-      segBuilder.addHitConnector ( & hitCon );
+      segBuilder.addSectorConnector ( & secCon );
       
       
       // And get out the 1-segments 
@@ -718,8 +710,8 @@ std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMa
       std::vector< IHit* > hitVecA = it->second;
       int sector = it->first;
       // get the neighbouring petals
-      FTDNeighborPetalHitCon hitCon( secSysFTD );
-      std::set< int > targetSectors = hitCon.getTargetSectors( sector );
+      FTDNeighborPetalSecCon secCon( secSysFTD );
+      std::set< int > targetSectors = secCon.getTargetSectors( sector );
       
       
       //for all neighbouring petals

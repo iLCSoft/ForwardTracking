@@ -28,7 +28,6 @@ FTDHit01::FTDHit01( TrackerHit* trackerHit , const SectorSystemFTD* const sector
    _side   = cellID[ ILDCellID0::side ];
    _module = cellID[ ILDCellID0::module ];
    _sensor = cellID[ ILDCellID0::sensor ];
-//    _layer = 2 * cellID[ ILDCellID0::layer ] + 1 + _module%2;
    _layer = cellID[ ILDCellID0::layer ] + 1;
    
    

@@ -33,10 +33,8 @@
 #include "FTDHit00.h"
 
 
-
-
-// the hit connectors
-#include "FTDHitCon00.h"
+// the sector connectors
+#include "FTDSecCon00.h"
 
 
 //My own classe end
@@ -256,17 +254,8 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
 
    
   
-   LCCollection* col = NULL ;
 
-   try{
-       col = evt->getCollection( _FTDHitCollection ) ;
-   }
-   catch( lcio::DataNotAvailableException e )
-   {
-       streamlog_out(WARNING) << _FTDHitCollection << " collection not available" << std::endl;
-       col = NULL;
-   }
-
+   LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
 
   
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -334,11 +323,11 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
       
       segBuilder.addCriteria ( _crit2Vec );
       
-      //Also load hit connectors
-      FTDHitCon00 hitCon( _sectorSystemFTD );
+      //Also load sector connectors
+      FTDSecCon00 secCon( _sectorSystemFTD );
       
       
-      segBuilder.addHitConnector ( & hitCon );
+      segBuilder.addSectorConnector ( & secCon );
       
       
       // And get out the 1-segments 

@@ -1,7 +1,7 @@
-#ifndef FTDHitCon00_h
-#define FTDHitCon00_h
+#ifndef FTDSecCon00_h
+#define FTDSecCon00_h
 
-#include "IHitConnector.h"
+#include "ISectorConnector.h"
 
 #include "SectorSystemFTD.h"
 
@@ -9,7 +9,7 @@
 
 namespace FTrack{
    
-   /** Used to connect two hits.
+   /** Used to connect two sectors.
     * 
     * Allows:
     * 
@@ -17,16 +17,16 @@ namespace FTrack{
     * - going to next layer
     * 
     */   
-   class FTDHitCon00 : public IHitConnector{
+   class FTDSecCon00 : public ISectorConnector{
       
       
    public:
       
-      FTDHitCon00 ( const SectorSystemFTD* sectorSystemFTD );
+      FTDSecCon00 ( const SectorSystemFTD* sectorSystemFTD );
       
       virtual std::set <int>  getTargetSectors ( int sector );
       
-      virtual ~FTDHitCon00(){};
+      virtual ~FTDSecCon00(){};
       
    private:
       

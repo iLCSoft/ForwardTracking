@@ -1,11 +1,11 @@
-#include "FTDHitCon00.h"
+#include "FTDSecCon00.h"
 
 
 using namespace FTrack;
 
 
 
-FTDHitCon00::FTDHitCon00( const SectorSystemFTD* sectorSystemFTD ){
+FTDSecCon00::FTDSecCon00( const SectorSystemFTD* sectorSystemFTD ){
    
    _sectorSystemFTD = sectorSystemFTD;
    
@@ -13,7 +13,7 @@ FTDHitCon00::FTDHitCon00( const SectorSystemFTD* sectorSystemFTD ){
 
 
 
-std::set< int > FTDHitCon00::getTargetSectors ( int sector ){
+std::set< int > FTDSecCon00::getTargetSectors ( int sector ){
    
    
    

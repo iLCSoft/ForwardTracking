@@ -1,11 +1,11 @@
-#include "FTDHitCon01.h"
+#include "FTDSecCon01.h"
 
 
 using namespace FTrack;
 
 
 
-FTDHitCon01::FTDHitCon01( const SectorSystemFTD* sectorSystemFTD , unsigned layerStepMax , unsigned petalStepMax, unsigned lastLayerToIP){
+FTDSecCon01::FTDSecCon01( const SectorSystemFTD* sectorSystemFTD , unsigned layerStepMax , unsigned petalStepMax, unsigned lastLayerToIP){
    
    _sectorSystemFTD = sectorSystemFTD;
    _layerStepMax = layerStepMax;
@@ -16,7 +16,7 @@ FTDHitCon01::FTDHitCon01( const SectorSystemFTD* sectorSystemFTD , unsigned laye
 
 
 
-std::set< int > FTDHitCon01::getTargetSectors ( int sector ){
+std::set< int > FTDSecCon01::getTargetSectors ( int sector ){
    
    
    
@@ -46,7 +46,7 @@ std::set< int > FTDHitCon01::getTargetSectors ( int sector ){
          for ( unsigned iSensor=0; iSensor < nSensors ; iSensor++){ //over all sensors
             
             
-            for ( int iPetal= int(module) - _petalStepMax; iPetal <= int(module) + _petalStepMax ; iPetal++ ){ 
+            for ( int iPetal= int(module) - _petalStepMax; iPetal <= int(module) + int(_petalStepMax) ; iPetal++ ){ 
                
                //if iPetal is out of the range from 0 to nModules-1, move it back there. 
                //And of course use a different variable for that. 

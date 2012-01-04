@@ -9,24 +9,25 @@ namespace FTrack{
    
    /** An interface for Sector Systems. 
     * 
-    * A sector system is able to take an integer that represents a sector and gives back information
+    * A sector is a code for a place. So it can for example equal a sensor somewhere in a detector
+    * 
+    * A sector system is able to take a sector (integer number) and give back information
     * about it. This can be things like the number of the sensor or the rough distance from the IP or such
     * things. Or even neighbouring sectors. 
-    * But this is all dependent on the circumstances of the detectors and their representation. In the interface
-    * only what is really needed is defined and that are the layers. So any sector system must be able to
+    * But this is all dependent on the circumstances of the detectors and their representation. 
+    * 
+    * What all SectorSystems have in common is the layer: SectorSystems must be able to
     * return the layer of a sector and how many layers there are all in all. 
-    * 
-    * 
     */  
    class ISectorSystem{
       
       
    public:
       
-      
+      /** @return the layer of the corresponding sector. */
       virtual unsigned getLayer( int sector ) const throw ( OutOfRange ) =0;
       
-      
+      /** @return the number of layers in the sector system. */
       unsigned getNumberOfLayers() const { return _nLayers; };
       
       virtual ~ISectorSystem(){}

@@ -1,11 +1,11 @@
-#include "FTDNeighborPetalHitCon.h"
+#include "FTDNeighborPetalSecCon.h"
 
 
 using namespace FTrack;
 
 
 
-FTDNeighborPetalHitCon::FTDNeighborPetalHitCon( const SectorSystemFTD* sectorSystemFTD ){
+FTDNeighborPetalSecCon::FTDNeighborPetalSecCon( const SectorSystemFTD* sectorSystemFTD ){
    
    _sectorSystemFTD = sectorSystemFTD;
      
@@ -13,7 +13,7 @@ FTDNeighborPetalHitCon::FTDNeighborPetalHitCon( const SectorSystemFTD* sectorSys
 
 
 
-std::set< int > FTDNeighborPetalHitCon::getTargetSectors ( int sector ){
+std::set< int > FTDNeighborPetalSecCon::getTargetSectors ( int sector ){
    
    
    

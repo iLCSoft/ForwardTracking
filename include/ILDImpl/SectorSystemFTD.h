@@ -9,9 +9,9 @@
 
 namespace FTrack{
 
-   /** A Sector System class for the Forward Tracking Disks FTD.
+   /** A Sector System class for the Forward Tracking Disks FTD in the ILD.
     * 
-    * It calculates sectors from the side, layer, sensor and module.
+    * It calculates sectors from the side, layer, sensor and module and vice versa.
     * 
     * @param side: +1 for forward, -1 for backward
     * 

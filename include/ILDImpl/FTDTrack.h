@@ -18,6 +18,8 @@
 namespace FTrack{
 
 
+   /** A class for ITracks containing an lcio::Track at core
+    */
    class FTDTrack : public ITrack {
       
    public:

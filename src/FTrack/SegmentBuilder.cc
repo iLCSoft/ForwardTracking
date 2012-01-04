@@ -83,10 +83,10 @@ Automaton SegmentBuilder::get1SegAutomaton(){
       // Now find out, what the allowed codes to connect to are:
       std::set <int> targetSectors;
     
-      for ( unsigned i=0; i < _hitConnectors.size(); i++ ){ // over all IHitConnectors
+      for ( unsigned i=0; i < _sectorConnectors.size(); i++ ){ // over all IHitConnectors
          
          // get the allowed targets
-         std::set <int> newTargetSectors = _hitConnectors[i]->getTargetSectors( sector );
+         std::set <int> newTargetSectors = _sectorConnectors[i]->getTargetSectors( sector );
          
          //insert them into our set
          targetSectors.insert( newTargetSectors.begin() , newTargetSectors.end() );

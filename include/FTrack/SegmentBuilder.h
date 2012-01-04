@@ -2,7 +2,7 @@
 #define SegmentBuilder_h
 
 #include "ICriterion.h"
-#include "IHitConnector.h"
+#include "ISectorConnector.h"
 #include "Automaton.h"
 
 namespace FTrack{
@@ -55,7 +55,7 @@ namespace FTrack{
       
       /** Adds a hitConnector
        */
-      void addHitConnector ( IHitConnector* hitConnector ){ _hitConnectors.push_back( hitConnector ); };
+      void addSectorConnector ( ISectorConnector* connector ){ _sectorConnectors.push_back( connector ); };
       
       /**
        * @return An automaton containing all the hits from the FTDRepresentation sorted now by layers. 
@@ -69,7 +69,7 @@ namespace FTrack{
       
       
       std::vector <ICriterion* > _criteria;
-      std::vector <IHitConnector* > _hitConnectors;
+      std::vector <ISectorConnector* > _sectorConnectors;
       
       std::map< int , std::vector< IHit* > > _map_sector_hits;
       
