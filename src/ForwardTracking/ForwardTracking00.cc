@@ -256,8 +256,17 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
 
    
   
+   LCCollection* col = NULL ;
 
-   LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
+   try{
+       col = evt->getCollection( _FTDHitCollection ) ;
+   }
+   catch( lcio::DataNotAvailableException e )
+   {
+       streamlog_out(WARNING) << _FTDHitCollection << " collection not available" << std::endl;
+       col = NULL;
+   }
+
 
   
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
