@@ -511,7 +511,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
             for( unsigned j=1; j < overlappingTrackCands.size(); j++ ){
                
-               if( overlappingTrackCands[j]->getQI() > bestTrack->getQI() ) bestTrack = overlappingTrackCands[j];
+               if( overlappingTrackCands[j]->getQI() > bestTrack->getQI() ){
+                  
+                  delete bestTrack; //delete the old one, not needed anymore
+                  bestTrack = overlappingTrackCands[j];
+               }
+               else{
+                  
+                  delete overlappingTrackCands[j]; //delete this one
+                  
+               }
                
             }
             
