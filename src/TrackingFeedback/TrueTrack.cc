@@ -129,9 +129,16 @@ std::string TrueTrack::getRelatedTracksInfo(){
       
       
       // the chi2 prob
+      try{
+      
       Fitter fitter( track );
       info << "Chi2Prob = " << fitter.getChi2Prob() << "\n";
-      
+      }
+      catch(MarlinTrk::Exception){
+         
+         info << "Could not be fitted!!!\n";
+         
+      }
       
    }
    
