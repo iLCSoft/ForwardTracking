@@ -47,6 +47,8 @@ void Automaton::lengthenSegments(){
    // You see how they overlap with all of their hits except the inner one of the child
    // and the outer one of the parent. As the layer they are on equals the layer of the
    // innermost point, the child will have layer 1 and the parent layer 2.
+   // (The choice of assigning the layer number of the innermost point and not the outermost
+   // is arbitrary, it could be the other way as well.)
    //
    // Now suppose the child skips layer 1: ( in this example a kink in the segment means the layer is hit,
    // no kink means it is left out.)
@@ -59,8 +61,8 @@ void Automaton::lengthenSegments(){
    //           /       _layer 0                                                //
    //
    // That means the child has now layer 0 and the parent layer 2.
-   // This is no problem, the segment class has therefore an outer and an inner state (simulating skipped layers)
-   // instead of just an int. (to be more precise it has a vector containing for the inner state and every layer left out)
+   // This is no problem, the segment class has an outer and an inner state (simulating skipped layers)
+   // instead of just an int. (to be more precise it has a vector containing the inner state and every layer left out)
    // Now when we want to make 6-segments (I know the numbers are high, but they help visualising), we would connect
    // parent and child to a new segment.
    //
@@ -132,7 +134,7 @@ void Automaton::lengthenSegments(){
             Segment* newSegment = new Segment ( hits );
             nLongerSegments++;
 
-            //set the layer to the layer of the childsegment. TODO: explain why we take the layer of the child.
+            //set the layer to the layer of the childsegment
             unsigned newLayer = child->getLayer();
             newSegment->setLayer ( newLayer );
 
@@ -296,7 +298,7 @@ void Automaton::doAutomaton(){
             Segment* parent= *iSeg;
 
             
-            //Simulate skipped layers TODO: don't use set and get state, this is not well encapsulated!
+            //Simulate skipped layers
             std::vector < int > state = parent->getState();
 
             for ( int j= state.size()-1; j>=1; j--){
@@ -631,7 +633,7 @@ std::vector < std::vector< IHit* > > Automaton::getTracks( unsigned minHits ){
 
 
 
-   streamlog_out( DEBUG4 ) << " Created " << tracks.size() << " tracks.\n";
+   streamlog_out( DEBUG3 ) << " Automaton returned " << tracks.size() << " tracks.\n";
 
    return tracks;
 

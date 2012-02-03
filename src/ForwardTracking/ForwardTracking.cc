@@ -421,7 +421,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       
       
-      streamlog_out( DEBUG4 ) << "\t\t---Add hits from overlapping petals + fit + chi2prob Cuts---" ;
+      streamlog_out( DEBUG4 ) << "\t\t---Add hits from overlapping petals + fit + chi2prob Cuts---\n" ;
       
       std::vector < rawTrack > autRawTracks = automaton.getTracks(3);
       std::vector <ITrack*> trackCandidates;
@@ -535,6 +535,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
       streamlog_out( DEBUG4 ) << "\t\t---Get best subset of tracks---\n" ;
+      
       
       // Make a TrackSubset
 //       TrackSubsetSimple subset;

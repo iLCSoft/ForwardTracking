@@ -102,7 +102,7 @@ bool HopfieldNeuralNet::doIteration(){
    for (unsigned int i=0; i<_States.size() ; i++){ //for all entries of the vector
        
       unsigned iNeuron = _order[i];
-//       if ( j > _States.size() ) throw...TODO: implement this
+
 
       double y;
       

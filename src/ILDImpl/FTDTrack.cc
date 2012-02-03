@@ -75,7 +75,7 @@ void FTDTrack::addHit( IHit* hit ){
       _hits.push_back( ftdHit );
       
       // and sort the track again
-      sort( _hits.begin(), _hits.end(), compare_z ); //TODO: maybe make this more flexible for different sorting
+      sort( _hits.begin(), _hits.end(), compare_z );
       
       
       _lcioTrack->addHit( ftdHit->getTrackerHit() );
