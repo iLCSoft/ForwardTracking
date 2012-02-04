@@ -6,19 +6,10 @@
 
 #include "HopfieldNeuralNet.h"
 
-#include "RelationVec.h"
-
-#include <algorithm>
-
 using namespace FTrack;
 
 
-
 void TrackSubsetHopfieldNN::calculateBestSet(){
-   
-  
-
-
    
    
    unsigned nAccepted=0;
@@ -26,14 +17,10 @@ void TrackSubsetHopfieldNN::calculateBestSet(){
    unsigned nCompWithAll=0;
    unsigned nIncompatible=0;
    
-//    random_shuffle( _tracks.begin(), _tracks.end() );
    
    std::vector< ITrack* > tracks = _tracks;
    
-
-   
    unsigned nTracks = tracks.size();
-   streamlog_out( DEBUG3 )<< " TrackSubsetHopfieldNN checking " << nTracks << " tracks.\n";
    
    // the information for the Hopfield Neural Network:
    
@@ -74,7 +61,7 @@ void TrackSubsetHopfieldNN::calculateBestSet(){
       
       
       // Fill the states in the G matrix. (whether two tracks are compatible or not
-      for ( unsigned j=i+1; j < nTracks ; j++ ){ // over all tracks that come after the current one (because the matrix is symmetric we only need to calculate one half of it and set the other half correspondingly)
+      for ( unsigned j=i+1; j < nTracks ; j++ ){ // over all tracks that come after the current one (TODO: explain, why not previous ones too)
          
          ITrack* trackB = tracks[j]; // the track we check if it is in conflict with trackA
    
@@ -97,78 +84,21 @@ void TrackSubsetHopfieldNN::calculateBestSet(){
       
    }
    
-   
    // output of the G matrix:
-   if( !G.empty() ) streamlog_out(MESSAGE2) << "G:\n"; // TODO: should be all in DEBUG2!!!
+   if( !G.empty() ) streamlog_out(DEBUG2) << "\nG:";
    
 
    for ( unsigned i=0; i < G.size(); i++ ){
       
-      streamlog_out(MESSAGE2) << tracks[i] << "    " ;
+      streamlog_out(DEBUG2) << "\n";
       
       for ( unsigned j=0; j < G[i].size(); j++ ){
          
-         streamlog_out(MESSAGE2) << G[i][j] << "  ";
-         
-      }
-      
-      streamlog_out(MESSAGE2) << "\n";
-      
-   }
-   streamlog_out(MESSAGE2) << "\n";
-   
-   
-   
-   //////////////////////////
-   RelationVec <ITrack*> test( tracks , areIncompatible );
-
-   std::vector < std::vector <bool> > H = test.getRelationMatrix();
-   
-//    // output of the H matrix:
-//    if( !H.empty() ) streamlog_out(MESSAGE2) << "H:\n";
-//    
-//    
-//    for ( unsigned i=0; i < H.size(); i++ ){
-//       
-//      
-//       
-//       for ( unsigned j=0; j < H[i].size(); j++ ){
-//          
-//          streamlog_out(MESSAGE2) << H[i][j]-G[i][j] << "  ";
-//          
-//       }
-//       
-//       streamlog_out(MESSAGE2) << "\n";
-//       
-//    }
-   
-   std::vector< RelationVec<ITrack*> > sepVecs = test.getSeperatedRelationVectors();
-   
-   for( unsigned i= 0; i < sepVecs.size(); i++){
-      
-      RelationVec <ITrack*>  relVec = sepVecs[i];
-      
-      std::vector < std::vector <bool> > H = relVec.getRelationMatrix();
-      
-      streamlog_out(MESSAGE2) << "H" << i << ":\n";
-      for ( unsigned i=0; i < H.size(); i++ ){
-         
-         streamlog_out(MESSAGE2) << relVec[i] << "    " ;
-         
-         for ( unsigned j=0; j < H[i].size(); j++ ){
-            
-            streamlog_out(MESSAGE2) << H[i][j] << "  ";
-            
-         }
-         
-         streamlog_out(MESSAGE2) << "\n";
+         streamlog_out(DEBUG2) << G[i][j] << "  ";
          
       }
       
    }
-   ///////////////////////
-   
-
    
    
    /**********************************************************************************************/
@@ -331,13 +261,6 @@ bool TrackSubsetHopfieldNN::areCompatible( ITrack* trackA , ITrack* trackB ){
    }
    
    return true;
-   
-}
-
-bool TrackSubsetHopfieldNN::areIncompatible( ITrack* trackA , ITrack* trackB ){
-   
-  
-   return !( areCompatible( trackA, trackB ) );
    
 }
 

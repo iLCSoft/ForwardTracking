@@ -32,8 +32,7 @@ namespace FTrack {
       /**
        * @return whether two tracks are compatible, i.e. are not in conflict
        */
-      static bool areCompatible( ITrack* trackA , ITrack* trackB );
-      static bool areIncompatible( ITrack* trackA , ITrack* trackB );
+      bool areCompatible( ITrack* trackA , ITrack* trackB );
       
    };
      
