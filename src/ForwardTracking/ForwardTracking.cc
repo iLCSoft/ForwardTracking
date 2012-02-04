@@ -141,10 +141,10 @@ void ForwardTracking::init() {
    if( _useCED )MarlinCED::init(this) ;    //CED
    
 
-   // Get data from gear
+   // TODO: Get data from gear
    unsigned int nLayers = 8; // layer 0 is for the IP
    unsigned int nModules = 1;
-   unsigned int nSensors = 2; // there is at the moment only one sensor, namely sensor 1, but as usually things start with 0...
+   unsigned int nSensors = 4;
   
    const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
    const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
