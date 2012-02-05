@@ -140,16 +140,20 @@ void ForwardTracking::init() {
    _useCED = false;
    if( _useCED )MarlinCED::init(this) ;    //CED
    
-
-   // TODO: Get data from gear
-   unsigned int nLayers = 8; // layer 0 is for the IP
-   unsigned int nModules = 1;
-   unsigned int nSensors = 4;
-  
+    
+    
    const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
    const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
-   nLayers = ftdLayers.getNLayers() + 1;
-   nModules = ftdLayers.getNPetals(0); 
+   unsigned nLayers = ftdLayers.getNLayers() + 1;
+   unsigned nModules = ftdLayers.getNPetals(0);
+   unsigned nSensors = ftdLayers.getNSensors(0);
+   
+   for( unsigned i=1; i<nLayers; i++){
+     
+      if( ftdLayers.getNPetals(i) > nModules ) nModules = ftdLayers.getNPetals(i); 
+      if( ftdLayers.getNSensors(i) > nSensors ) nSensors = ftdLayers.getNSensors(i);
+     
+   }
    
    streamlog_out( DEBUG4 ) << "using " << nLayers - 1 << " layers, " << nModules << " petals and " << nSensors << " sensors.\n";
 
