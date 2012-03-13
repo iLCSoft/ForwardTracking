@@ -62,12 +62,13 @@ int SectorSystemFTD::getSector( int side, unsigned layer , unsigned module , uns
    
    
    sector += ( (side + 1 )/2 ) * multiplicator;             // (side+1) /2 gives 0 for backward (-1) and 1 for forward (+1)
-   
-   streamlog_out( DEBUG0 ) << "\n Sector of side " << side
+   /*
+   streamlog_out( DEBUG0 ) << " Sector of side " << side
    << ", layer " << layer
    << ", module " << module
    << ", sensor " << sensor
-   << " == " << sector;
+   << " == " << sector << "\n";
+   */
    
    return sector;
    
@@ -88,7 +89,7 @@ int SectorSystemFTD::getSide( int sector ) const throw ( OutOfRange ){
    
    side = side*2 - 1 ; //from 0 and 1 to  -1 and 1
    
-   streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Side " << side;
+//    streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Side " << side;
    
    return side;
    
@@ -100,7 +101,7 @@ unsigned SectorSystemFTD::getLayer( int sector ) const throw ( OutOfRange ){
    
    unsigned layer = ( sector / (  _nSensors * _nModules ) ) % _nLayers; //this is an integerdivision --> we will get the floor authomatically
    
-   streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Layer " << layer;
+//    streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Layer " << layer;
    
    return layer;
    
@@ -114,7 +115,7 @@ unsigned SectorSystemFTD::getModule( int sector ) const throw ( OutOfRange ){
    
    unsigned module = ( sector / ( _nSensors ) ) % _nModules; //this is an integerdivision --> we will get the floor authomatically
    
-   streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Module " << module;
+//    streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Module " << module;
    
    return module;
    
@@ -128,7 +129,7 @@ unsigned SectorSystemFTD::getSensor( int sector ) const throw ( OutOfRange ){
    
    unsigned sensor = ( sector ) % _nSensors; 
    
-   streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Sensor " << sensor;
+//    streamlog_out( DEBUG0 ) << "\n Sector " << sector << " == Sensor " << sensor;
    
    return sensor;
    
@@ -152,6 +153,21 @@ void SectorSystemFTD::checkSectorIsInRange( int sector ) const throw ( OutOfRang
       
    }  
 
+}
+
+std::string SectorSystemFTD::getInfoOnSector( int sector ) const{
+   
+   
+   std::string s = " (si" + intToString( getSide(sector) ) + 
+                   ",la" + intToString( getLayer(sector) ) +
+                   ",mo" + intToString( getModule(sector) ) +
+                   ",se" + intToString( getSensor( sector ) ) +
+                   ")";
+   
+   
+   return s;   
+   
+   
 }
 
 

@@ -142,10 +142,10 @@ void Automaton::lengthenSegments(){
             int skippedLayers = segment->getLayer() - child->getLayer() - 1;
             newSegment->setSkippedLayers( skippedLayers );      //
 
-            streamlog_out( DEBUG1 ) << "\n Created longer segment: " << segment->getHits().size()
+            streamlog_out( DEBUG1 ) << " Created longer segment: " << segment->getHits().size()
                                     << "-->" << newSegment->getHits().size()
                                     << " hits, layer = " << newLayer
-                                    << ", skipped layers = " << skippedLayers;
+                                    << ", skipped layers = " << skippedLayers <<"\n";
 
 
             //Erase the connection from the child to the parent segment and replace it with a link to the new
@@ -633,7 +633,6 @@ std::vector < std::vector< IHit* > > Automaton::getTracks( unsigned minHits ){
 
 
 
-   streamlog_out( DEBUG3 ) << " Automaton returned " << tracks.size() << " tracks.\n";
 
    return tracks;
 

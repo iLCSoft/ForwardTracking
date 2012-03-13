@@ -1,6 +1,7 @@
 #ifndef ISectorSystem_h
 #define ISectorSystem_h
 
+#include <string>
 
 #include "FTrackExceptions.h"
 
@@ -30,7 +31,12 @@ namespace FTrack{
       /** @return the number of layers in the sector system. */
       unsigned getNumberOfLayers() const { return _nLayers; };
       
+      /** @return some information on the sector as string */
+      virtual std::string getInfoOnSector( int sector ) const = 0;
+      
       virtual ~ISectorSystem(){}
+      
+      
       
    protected:
       

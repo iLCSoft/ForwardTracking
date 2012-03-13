@@ -51,6 +51,10 @@ namespace FTrack{
        */
       virtual unsigned getLayer( int sector ) const throw ( OutOfRange );
       
+      
+      /** @return some information on the sector as string */
+      virtual std::string getInfoOnSector( int sector ) const;
+      
       /** @return the side the sector is on (+1 = forward, -1 = backward)
        */
       int getSide( int sector ) const throw ( OutOfRange );

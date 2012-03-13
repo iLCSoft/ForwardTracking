@@ -5,6 +5,8 @@
 #include "Math/ProbFunc.h"
 #include <algorithm>
 
+#include <UTIL/ILDConf.h>
+
 
 using namespace FTrack;
 
@@ -122,7 +124,40 @@ void FTDTrack::fit(){
    MarlinTrk::IMarlinTrack* marlin_trk = _trkSystem->createTrack();
    
    
-   EVENT::TrackerHitVec trkHits = _lcioTrack->getTrackerHits() ;        
+   EVENT::TrackerHitVec trkHits = _lcioTrack->getTrackerHits() ;
+   
+   //-----------------------------------------------------------------------------
+   // Now we have the tracker hits, but for fitting, we need to make sure,
+   // that SpacePoints get seperated into the hits they consist of.
+     
+   EVENT::TrackerHitVec trkHitsWithSplittedSpacePoints;
+   
+   for( unsigned i=0; i<trkHits.size(); i++ ){
+      
+      TrackerHit* trkHit = trkHits[i];
+      
+      if( BitSet32( trkHit->getType() )[ UTIL::ILDTrkHitTypeBit::COMPOSITE_SPACEPOINT ]  ){ //spacepoint --> split it up
+         
+         const LCObjectVec rawObjects = trkHit->getRawHits();
+         
+         for( unsigned j=0; j< rawObjects.size(); j++ ){
+            
+            TrackerHit* rawHit = dynamic_cast< TrackerHit* >( rawObjects[j] );
+            trkHitsWithSplittedSpacePoints.push_back( rawHit );
+            
+         }
+         
+      }
+      else{ //no spacepoint --> use hit as it is
+         
+         trkHitsWithSplittedSpacePoints.push_back( trkHit );
+         
+      }
+    
+   }
+   trkHits = trkHitsWithSplittedSpacePoints; //write it back into the original vector (reason a: the name is shorter ;), reason b: then this block might be just commented out for testing)
+   
+   //-----------------------------------------------------------------------------
    
    // sort the hits
    sort( trkHits.begin(), trkHits.end(), compare_TrackerHit_z );

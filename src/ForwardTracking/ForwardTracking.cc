@@ -2,20 +2,20 @@
 
 #include <algorithm>
 
-#include <EVENT/TrackerHit.h>
-#include <EVENT/Track.h>
-#include <EVENT/LCCollection.h>
-#include <IMPL/LCCollectionVec.h>
+#include "EVENT/TrackerHit.h"
+#include "EVENT/Track.h"
+#include "EVENT/LCCollection.h"
+#include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCFlagImpl.h"
-
+#include "UTIL/ILDConf.h"
 
 #include "marlin/VerbosityLevels.h"
 
-#include <MarlinCED.h>
+#include "MarlinCED.h"
 
-#include <gear/GEAR.h>
-#include <gear/GearParameters.h>
-#include <gear/BField.h>
+#include "gear/GEAR.h"
+#include "gear/GearParameters.h"
+#include "gear/BField.h"
 #include "gear/FTDParameters.h"
 #include "gear/FTDLayerLayout.h"
 
@@ -23,6 +23,7 @@
 //--------------------------------------------------------------
 #include "FTDTrack.h"
 #include "FTrackTools.h"
+#include "FTrackILDTools.h"
 #include "TrackSubsetHopfieldNN.h"
 #include "TrackSubsetSimple.h"
 #include "SegmentBuilder.h"
@@ -36,6 +37,7 @@
 using namespace lcio ;
 using namespace marlin ;
 using namespace FTrack;
+using namespace FTrackILD;
 using namespace MarlinTrk ;
 
 
@@ -52,11 +54,20 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
 
 
    // register steering parameters: name, description, class-variable, default value
-   registerInputCollection(LCIO::TRACKERHIT,
-                           "FTDHitCollectionName",
-                           "FTD Hit Collection Name",
-                           _FTDHitCollection,
-                           std::string("FTDTrackerHits")); 
+   std::vector< std::string > collections;
+   collections.push_back( "FTDTrackerHits" );
+   collections.push_back( "FTDSpacePoints" );
+   
+   registerProcessorParameter( "FTDHitCollections",
+                               "FTD Hit Collections",
+                               _FTDHitCollections,
+                               collections); 
+   
+//    registerInputCollection(LCIO::TRACKERHIT,
+//                            "FTDHitCollections",
+//                            "FTD Hit Collections",
+//                            _FTDHitCollections,
+//                            collections); 
 
 
    registerOutputCollection(LCIO::TRACK,
@@ -70,6 +81,19 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               "The chi2 probability value below which tracks will be cut",
                               _chi2ProbCut,
                               double(0.005));
+   
+
+   registerProcessorParameter("OverlappingHitsDistMax",
+                              "The maximum distance of overlapping hits",
+                              _overlappingHitsDistMax,
+                              double(3.5));
+   
+   
+   registerProcessorParameter( "HitsPerTrackMin",
+                               "The minimum number of hits to create a track",
+                               _hitsPerTrackMin,
+                               int( 3 ) );
+   
    
    //For fitting:
    
@@ -144,11 +168,11 @@ void ForwardTracking::init() {
     
    const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
    const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
-   unsigned nLayers = ftdLayers.getNLayers() + 1;
-   unsigned nModules = ftdLayers.getNPetals(0);
-   unsigned nSensors = ftdLayers.getNSensors(0);
+   int nLayers = ftdLayers.getNLayers() + 1;
+   int nModules = ftdLayers.getNPetals(0);
+   int nSensors = ftdLayers.getNSensors(0);
    
-   for( unsigned i=1; i<nLayers; i++){
+   for( int i=1; i<nLayers; i++){
      
       if( ftdLayers.getNPetals(i) > nModules ) nModules = ftdLayers.getNPetals(i); 
       if( ftdLayers.getNSensors(i) > nSensors ) nSensors = ftdLayers.getNSensors(i);
@@ -156,12 +180,12 @@ void ForwardTracking::init() {
    }
    
    streamlog_out( DEBUG4 ) << "using " << nLayers - 1 << " layers, " << nModules << " petals and " << nSensors << " sensors.\n";
-
-   _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
-  
+   
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
-
-
+   
+   
+   _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
+   
    //Initialise the TrackFitter of the tracks:
    FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
 
@@ -216,6 +240,17 @@ void ForwardTracking::processRunHeader( LCRunHeader* run) {
 
 void ForwardTracking::processEvent( LCEvent * evt ) { 
 
+   
+   
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   //                                                                                                              //
+   //                                                                                                              //
+   //                            Track Reconstruction in the FTD                                                   //
+   //                                                                                                              //
+   //                                                                                                              //
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   
+   
 
 //--CED---------------------------------------------------------------------
 // Reset drawing buffer and START drawing collection
@@ -232,100 +267,74 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 //-----------------------------------------------------------------------
   
-//    const gear::GearParameters& paramFTD = Global::GEAR->getGearParameters("FTD");
-//    drawFTDSensors( paramFTD , 16 , 2 ); //TODO use the same values here as for the code
+
+
+   std::vector< IHit* > hitsTBD; //Hits to be deleted at the end
+   _map_sector_hits.clear();
 
    
-  
-
-   LCCollection* col = evt->getCollection( _FTDHitCollection ) ;
-
-  
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   //                                                                                                              //
-   //                                                                                                              //
-   //                            Track Reconstruction in the FTDs                                                  //
-   //                                                                                                              //
-   //                                                                                                              //
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-
-
-   //First: collect all the hits and store them
-   if( col != NULL ){
-
-     
-      unsigned nHits = col->getNumberOfElements()  ;
+   /**********************************************************************************************/
+   /*    Read in the collections, create hits from the TrackerHits and store them in a map       */
+   /**********************************************************************************************/
+   
+   streamlog_out( DEBUG4 ) << "\t\t---Reading in Collections---\n" ;
+   
+   
+   for( unsigned iCol=0; iCol < _FTDHitCollections.size(); iCol++ ){
       
       
-      streamlog_out( DEBUG4 ) << "Number of hits on the FTDs: " << nHits <<"\n";
+      LCCollection* col = evt->getCollection( _FTDHitCollections[iCol] ) ;
+      unsigned nHits = col->getNumberOfElements();
       
+      streamlog_out( DEBUG4 ) << "Number of hits in collection " << _FTDHitCollections[iCol] << ": " << nHits <<"\n";
       
-      // A map to store the hits according to their sectors
-      std::map< int , std::vector< IHit* > > map_sector_hits;
-      
-      
-      std::vector< IHit* > hitsTBD; //Hits to be deleted at the end
       
       for(unsigned i=0; i< nHits ; i++){
          
          
-         TrackerHit* trkHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
+         TrackerHit* trackerHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
+         
+         streamlog_out(DEBUG1) << "hit" << i << " " << FTrackILD::getCellID0Info( trackerHit->getCellID0() );
          
          //Make an FTDHit01 from the TrackerHit 
-         FTDHit01* ftdHit = new FTDHit01 ( trkHit , _sectorSystemFTD );
-         hitsTBD.push_back(ftdHit);
-       
-         map_sector_hits[ ftdHit->getSector() ].push_back( ftdHit );         
          
-        
+         FTDHit01* ftdHit = new FTDHit01 ( trackerHit , _sectorSystemFTD );
+         hitsTBD.push_back(ftdHit); //so we can easily delete every created hit afterwards
+         
+         _map_sector_hits[ ftdHit->getSector() ].push_back( ftdHit );         
+         
       }
       
+   }
+  
+
+
+   
+   if( !_map_sector_hits.empty() ){
+      
+     
+      /**********************************************************************************************/
+      /*                Add the IP as virtual hit for forward and backward                          */
+      /**********************************************************************************************/
       
       IHit* virtualIPHitForward = createVirtualIPHit(1 , _sectorSystemFTD );
       hitsTBD.push_back( virtualIPHitForward );
-      map_sector_hits[ virtualIPHitForward->getSector() ].push_back( virtualIPHitForward );
+      _map_sector_hits[ virtualIPHitForward->getSector() ].push_back( virtualIPHitForward );
       
       IHit* virtualIPHitBackward = createVirtualIPHit(-1 , _sectorSystemFTD );
       hitsTBD.push_back( virtualIPHitBackward );
-      map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
+      _map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
       
-      ////////////////////////////////////////////////////
-      std::map< int , std::vector< IHit* > >::iterator it;
-      
-      for( it = map_sector_hits.begin(); it != map_sector_hits.end(); it++ ){
-         
-         
-         std::vector<IHit*> hits = it->second;
-         int sector = it->first;
-         
-         int side = _sectorSystemFTD->getSide( sector );
-         unsigned layer = _sectorSystemFTD->getLayer( sector );
-         unsigned module = _sectorSystemFTD->getModule( sector );
-         unsigned sensor = _sectorSystemFTD->getSensor( sector );
-         
-         streamlog_out( DEBUG2 ) << "\nSECTOR " << sector  << " ("
-                                 << side << ","
-                                 << layer << ","
-                                 << module << ","
-                                 << sensor << ") "
-                                 << " has " << hits.size() << " hits.";
-         
-//          for( unsigned i=0; i<hits.size(); i++){
-//             
-//             streamlog_out( DEBUG4 ) << "\n\t" << hits[i];
-//             
-//          }
-      
-      }
-      
-      /////////////////////////////////////////////////
+      std::string inf = getInfo_map_sector_hits(); 
+      streamlog_out( DEBUG2 ) << inf;
       
       /**********************************************************************************************/
       /*                Check the possible connections of hits on overlapping petals                */
       /**********************************************************************************************/
       
-      std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack = getOverlapConnectionMap( map_sector_hits, _sectorSystemFTD, 3.5);
+      streamlog_out( DEBUG4 ) << "\t\t---Overlapping Hits---\n" ;
+      
+      std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack = getOverlapConnectionMap( _map_sector_hits, _sectorSystemFTD, _overlappingHitsDistMax);
       
       /**********************************************************************************************/
       /*                Build the segments                                                          */
@@ -335,8 +344,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       streamlog_out( DEBUG4 ) << "\t\t---SegementBuilder---\n" ;
       
       //Create a segmentbuilder
-      SegmentBuilder segBuilder( map_sector_hits );
-      
+      SegmentBuilder segBuilder( _map_sector_hits );
       
       
       segBuilder.addCriteria ( _crit2Vec );
@@ -416,7 +424,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Reset the states of all segments
       automaton.resetStates();
       
-      
+      std::vector < RawTrack > autRawTracks = automaton.getTracks( _hitsPerTrackMin );
+      streamlog_out( DEBUG3 ) << " Automaton returned " << autRawTracks.size() << " tracks \n";
       
       
       
@@ -427,63 +436,38 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       streamlog_out( DEBUG4 ) << "\t\t---Add hits from overlapping petals + fit + chi2prob Cuts---\n" ;
       
-      std::vector < rawTrack > autRawTracks = automaton.getTracks(3);
+      
       std::vector <ITrack*> trackCandidates;
       
       
       // for all raw tracks
       for( unsigned i=0; i < autRawTracks.size(); i++){
          
-         std::vector <ITrack*> overlappingTrackCands;
-         std::vector< IHit* > trackHits = autRawTracks[i];
          
-         std::vector < rawTrack > autRawTracksPlus;          // the tracks plus the overlapping hits
-         autRawTracksPlus.push_back( trackHits );            // add the basic track
+         // get all versions of the track with hits from overlapping petals
+         std::vector < RawTrack > autRawTracksPlus = getRawTracksPlusOverlappingHits( autRawTracks[i], map_hitFront_hitsBack );
          
-         
-         // for all hits in the track
-         for( unsigned j=0; j<trackHits.size(); j++ ){
-            
-            IHit* hit = trackHits[j];
-            
-            //get all the possible overlapping hits
-            std::map< IHit* , std::vector< IHit* > >::iterator it;
-            
-            
-            it = map_hitFront_hitsBack.find( hit );
-            
-            if( it == map_hitFront_hitsBack.end() ) continue; // if there are no hits to be added
-            
-            std::vector< IHit* > overlappingHits = it->second; 
-            
-            //for all hits to be added
-            for( unsigned k=0; k<overlappingHits.size(); k++ ){
-               
-               
-               IHit* oHit = overlappingHits[k];
-               
-               //for all tracks we have so far create an additional track with the hit
-               unsigned nAutTrackHitsPlus = autRawTracksPlus.size();
-               for( unsigned l=0; l<nAutTrackHitsPlus; l++ ){
-                  
-                  std::vector< IHit* > newTrackHits = autRawTracksPlus[l];
-                  newTrackHits.push_back( oHit );
-                  autRawTracksPlus.push_back( newTrackHits );
-                  
-               }
-               
-            }
-            
-         }
          
          /**********************************************************************************************/
          /*                Make track candidates, fit them and throw away bad ones                     */
          /**********************************************************************************************/
          
+         std::vector< ITrack* > overlappingTrackCands;
+         
          for( unsigned j=0; j < autRawTracksPlus.size(); j++ ){
             
             
             ITrack* trackCand = new FTDTrack( autRawTracksPlus[j] );
+            streamlog_out( DEBUG2 ) << "Fitting track candidate with " << trackCand->getHits().size() << " hits\n";
+            
+//             std::vector< IHit* > testHits = trackCand->getHits();
+//             for( unsigned k=0; k < testHits.size(); k++ ){
+//                
+//                std::string inf = _sectorSystemFTD->getInfoOnSector( testHits[k]->getSector() );
+//                streamlog_out( DEBUG2) << "(" << testHits[k]->getX() << "," << testHits[k]->getY() << "," << testHits[k]->getZ() << ")" << inf;
+//             }
+//             streamlog_out(DEBUG2) << "\n";
+            
             trackCand->fit();
             
             streamlog_out( DEBUG2 ) << " Track " << trackCand 
@@ -527,6 +511,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                }
                
             }
+            streamlog_out( DEBUG2 ) << "Adding track candidate with " << bestTrack->getHits().size() << " hits\n";
             
             trackCandidates.push_back( bestTrack );
             
@@ -633,75 +618,6 @@ void ForwardTracking::end(){
    
 }
 
-void ForwardTracking::drawFTDSensors ( const gear::GearParameters& paramFTD , unsigned nPetalsPerDisk , unsigned nSensorsPerPetal){
-   
-
-   
-   std::vector <double> diskPositionZ = paramFTD.getDoubleVals( "FTDZCoordinate" ) ;
-   std::vector <double> diskInnerRadius = paramFTD.getDoubleVals( "FTDInnerRadius" ) ;
-   std::vector <double> diskOuterRadius = paramFTD.getDoubleVals( "FTDOuterRadius" ) ; 
-   
-   unsigned int color = 0x9999ff;
-   
-   
-   for ( int side = -1; side <= 1; side +=2){ //for backward and forward
-
-      for ( unsigned int disk=0; disk < diskPositionZ.size(); disk++ ){ //over all disks
-
-
-         double rMin = diskInnerRadius[ disk ];
-         double rMax = diskOuterRadius[ disk ];
-         double z      = side * diskPositionZ[ disk ];            
-         
-         //draw the radial boarders (i.e. straight lines)
-         for (unsigned int petal=0; petal < nPetalsPerDisk; petal++){ //over all petals
-
-            double phi = 2 * M_PI / (float) nPetalsPerDisk * (float) petal; //the phi angle of the first boarder of the petal
-            
-            
-            double xStart = rMin * cos( phi );
-            double yStart = rMin * sin( phi );
-            double xEnd   = rMax * cos( phi );
-            double yEnd   = rMax * sin( phi );
-            
-            
-            ced_line_ID( xStart, yStart, z , xEnd , yEnd , z , 2 , 2, color, 2);
-            
-            
-         }
-         
-         //draw the angular boarders (i.e. circles)
-         for (unsigned int i=0; i <= nSensorsPerPetal; i++){
-            
-            unsigned nLines = 360;
-            
-            double r = rMin + ( rMax - rMin ) / (float) nSensorsPerPetal * (float) i; //the radius of the circle
-            
-            for (unsigned int j=0; j<nLines; j++){
-               
-               double phiStart = 2.*M_PI / nLines * j;
-               double phiEnd   = 2.*M_PI / nLines * (j +1);
-               
-               double xStart = r * cos(phiStart);
-               double yStart = r * sin(phiStart);
-               double xEnd   = r * cos(phiEnd);
-               double yEnd   = r * sin(phiEnd);
-               
-               ced_line_ID( xStart, yStart, z , xEnd , yEnd , z , 2 , 2, color, 2);
-               
-            }
-            
-         }
-         
-      }
-      
-   }
-   
-   
-   
-   
-   
-}
 
 
 
@@ -750,7 +666,7 @@ std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMa
                float dz = hitA->getZ() - hitB->getZ();
                float dist = sqrt( dx*dx + dy*dy + dz*dz );
                
-               if (( dist < distMax )&& ( fabs( hitB->getZ() ) > fabs( hitA->getZ() ) )  ){
+               if (( dist < distMax )&& ( fabs( hitB->getZ() ) > fabs( hitA->getZ() ) )  ){ // if they are close enough and B is behind A
                   
                   
                   streamlog_out( DEBUG2 ) << "Connected: (" << hitA->getX() << "," << hitA->getY() << "," << hitA->getZ() << ")-->("
@@ -779,6 +695,132 @@ std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMa
 }
 
 
+std::string ForwardTracking::getInfo_map_sector_hits(){
+   
+   
+   std::stringstream s;
+   
+   std::map< int , std::vector< IHit* > >::iterator it;
+   
+   for( it = _map_sector_hits.begin(); it != _map_sector_hits.end(); it++ ){
+      
+      
+      std::vector<IHit*> hits = it->second;
+      int sector = it->first;
+      
+      int side = _sectorSystemFTD->getSide( sector );
+      unsigned layer = _sectorSystemFTD->getLayer( sector );
+      unsigned module = _sectorSystemFTD->getModule( sector );
+      unsigned sensor = _sectorSystemFTD->getSensor( sector );
+      
+      s << "sector " << sector  << " (si"
+      << side << ",la"
+      << layer << ",mo"
+      << module << "se,"
+      << sensor << ") has "
+      << hits.size() << " hits\n";
+      
+      
+   }  
+   
+   
+   return s.str();   
+   
+}
+
+std::vector < RawTrack > ForwardTracking::getRawTracksPlusOverlappingHits( RawTrack rawTrack , std::map< IHit* , std::vector< IHit* > >& map_hitFront_hitsBack ){
+   
+   
+   
+   // So we have a raw track (a vector of hits, that is) and a map, that tells us
+   // for every hit, if there is another hit in the overlapping region behind it very close,
+   // so that it could be part of the same track.
+   //
+   // We now want to find for a given track all possible tracks, when hits from the overlapping regions are added
+   //
+   // The method is this: start with pure track.
+   // Make a vector of rawTracks and fill in the pure track.
+   // For every hit on the original track do the following:
+   // Check if there are overlapping hits.
+   // For every overlapping hit take all the created tracks so far and make another version
+   // with the overlapping hit added to it and add them to the vector of rawTracks.
+   //
+   //
+   // Let's do an example: 
+   // the original hits in the track are calles A,B and C.
+   // A has one overlapping hit A1
+   // and B has two overlapping hits B1 and B2.
+   //
+   // So we start with a vector containing only the original track: {(A,B,C)}
+   //
+   // We start with the first hit: A. It has one overlapping hit A1.
+   // We take all tracks (which is the original one so far) and make another version containing A1 as well.
+   // Then we add it to the vector of tracks:
+   //
+   // {(A,B,C)(A,A1,B,C)}
+   //
+   // On to the next hit from the original track: B. Here we have overlapping hits B1 and B2.
+   // We take all the tracks so far and add versions with B1: (A,B,B1,C) and (A,A1,B,B1,C)
+   // We don't immediately add them or otherwise, we would create a track containing B1 as well as B2, which is plainly wrong
+   //
+   // So instead we make the combinations with B2: (A,B,B2,C) and (A,A1,B,B2,C)
+   // And now having gone through all overlapping hits of B, we add all the new versions to the vector:
+   //
+   // {(A,B,C)(A,A1,B,C)(A,B,B1,C)(A,A1,B,B1,C)(A,B,B2,C)(A,A1,B,B2,C)}
+   //
+   // So now we have all possible versions of the track with overlapping hits
+   
+   std::vector < RawTrack > rawTracksPlus;
+   
+   rawTracksPlus.push_back( rawTrack ); //add the original one
+   
+   // for every hit in the original track
+   for( unsigned i=0; i < rawTrack.size(); i++ ){
+      
+     
+      IHit* frontHit = rawTrack[i];
+      
+      // get the hits that are behind frontHit
+      std::map< IHit* , std::vector< IHit* > >::iterator it;
+      it = map_hitFront_hitsBack.find( frontHit );
+      if( it == map_hitFront_hitsBack.end() ) continue; // if there are no hits on the back skip this one
+      std::vector< IHit* > backHits = it->second; 
+      
+      
+      // Create the different versions of the tracks so far with the hits from the back
+      
+      std::vector< RawTrack > newVersions; //here we store all the versions with overlapping hits from the different back hits at this frontHit
+      
+      // for every hit in back of the frontHit
+      for( unsigned j=0; j<backHits.size(); j++ ){
+         
+         
+         IHit* backHit = backHits[j];
+         
+         // for all tracks we have so far
+         for( unsigned k=0; k<rawTracksPlus.size(); k++ ){
+            
+            
+            RawTrack newVersion = rawTracksPlus[k];     // exact copy of the track
+            newVersion.push_back( backHit );          // add the backHit to it   
+            newVersions.push_back( newVersion );         // store it
+            
+         }
+         
+      }
+      
+      // Now put all the new versions of the tracks into the rawTracksPlus vector before we go on to the next
+      // hit of the original track
+      rawTracksPlus.insert( rawTracksPlus.end(), newVersions.begin(), newVersions.end() );
+      
+      
+   }
+   
+   
+   
+   return rawTracksPlus;
+   
+}
 
 
 
