@@ -95,6 +95,12 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                int( 3 ) );
    
    
+   registerProcessorParameter( "BestSubsetFinder",
+                               "The method used to find the best non overlapping subset of tracks. Available are: TrackSubsetHopfieldNN and TrackSubsetSimple",
+                               _bestSubsetFinder,
+                               std::string( "TrackSubsetHopfieldNN" ) );
+   
+   
    //For fitting:
    
    registerProcessorParameter("MultipleScatteringOn",
@@ -525,24 +531,36 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       streamlog_out( DEBUG4 ) << "\t\t---Get best subset of tracks---\n" ;
       
+      std::vector< ITrack* > tracks;
+      
+      ITrackSubset* subset = NULL;
       
       // Make a TrackSubset
-//       TrackSubsetSimple subset;
-      TrackSubsetHopfieldNN subset;
-      subset.addTracks( trackCandidates ); 
+      if( _bestSubsetFinder == "TrackSubsetHopfieldNN" ) subset = new TrackSubsetHopfieldNN();
+      if( _bestSubsetFinder == "TrackSubsetSimple" ) subset = new TrackSubsetSimple();
       
-      //Calculate the best subset:
-      subset.calculateBestSet();
       
-      std::vector< ITrack* > tracks = subset.getAcceptedTracks();
-      std::vector< ITrack* > rejectedTracks = subset.getRejectedTracks();
-
-      // immediately delete the rejected ones
-      for ( unsigned i=0; i<rejectedTracks.size(); i++){
+      if( subset != NULL ){
+        
+         subset->addTracks( trackCandidates ); 
          
-         delete rejectedTracks[i];
+         //Calculate the best subset:
+         subset->calculateBestSet();
+         
+         std::vector< ITrack* > tracks = subset->getAcceptedTracks();
+         std::vector< ITrack* > rejectedTracks = subset->getRejectedTracks();
+         
+         // immediately delete the rejected ones
+         for ( unsigned i=0; i<rejectedTracks.size(); i++){
+            
+            delete rejectedTracks[i];
+            
+         }
+         
+         delete subset;
          
       }
+      else tracks = trackCandidates;
       
       
       

@@ -54,6 +54,10 @@ typedef std::vector< IHit* > RawTrack;
  * @param OverlappingHitsDistMax The maximum distance of overlapping hits
  * (default value  )
  * 
+ * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: TrackSubsetHopfieldNN and TrackSubsetSimple.
+ * Any other value means, that no final search for the best subset is done and overlapping tracks are possible.
+ * (default value TrackSubsetHopfieldNN )
+ * 
  * @author Robin Glattauer HEPHY, Wien
  *
  */
@@ -163,8 +167,12 @@ class ForwardTracking : public Processor {
    double _overlappingHitsDistMax;
    
    
+   std::string _bestSubsetFinder;
+   
+   
    /** @return Info on the content of _map_sector_hits */
    std::string getInfo_map_sector_hits();
+   
    
 
    
