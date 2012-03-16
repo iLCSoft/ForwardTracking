@@ -36,31 +36,41 @@ typedef std::vector< IHit* > RawTrack;
  * @param ForwardTrackCollection Name of the Forward Tracking output collection
  * (default value  "ForwardTracks" (output collection) )
  * 
- * @param ptMin Minimal allowed transversal momentum. Should be a bit lower than the wanted value due to fluctuations. [GeV]
- * (default value  )
- * 
  * @param MultipleScatteringOn Whether to take multiple scattering into account when fitting the tracks
- * (default value  )
+ * (default value true )
  * 
  * @param EnergyLossOn Whether to take energyloss into account when fitting the tracks
- * (default value  )
+ * (default value true )
  * 
  * @param SmoothOn Whether to smooth all measurement sites in fit
- * (default value  )
+ * (default value false )
  * 
  * @param Chi2ProbCut Tracks with a chi2 probability below this will get sorted out
- * (default value  )
+ * (default value 0.005 )
  * 
- * @param OverlappingHitsDistMax The maximum distance of overlapping hits
- * (default value  )
+ * @param OverlappingHitsDistMax The maximum distance of hits from overlapping petals belonging to one track
+ * (default value 3.5 )
+ * 
+ * @param HitsPerTrackMin The minimum number of hits to create a track
+ * (default value 3 )
  * 
  * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: TrackSubsetHopfieldNN and TrackSubsetSimple.
- * Any other value means, that no final search for the best subset is done and overlapping tracks are possible.
+ * Any other value means, that no final search for the best subset is done and overlapping tracks are possible. (If you want that, don't
+ * leave the string empty or the default value will be used!)
  * (default value TrackSubsetHopfieldNN )
+ * 
+ * @param Criteria A vector of the criteria that are going to be used. For every criterion a min and max needs to be set!!!
+ * (default value is defined in class Criteria )
+ * 
+ * @param NameOfACriterion_min/max For every used criterion a minimum and maximum value needs to be set. If a criterion is
+ * named "Crit_Example", then the min parameter would be: Crit_Example_min and the max parameter Crit_Example_max.
  * 
  * @author Robin Glattauer HEPHY, Wien
  *
  */
+
+
+
 
 
 

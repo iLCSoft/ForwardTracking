@@ -78,13 +78,13 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
 
    
    registerProcessorParameter("Chi2ProbCut",
-                              "The chi2 probability value below which tracks will be cut",
+                              "Tracks with a chi2 probability below this will get sorted out",
                               _chi2ProbCut,
                               double(0.005));
    
 
    registerProcessorParameter("OverlappingHitsDistMax",
-                              "The maximum distance of overlapping hits",
+                              "The maximum distance of hits from overlapping petals belonging to one track",
                               _overlappingHitsDistMax,
                               double(3.5));
    
