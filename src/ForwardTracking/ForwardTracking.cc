@@ -100,6 +100,12 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _bestSubsetFinder,
                                std::string( "TrackSubsetHopfieldNN" ) );
    
+   registerProcessorParameter( "TakeBestVersionOfTrack ",
+                               "Whether when adding hits to a track only the track with highest quality should be further processed",
+                               _takeBestVersionOfTrack,
+                               bool( true ) );
+
+   
    
    //For fitting:
    
@@ -476,7 +482,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
             trackCand->fit();
             
-            streamlog_out( DEBUG2 ) << " Track " << trackCand 
+            streamlog_out( DEBUG7 ) << " Track " << trackCand 
                                     << " chi2Prob = " << trackCand->getChi2Prob() 
                                     << "( chi2=" << trackCand->getChi2() 
                                     <<", Ndf=" << trackCand->getNdf() << " )\n";
@@ -485,10 +491,12 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             if ( trackCand->getChi2Prob() > _chi2ProbCut ){
                
                overlappingTrackCands.push_back( trackCand );
+               streamlog_out( DEBUG2 ) << "Track accepted (chi2prob " << trackCand->getChi2Prob() << " > " << _chi2ProbCut << "\n";
                
             }
             else{
                
+               streamlog_out( DEBUG2 ) << "Track rejected (chi2prob " << trackCand->getChi2Prob() << " <= " << _chi2ProbCut << "\n";
                delete trackCand;
                
             }
@@ -498,28 +506,42 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          /**********************************************************************************************/
          /*                Take the best version of the track                                          */
          /**********************************************************************************************/
-        
-         if( !overlappingTrackCands.empty() ){
+        // Now we have all versions of one track, coming from adding possible hits from overlapping petals.
+         
+         if( _takeBestVersionOfTrack ){ // we want to take only the best version
             
-            ITrack* bestTrack = overlappingTrackCands[0];
             
-            for( unsigned j=1; j < overlappingTrackCands.size(); j++ ){
+            streamlog_out( DEBUG7 ) << "Take the version of the track with best quality from " << overlappingTrackCands.size() << " track candidates\n";
+            
+            if( !overlappingTrackCands.empty() ){
                
-               if( overlappingTrackCands[j]->getQI() > bestTrack->getQI() ){
+               ITrack* bestTrack = overlappingTrackCands[0];
+               
+               for( unsigned j=1; j < overlappingTrackCands.size(); j++ ){
                   
-                  delete bestTrack; //delete the old one, not needed anymore
-                  bestTrack = overlappingTrackCands[j];
+                  if( overlappingTrackCands[j]->getQI() > bestTrack->getQI() ){
+                     
+                     delete bestTrack; //delete the old one, not needed anymore
+                     bestTrack = overlappingTrackCands[j];
+                  }
+                  else{
+                     
+                     delete overlappingTrackCands[j]; //delete this one
+                     
+                  }
+                  
                }
-               else{
-                  
-                  delete overlappingTrackCands[j]; //delete this one
-                  
-               }
+               streamlog_out( DEBUG7 ) << "Adding best track candidate with " << bestTrack->getHits().size() << " hits\n";
+               
+               trackCandidates.push_back( bestTrack );
                
             }
-            streamlog_out( DEBUG2 ) << "Adding track candidate with " << bestTrack->getHits().size() << " hits\n";
             
-            trackCandidates.push_back( bestTrack );
+         }
+         else{ // we take all versions
+            
+            streamlog_out( DEBUG7 ) << "Taking all " << overlappingTrackCands.size() << " versions of the track\n";
+            trackCandidates.insert( trackCandidates.end(), overlappingTrackCands.begin(), overlappingTrackCands.end() );
             
          }
          

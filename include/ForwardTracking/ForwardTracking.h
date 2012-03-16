@@ -176,6 +176,7 @@ class ForwardTracking : public Processor {
    
    double _overlappingHitsDistMax;
    
+   bool _takeBestVersionOfTrack;
    
    std::string _bestSubsetFinder;
    
