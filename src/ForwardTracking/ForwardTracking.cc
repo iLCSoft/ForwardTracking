@@ -100,7 +100,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _bestSubsetFinder,
                                std::string( "TrackSubsetHopfieldNN" ) );
    
-   registerProcessorParameter( "TakeBestVersionOfTrack ",
+   registerProcessorParameter( "TakeBestVersionOfTrack",
                                "Whether when adding hits to a track only the track with highest quality should be further processed",
                                _takeBestVersionOfTrack,
                                bool( true ) );
