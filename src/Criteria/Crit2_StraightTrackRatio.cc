@@ -1,6 +1,7 @@
 #include "Crit2_StraightTrackRatio.h"
 
-
+#include <cmath>
+#include <sstream>
 
 using namespace FTrack;
 
@@ -68,12 +69,13 @@ bool Crit2_StraightTrackRatio::areCompatible( Segment* parent , Segment* child )
    }
    else{
       
-      std::string s = "Crit2_StraightTrackRatio::This criterion needs 2 segments with 1 hit each, passed was a "
-      +  intToString( parent->getHits().size() ) + " hit segment (parent) and a "
-      +  intToString( child->getHits().size() ) + " hit segment (child).";
-
+      std::stringstream s;
+      s << "Crit2_StraightTrackRatio::This criterion needs 2 segments with 1 hit each, passed was a "
+      <<  parent->getHits().size() << " hit segment (parent) and a "
+      <<  child->getHits().size() << " hit segment (child).";
       
-      throw BadSegmentLength( s );
+      
+      throw BadSegmentLength( s.str() );
       
       
    }

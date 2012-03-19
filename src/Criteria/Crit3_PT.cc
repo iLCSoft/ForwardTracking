@@ -1,7 +1,9 @@
 #include "Crit3_PT.h"
 
-#include "SimpleCircle.h"
 #include <cmath>
+#include <sstream>
+
+#include "SimpleCircle.h"
 
 using namespace FTrack;
 
@@ -79,12 +81,13 @@ bool Crit3_PT::areCompatible( Segment* parent , Segment* child )throw( BadSegmen
    }
    else{
       
-      std::string s = "Crit3_PT::This criterion needs 2 segments with 2 hits each, passed was a "
-      +  intToString( parent->getHits().size() ) + " hit segment (parent) and a "
-      +  intToString( child->getHits().size() ) + " hit segment (child).";
+      std::stringstream s;
+      s << "Crit3_PT::This criterion needs 2 segments with 2 hits each, passed was a "
+      <<  parent->getHits().size() << " hit segment (parent) and a "
+      <<  child->getHits().size() << " hit segment (child).";
       
       
-      throw BadSegmentLength( s );
+      throw BadSegmentLength( s.str() );
       
       
    }

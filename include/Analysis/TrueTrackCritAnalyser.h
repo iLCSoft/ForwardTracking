@@ -11,6 +11,7 @@
 
 #include "ICriterion.h"
 #include <string>
+#include "SectorSystemFTD.h"
 
 using namespace lcio ;
 using namespace marlin ;

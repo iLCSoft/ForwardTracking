@@ -2,13 +2,7 @@
 #define Criteria_h
 
 
-/**
- * Information about all Criteria.
- * 
- * For example bundles the includes.
- * 
- * Author: Robin Glattauer
- */
+
 
 #include "Crit2_RZRatio.h"
 #include "Crit2_StraightTrackRatio.h"
@@ -33,15 +27,20 @@
 
 
 
-#include <map>
 #include <vector>
+#include <set>
 #include <string>
 
 
 namespace FTrack{
 
-   
-   
+   /**
+    * Information about all Criteria.
+    * 
+    * For example bundles the includes.
+    * 
+    * Author: Robin Glattauer
+    */   
    class Criteria {
       
       

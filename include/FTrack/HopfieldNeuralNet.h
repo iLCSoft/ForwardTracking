@@ -1,9 +1,3 @@
-/**
- * Represents a hopfield neuronal network
- * 
- * Author: Robin Glattauer
- */
- 
 #ifndef HopfieldNeuralNet_h
 #define HopfieldNeuralNet_h
  
@@ -13,6 +7,11 @@
 
 namespace FTrack{
 
+   /**
+    * Represents a hopfield neuronal network
+    * 
+    * Author: Robin Glattauer
+    */
    class HopfieldNeuralNet {
 
 

@@ -1,5 +1,8 @@
 #include "Crit4_3DAngleChange.h"
+
 #include <cmath>
+#include <sstream>
+
 #include "TVector3.h"
 
 
@@ -79,12 +82,13 @@ bool Crit4_3DAngleChange::areCompatible( Segment* parent , Segment* child )throw
    }
    else{
       
-      std::string s = "Crit4_3DAngleChange::This criterion needs 2 segments with 3 hits each, passed was a "
-      +  intToString( parent->getHits().size() ) + " hit segment (parent) and a "
-      +  intToString( child->getHits().size() ) + " hit segment (child).";
+      std::stringstream s;
+      s << "Crit4_3DAngleChange::This criterion needs 2 segments with 3 hits each, passed was a "
+      <<  parent->getHits().size() << " hit segment (parent) and a "
+      <<  child->getHits().size() << " hit segment (child).";
       
       
-      throw BadSegmentLength( s );
+      throw BadSegmentLength( s.str() );
       
       
    }

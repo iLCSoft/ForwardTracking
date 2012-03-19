@@ -1,6 +1,8 @@
 #include "Crit4_DistToExtrapolation.h"
 
 #include <cmath>
+#include <sstream>
+
 #include "SimpleCircle.h"
 #include "TVector3.h"
 
@@ -97,12 +99,13 @@ bool Crit4_DistToExtrapolation::areCompatible( Segment* parent , Segment* child 
    }
    else{
       
-      std::string s = "Crit4_DistToExtrapolation::This criterion needs 2 segments with 3 hits each, passed was a "
-      +  intToString( parent->getHits().size() ) + " hit segment (parent) and a "
-      +  intToString( child->getHits().size() ) + " hit segment (child).";
+      std::stringstream s;
+      s << "Crit4_DistToExtrapolation::This criterion needs 2 segments with 3 hits each, passed was a "
+      <<  parent->getHits().size() << " hit segment (parent) and a "
+      <<  child->getHits().size() << " hit segment (child).";
       
       
-      throw BadSegmentLength( s );
+      throw BadSegmentLength( s.str() );
       
       
    }

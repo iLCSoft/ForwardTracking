@@ -2,15 +2,12 @@
 #define ICriterion_h
 
 #include <vector>
+#include <map>
+#include <string>
+
 #include "Segment.h"
-#include "lcio.h"
 #include "FTrackExceptions.h"
-#include "FTrackTools.h"
-#include <cmath>
 
-#include "marlin/VerbosityLevels.h"
-
-using namespace lcio;
 
 
 namespace FTrack{

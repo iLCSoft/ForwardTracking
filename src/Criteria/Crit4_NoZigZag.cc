@@ -1,5 +1,8 @@
 #include "Crit4_NoZigZag.h"
+
 #include <cmath>
+#include <sstream>
+
 #include "TVector3.h"
 
 
@@ -21,9 +24,6 @@ Crit4_NoZigZag::Crit4_NoZigZag ( float prodMin , float prodMax ){
 
 
 bool Crit4_NoZigZag::areCompatible( Segment* parent , Segment* child )throw( BadSegmentLength ){
-   
-   
-     
    
    
    
@@ -87,12 +87,13 @@ bool Crit4_NoZigZag::areCompatible( Segment* parent , Segment* child )throw( Bad
    }
    else{
       
-      std::string s = "Crit4_NoZigZag::This criterion needs 2 segments with 3 hits each, passed was a "
-      +  intToString( parent->getHits().size() ) + " hit segment (parent) and a "
-      +  intToString( child->getHits().size() ) + " hit segment (child).";
+      std::stringstream s;
+      s << "Crit4_NoZigZag::This criterion needs 2 segments with 3 hits each, passed was a "
+      <<  parent->getHits().size() << " hit segment (parent) and a "
+      <<  child->getHits().size() << " hit segment (child).";
       
       
-      throw BadSegmentLength( s );
+      throw BadSegmentLength( s.str() );
       
       
    }
