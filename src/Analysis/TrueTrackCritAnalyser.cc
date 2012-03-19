@@ -1,29 +1,21 @@
 #include "TrueTrackCritAnalyser.h"
-#include <iostream>
+
 #include <algorithm>
-
-#include <EVENT/LCCollection.h>
-#include <EVENT/MCParticle.h>
-
-// ----- include for verbosity dependend logging ---------
-#include "marlin/VerbosityLevels.h"
-
-
-#include <EVENT/Track.h>
-#include <EVENT/MCParticle.h>
 #include <cmath>
+
+#include "EVENT/LCCollection.h"
+#include "EVENT/MCParticle.h"
+#include "EVENT/Track.h"
+#include "EVENT/MCParticle.h"
+#include "IMPL/TrackerHitPlaneImpl.h"
+#include "marlin/VerbosityLevels.h"
+#include "marlin/Global.h"
+
 #include "TVector3.h"
-
-// Root, for calculating the chi2 probability. 
-#include "Math/ProbFunc.h"
-
-#include <marlin/Global.h>
-
-#include "FTrackTools.h"
-
-#include <IMPL/TrackerHitPlaneImpl.h>
+#include "Math/ProbFunc.h"  // Root, for calculating the chi2 probability. 
 
 
+#include "FTrackILDTools.h"
 #include "Criteria.h"
 #include "FTDTrack.h"
 #include "FTDHit00.h"
@@ -160,7 +152,7 @@ void TrueTrackCritAnalyser::init() {
    // Therefore first get all the possible names of the branches
    
    // create a virtual hit
-   IHit* virtualIPHit = createVirtualIPHit(1 , _sectorSystemFTD );
+   IHit* virtualIPHit = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
 
    
    std::vector <IHit*> hitVec;
@@ -201,7 +193,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames2.insert( "distance" ); // the distance between two hits
    // Set up the root file with the tree and the branches
    _treeName2 = "2Hit";
-   setUpRootFile( _rootFileName, _treeName2, branchNames2 );      //prepare the root file.
+   FTrackILD::setUpRootFile( _rootFileName, _treeName2, branchNames2 );      //prepare the root file.
    
    
    
@@ -244,7 +236,7 @@ void TrueTrackCritAnalyser::init() {
    // Set up the root file with the tree and the branches
    _treeName3 = "3Hit"; 
    
-   setUpRootFile( _rootFileName, _treeName3, branchNames3 , false );      //prepare the root file.
+   FTrackILD::setUpRootFile( _rootFileName, _treeName3, branchNames3 , false );      //prepare the root file.
   
    
    
@@ -285,7 +277,7 @@ void TrueTrackCritAnalyser::init() {
    // Set up the root file with the tree and the branches
    _treeName4 = "4Hit"; 
    
-   setUpRootFile( _rootFileName, _treeName4, branchNames4 , false );      //prepare the root file.
+   FTrackILD::setUpRootFile( _rootFileName, _treeName4, branchNames4 , false );      //prepare the root file.
    
  
    delete virtualIPHit;
@@ -306,7 +298,7 @@ void TrueTrackCritAnalyser::init() {
    // Set up the root file with the tree and the branches
    _treeNameKalman = "KalmanFit"; 
    
-   setUpRootFile( _rootFileName, _treeNameKalman, branchNamesKalman , false );      //prepare the root file.
+   FTrackILD::setUpRootFile( _rootFileName, _treeNameKalman, branchNamesKalman , false );      //prepare the root file.
    
  
    /**********************************************************************************************/
@@ -403,7 +395,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          
          std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
          // sort the hits in the track
-         sort( trackerHits.begin(), trackerHits.end(), compare_TrackerHit_z );
+         sort( trackerHits.begin(), trackerHits.end(), FTrackILD::compare_TrackerHit_z );
          // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
          // So the direction of the hits when following the index from 0 on is:
          // from inside out: from the IP into the distance.
@@ -440,7 +432,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             
             // Add the IP as a hit
-            IHit* virtualIPHit = createVirtualIPHit(1 , _sectorSystemFTD );
+            IHit* virtualIPHit = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
            
             hits.insert( hits.begin() , virtualIPHit );
             
@@ -684,10 +676,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
         
 
-      saveToRoot( _rootFileName, _treeName2, rootDataVec2 );
-      saveToRoot( _rootFileName, _treeName3, rootDataVec3 );
-      saveToRoot( _rootFileName, _treeName4, rootDataVec4 );
-      saveToRoot( _rootFileName, _treeNameKalman, rootDataVecKalman );
+      FTrackILD::saveToRoot( _rootFileName, _treeName2, rootDataVec2 );
+      FTrackILD::saveToRoot( _rootFileName, _treeName3, rootDataVec3 );
+      FTrackILD::saveToRoot( _rootFileName, _treeName4, rootDataVec4 );
+      FTrackILD::saveToRoot( _rootFileName, _treeNameKalman, rootDataVecKalman );
       
          
       streamlog_out (MESSAGE) << "\n Number of used mcp-track relations: " << nUsedRelations <<"\n";

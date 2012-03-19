@@ -1,5 +1,6 @@
 #include "SectorSystemFTD.h"
-#include "FTrackTools.h"
+
+#include <sstream>
 
 using namespace FTrack;
 
@@ -22,29 +23,33 @@ int SectorSystemFTD::getSector( int side, unsigned layer , unsigned module , uns
    if ( ( side!= 1 )&&( side != -1 ) ){
       
       
-      std::string s = "Side has to be either +1 or -1 and not " + intToString( side );
-      throw OutOfRange( s );
+      std::stringstream s;
+      s << "Side has to be either +1 or -1 and not " << side;
+      throw OutOfRange( s.str() );
       
    }
    
    if ( layer >= _nLayers ){
       
-      std::string s = "Layer " + intToString( layer ) +" is too big, the outermost layer is layer " + intToString( _nLayers - 1 );
-      throw OutOfRange( s );
+      std::stringstream s; 
+      s << "Layer " << layer << " is too big, the outermost layer is layer " << _nLayers - 1;
+      throw OutOfRange( s.str() );
       
    }
    
    if ( module >= _nModules ){
       
-      std::string s = "Module " + intToString( module ) +" is too big, the highest module is module " + intToString( _nModules - 1 );
-      throw OutOfRange( s );
+      std::stringstream s; 
+      s << "Module " << module << " is too big, the highest module is module " << _nModules - 1;
+      throw OutOfRange( s.str() );
       
    }
    
    if ( sensor >= _nSensors ){
       
-      std::string s = "Sensor " + intToString( sensor ) +" is too big, the highest sensor is sensor " + intToString( _nSensors - 1 );
-      throw OutOfRange( s );
+      std::stringstream s;
+      s << "Sensor " << sensor << " is too big, the highest sensor is sensor " << _nSensors - 1;
+      throw OutOfRange( s.str() );
       
    }   
    
@@ -141,15 +146,18 @@ void SectorSystemFTD::checkSectorIsInRange( int sector ) const throw ( OutOfRang
 
    if ( sector > _sectorMax ){
       
-      std::string s = "SectorSystemFTD:\n Sector " + intToString( sector ) +" is too big, the highest possible number for a sector in this configuration of FTDSegRepresentation is"
-      + intToString( _sectorMax ) + ".\nThe configuration is: nLayers = " + intToString( _nLayers ) +
-      ", nModules = " + intToString( _nModules ) + 
-      ", nSensors = " + intToString( _nSensors ) +
-      "\n With 2 sides (forward and backward) this gives sectors from 0 to 2*" 
-      + intToString( _nLayers ) + "*"  
-      + intToString( _nModules ) + "*"
-      + intToString( _nSensors ) + " -1 = " + intToString( 2*_nLayers*_nModules*_nSensors -1 );
-      throw OutOfRange( s );
+      std::stringstream s;
+      s << "SectorSystemFTD:\n Sector " 
+        << sector << " is too big, the highest possible number for a sector in this configuration of FTDSegRepresentation is"
+        << _sectorMax 
+        << ".\nThe configuration is: nLayers = " << _nLayers
+        << ", nModules = " << _nModules
+        << ", nSensors = " << _nSensors 
+        << "\n With 2 sides (forward and backward) this gives sectors from 0 to 2*" 
+        << _nLayers << "*"  
+        << _nModules << "*"
+        << _nSensors << " -1 = " << 2*_nLayers*_nModules*_nSensors -1 ;
+      throw OutOfRange( s.str() );
       
    }  
 
@@ -158,14 +166,15 @@ void SectorSystemFTD::checkSectorIsInRange( int sector ) const throw ( OutOfRang
 std::string SectorSystemFTD::getInfoOnSector( int sector ) const{
    
    
-   std::string s = " (si" + intToString( getSide(sector) ) + 
-                   ",la" + intToString( getLayer(sector) ) +
-                   ",mo" + intToString( getModule(sector) ) +
-                   ",se" + intToString( getSensor( sector ) ) +
-                   ")";
+   std::stringstream s;
+   s << " (si" << getSide(sector)  
+     << ",la" << getLayer(sector)
+     << ",mo" << getModule(sector) 
+     << ",se" << getSensor(sector) 
+     << ")";
    
    
-   return s;   
+   return s.str();   
    
    
 }

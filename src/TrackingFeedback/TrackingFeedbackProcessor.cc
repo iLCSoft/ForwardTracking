@@ -1,25 +1,20 @@
 #include "TrackingFeedbackProcessor.h"
 
-
 #include "marlin/VerbosityLevels.h"
-
 
 #include <cmath>
 #include <fstream>
 #include <algorithm>
 #include <sstream>
 
-
 #include <MarlinCED.h>
-#include "FTrackTools.h"
+
 #include "Fitter.h"
 
 
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
-
 
 
 

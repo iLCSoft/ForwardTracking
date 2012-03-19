@@ -1,5 +1,5 @@
 #include "FTDTrack.h"
-#include "FTrackTools.h"
+#include "FTrackILDTools.h"
 
 // Root, for calculating the chi2 probability. 
 #include "Math/ProbFunc.h"
@@ -9,6 +9,13 @@
 
 
 using namespace FTrack;
+
+/** @return if the absolute z value of hit a is bigger than that of hit b */
+bool compare_IHit_z( IHit* a, IHit* b ){
+   
+   return ( fabs( a->getZ() ) < fabs( b->getZ() ) ); //compare their z values
+   
+}
 
 
 MarlinTrk::IMarlinTrkSystem* FTDTrack::_trkSystem ;
@@ -77,7 +84,7 @@ void FTDTrack::addHit( IHit* hit ){
       _hits.push_back( ftdHit );
       
       // and sort the track again
-      sort( _hits.begin(), _hits.end(), compare_z );
+      sort( _hits.begin(), _hits.end(), compare_IHit_z );
       
       
       _lcioTrack->addHit( ftdHit->getTrackerHit() );
@@ -160,7 +167,7 @@ void FTDTrack::fit(){
    //-----------------------------------------------------------------------------
    
    // sort the hits
-   sort( trkHits.begin(), trkHits.end(), compare_TrackerHit_z );
+   sort( trkHits.begin(), trkHits.end(), FTrackILD::compare_TrackerHit_z );
    
    // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
    // So the direction of the hits when following the index from 0 on is:

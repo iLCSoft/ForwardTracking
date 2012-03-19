@@ -2,13 +2,15 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <sstream>
 #include <fstream>
+#include <cmath>
 
 #include "TFile.h"
 #include "TTree.h"
 
 #include "Criteria.h"
-#include "FTrackTools.h"
+
 
 using namespace FTrack;
 
@@ -99,8 +101,8 @@ int main(int argc,char *argv[]){
    
    std::set< std::string >::iterator iType;
    
-   std::string steerInfo = "\n\n"; //for getting something that can be used in the marlin steer file
-   std::string steerInfob; // a second part
+   std::stringstream steerInfo("\n\n"); //for getting something that can be used in the marlin steer file
+   std::stringstream steerInfob; // a second part
    
    for( iType = critTypes.begin(); iType != critTypes.end(); iType++ ){ // once for every type of criteria ( 1 type = 1 tree in ROOT file )
       
@@ -177,9 +179,9 @@ int main(int argc,char *argv[]){
 //          max += 0.01*fabs(max);
          
          std::cout << "\n" << critName << ": min = " << min << ", max = " << max;
-         steerInfo += "\n<parameter name=\"" + critName + "_min\" type=\"float\">" + floatToString(min) + "</parameter>";
-         steerInfo += "\n<parameter name=\"" + critName + "_max\" type=\"float\">" + floatToString(max) + "</parameter>";
-         steerInfob += critName + "\n";
+         steerInfo << "\n<parameter name=\"" << critName << "_min\" type=\"float\">" << min << "</parameter>";
+         steerInfo << "\n<parameter name=\"" << critName << "_max\" type=\"float\">" << max << "</parameter>";
+         steerInfob << critName << "\n";
          
          
          myfile << "--MyForwardTracking." << critName << "_min=" << min << "   ";
@@ -190,15 +192,15 @@ int main(int argc,char *argv[]){
       }
       
       
-      steerInfo += "\n\n";
+      steerInfo << "\n\n";
       
       
       
    }
    
-   steerInfo += "<parameter name=\"Criteria\" type=\"StringVec\">";
-   steerInfo += steerInfob;
-   steerInfo += "</parameter>\n\n";
+   steerInfo << "<parameter name=\"Criteria\" type=\"StringVec\">";
+   steerInfo << steerInfob;
+   steerInfo << "</parameter>\n\n";
    
    std::cout << steerInfo;
    

@@ -6,7 +6,7 @@
 #include "marlin/Global.h"
 #include "UTIL/ILDConf.h"
 
-#include "FTrackTools.h"
+#include "FTrackILDTools.h"
 
 using namespace FTrack;
 
@@ -95,7 +95,7 @@ void Fitter::fit(){
       
    
    // sort the hits
-   std::sort( _trackerHits.begin(), _trackerHits.end(), compare_TrackerHit_z );
+   std::sort( _trackerHits.begin(), _trackerHits.end(), FTrackILD::compare_TrackerHit_z );
    
    // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
    // So the direction of the hits when following the index from 0 on is:

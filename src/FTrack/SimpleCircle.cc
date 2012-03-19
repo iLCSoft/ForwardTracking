@@ -1,10 +1,7 @@
 #include "SimpleCircle.h"
 
-#include "FTrackTools.h"
-
-
-
 #include <cmath>
+#include <sstream>
 
 
 
@@ -19,15 +16,17 @@ SimpleCircle::SimpleCircle( double x1 , double y1 , double x2 , double y2 , doub
   if ( (x2 -x1)*(y3 - y2) == (x3 - x2)*(y2 - y1) ){
      
      
-     std::string s = "SimpleCircle::The 3 points are on one line in xy-space: x1 = "
-                               +  doubleToString( x1 ) +
-                     ", y1 = " +  doubleToString( y1 ) +
-                     ", x2 = " +  doubleToString( x2 ) +
-                     ", y2 = " +  doubleToString( y2 ) +
-                     ", x3 = " +  doubleToString( x3 ) +
-                     ", y3 = " +  doubleToString( y3 );
+     std::stringstream s;
+     
+     s << "SimpleCircle::The 3 points are on one line in xy-space: x1 = "
+       <<  x1
+       << ", y1 = " << y1
+       << ", x2 = " << x2
+       << ", y2 = " << y2
+       << ", x3 = " << x3
+       << ", y3 = " << y3;
                      
-     throw InvalidParameter( s );
+     throw InvalidParameter( s.str() );
      
      
   }

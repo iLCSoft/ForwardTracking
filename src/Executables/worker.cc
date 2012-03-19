@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "FTrackTools.h"
+#include <sstream>
 #include "Timer.h"
 
 /**
@@ -32,9 +32,9 @@ int main(int argc,char *argv[]){
       // run the QuantileAnalyser
       
 
-      std::string command = QUANTILE_ANALYSER_PATH + " " + FTrack::floatToString( quantSize ) + " " 
-                          + QUANTILE_ANALYSER_TARGET + " " + QUANTILE_ANALYSER_OUTPUT;
-      int returnValue = system( command.c_str() );
+      std::stringstream command;
+      command << QUANTILE_ANALYSER_PATH << " " << quantSize<< " " << QUANTILE_ANALYSER_TARGET << " " << QUANTILE_ANALYSER_OUTPUT;
+      int returnValue = system( command.str().c_str() );
       
       if( returnValue != 0 ){
          
@@ -63,8 +63,9 @@ int main(int argc,char *argv[]){
       /**********************************************************************************************/
       /*                Run Marlin                                                                  */
       /**********************************************************************************************/
-      command = "Marlin " + STEERING_FILE + " " + parameters;
-      returnValue = system( command.c_str() );
+      command.str("");
+      command << "Marlin " << STEERING_FILE << " " << parameters;
+      returnValue = system( command.str().c_str() );
 
       if( returnValue != 0 ){
          

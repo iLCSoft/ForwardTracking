@@ -19,26 +19,13 @@
 #include "gear/FTDLayerLayout.h"
 
 
-//--------------------------------------------------------------
-//My own classes begin
-
 #include "FTDTrack.h"
-
-#include "FTrackTools.h"
+#include "FTrackILDTools.h"
 #include "TrackSubsetHopfieldNN.h"
-
 #include "SegmentBuilder.h"
 #include "Automaton.h"
-
 #include "FTDHit00.h"
-
-
-// the sector connectors
 #include "FTDSecCon00.h"
-
-
-//My own classe end
-//--------------------------------------------------------------
 
 
 using namespace lcio ;
@@ -299,11 +286,11 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
       }
       
       
-      IHit* virtualIPHitForward = createVirtualIPHit(1 , _sectorSystemFTD );
+      IHit* virtualIPHitForward = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
       hitsTBD.push_back( virtualIPHitForward );
       map_sector_hits[ virtualIPHitForward->getSector() ].push_back( virtualIPHitForward );
       
-      IHit* virtualIPHitBackward = createVirtualIPHit(-1 , _sectorSystemFTD );
+      IHit* virtualIPHitBackward = FTrackILD::createVirtualIPHit(-1 , _sectorSystemFTD );
       hitsTBD.push_back( virtualIPHitBackward );
       map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
       

@@ -4,7 +4,7 @@
 #include <cmath>
 #include "Fitter.h"
 #include "UTIL/ILDConf.h"
-#include "FTrackTools.h"
+#include "FTrackILDTools.h"
 #include <algorithm>
 
 std::string TrueTrack::getMCPInfo(){
@@ -124,7 +124,7 @@ std::string TrueTrack::getRelatedTracksInfo(){
       
       //the positions of the hits
       std::vector< TrackerHit* > hits = track->getTrackerHits();
-      std::sort( hits.begin(), hits.end(), FTrack::compare_TrackerHit_z );
+      std::sort( hits.begin(), hits.end(), FTrackILD::compare_TrackerHit_z );
       for (unsigned i=0; i<hits.size(); i++ ) info << positionInfo( hits[i] );
       
       

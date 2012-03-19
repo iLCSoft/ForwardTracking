@@ -70,20 +70,18 @@ namespace FTrack{
       /** the hits the track consists of
        */
       std::vector< IFTDHit* > _hits;
-
+      
       
       IMPL::TrackImpl* _lcioTrack;
       
       // for fitting
       static MarlinTrk::IMarlinTrkSystem* _trkSystem;
       
-
+      
       double _chi2Prob;
-
-
+      
+      
    };
-
-
 
 
 

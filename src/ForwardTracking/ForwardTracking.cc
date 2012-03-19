@@ -22,7 +22,6 @@
 
 //--------------------------------------------------------------
 #include "FTDTrack.h"
-#include "FTrackTools.h"
 #include "FTrackILDTools.h"
 #include "TrackSubsetHopfieldNN.h"
 #include "TrackSubsetSimple.h"

@@ -20,7 +20,7 @@
 #include "TFile.h"
 
 
-#include "FTrackTools.h"
+#include "FTrackILDTools.h"
 
 #include <IMPL/TrackerHitPlaneImpl.h>
 
@@ -95,7 +95,7 @@ void StepAnalyser::init() {
    
    // Set up the root file with the tree and the branches
    _treeName = "values";
-   setUpRootFile( _rootFileName, _treeName, branchNames );      //prepare the root file.
+   FTrackILD::setUpRootFile( _rootFileName, _treeName, branchNames );      //prepare the root file.
    
    
    branchNames.clear();
@@ -111,7 +111,7 @@ void StepAnalyser::init() {
    branchNames.insert("pt");
    
    _treeName2 = "hitPairs";
-   setUpRootFile( _rootFileName, _treeName2, branchNames , false );   
+   FTrackILD::setUpRootFile( _rootFileName, _treeName2, branchNames , false );   
    
    
    
@@ -151,7 +151,7 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
       std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
       
       //sort the hits
-      sort( trackerHits.begin(), trackerHits.end(), compare_TrackerHit_z ); 
+      sort( trackerHits.begin(), trackerHits.end(), FTrackILD::compare_TrackerHit_z ); 
       
 
       int lastLayerBeforeIP = 0;
@@ -218,8 +218,8 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
    
    streamlog_out(DEBUG) << "Saving " << rootDataVec2.size() << "\n";
 
-   saveToRoot( _rootFileName, _treeName , rootDataVec );
-   saveToRoot( _rootFileName, _treeName2 , rootDataVec2 );
+   FTrackILD::saveToRoot( _rootFileName, _treeName , rootDataVec );
+   FTrackILD::saveToRoot( _rootFileName, _treeName2 , rootDataVec2 );
 
 
    //-- note: this will not be printed if compiled w/o MARLINDEBUG4=1 !
