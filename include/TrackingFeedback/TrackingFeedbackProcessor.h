@@ -107,6 +107,9 @@ class TrackingFeedbackProcessor : public Processor {
    
    
    void checkTheTrack( Track* track );
+   TrueTrack* getAssignedTrueTrack( std::vector<TrueTrack*> relatedTrueTracks , unsigned& nHitsFromAssignedTrueTrack );
+      
+   
    double getDistToIP( MCParticle* mcp );
    
 } ;

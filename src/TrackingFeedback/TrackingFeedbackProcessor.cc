@@ -231,6 +231,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    if( col != NULL ){
       
       _nRecoTracks = col->getNumberOfElements()  ;
+      streamlog_out( DEBUG4 ) << "Number of Reco Tracks: " << _nRecoTracks << "\n";
       
       //check all the reconstructed tracks
       for(unsigned i=0; i< _nRecoTracks ; i++){
@@ -401,10 +402,11 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
  
    
    std::vector <TrackerHit*> hitVec = track->getTrackerHits();
-
-   std::vector<TrueTrack*> hitRelations; //to contain all the true tracks relations that correspond to the hits of the track
+   unsigned nHitsTrack = hitVec.size();   //number of hits of the reconstructed track
+   
+   std::vector<TrueTrack*> relatedTrueTracks; //to contain all the true tracks relations that correspond to the hits of the track
                                           //if for example a track consists of 3 points from one true track and two from another
-                                          //at the end this vector will have five entries: 3 times one true track and 3 times the other.
+                                          //at the end this vector will have five entries: 3 times one true track and 2 times the other.
                                           //so at the end, all we have to do is to count them.
 
    for( unsigned int j=0; j < hitVec.size(); j++ ){ //over all hits in the track
@@ -417,70 +419,40 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
          
          if ( find (trueTrack->getTrackerHits().begin() , trueTrack->getTrackerHits().end() , hitVec[j] ) 
             !=  trueTrack->getTrackerHits().end())      // if the hit is contained in this truetrack
-         hitRelations.push_back( _trueTracks[k] );     //add the track (i.e. its relation) to the vector hitRelations
+         relatedTrueTracks.push_back( _trueTracks[k] );     //add the track (i.e. its relation) to the vector relatedTrueTracks
       }
       
    } 
 
 
-   // After those two for loops we have the vector hitRelations filled with all the true track (relations) that correspond
-   // to our reconstructed track. Ideally this vector would now only consist of the same true track again and again.
+   // After those two for loops we have the vector relatedTrueTracks filled with all the true tracks (relations) that correspond
+   // to the hits in our reconstructed track. 
+   // Ideally this vector would only consist of the same true track again and again, i.e. every hit from the reconstructed
+   // track comes from the true hit.
    //
-   // Before we can check what kind of track we have here, we have to get some data.
-   // We wanna know the most represented true track:
-
-   unsigned nHitsOneTrack = 0;              //number of most true hits corresponding to ONE true track 
-   TrueTrack* dominantTrueTrack = NULL;    //the true track most represented in the track 
-
-   sort ( hitRelations.begin() , hitRelations.end()); //Sorting, so all the same elements are at one place
-
-   unsigned n = 0;                  // number of hits from one track
-   TrueTrack* previousRel = NULL;  // used to store the previous relation, so we can compare, if there was a change. at first we don't have
-   // a previous one, so we set it NULL
-   for (unsigned int j=0; j< hitRelations.size(); j++){ 
-      
-      if ( hitRelations[j] == previousRel ) n++;   //for every repeating element count 1. (that's the reason we sorted before, so we can just count them like this)
-               else n = 1; //previous was different --> we start again with 1
-               
-               previousRel = hitRelations[j];
-      
-      if (n > nHitsOneTrack){ //we have a new winner (a true track) with (currently) the most hits in this track
-                              
-                  nHitsOneTrack = n;
-                  dominantTrueTrack = hitRelations[j];
-                  
-      }
-      
-   }
-
-   unsigned nHitsTrack = hitVec.size();   //number of hits of the reconstructed track
-   unsigned nHitsTrueTrack = 0;           //number of hits of the true track
-
-   if (dominantTrueTrack != NULL ){ 
-      const Track* trueTrack = dominantTrueTrack->getTrueTrack();
-      nHitsTrueTrack = trueTrack->getTrackerHits().size();  
-      
-   }
+   // Now we need to find out to what true track the reconstructed belongs or if it doesn't belong to any true track
+   // at all (a ghost).
+   
+   unsigned nHitsFromAssignedTrueTrack = 0;
+   TrueTrack* assigendTrueTrack = getAssignedTrueTrack( relatedTrueTracks , nHitsFromAssignedTrueTrack );
+   streamlog_out(DEBUG5) << "Assigned true track = " << assigendTrueTrack << "\n";
 
 
-
-
-   //So now we have all the values we need to know to tell, what kind of track we have here.
-
-   if ( nHitsOneTrack <= nHitsTrack/2. ){  // less than half the points at maximum correspond to one track, this is not a real track, but
-      _nGhost++;                           // a ghost track
+   if ( assigendTrueTrack == NULL ){    // no true track could be assigned --> a ghost track
+      _nGhost++;                           
      
    }
-   else{                                   // more than half of the points form a true track!
+   else{                                   // assigned to a true track
+      
+      unsigned nHitsTrueTrack = assigendTrueTrack->getTrueTrack()->getTrackerHits().size();
       
       TrackType trackType;
       
-      if (nHitsOneTrack > nHitsTrueTrack/2.) //If more than half of the points from the true track are covered
-         dominantTrueTrack->isLost = false;  // this is guaranteed no lost track  
+      assigendTrueTrack->isLost = false;      // this is guaranteed no lost track  
          
-      if (nHitsOneTrack < nHitsTrueTrack){    // there are too few good hits,, something is missing --> incomplete
-      
-         if (nHitsOneTrack < nHitsTrack){       // besides the hits from the true track there are also additional ones-->
+      if (nHitsFromAssignedTrueTrack < nHitsTrueTrack){    // there are too few good hits,, something is missing --> incomplete
+         
+         if (nHitsFromAssignedTrueTrack < nHitsTrack){       // besides the hits from the true track there are also additional ones-->
             _nIncompletePlus++;                 // incomplete with extra points
             trackType = INCOMPLETE_PLUS;
          }   
@@ -492,24 +464,88 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
       }
       else{                                  // there are as many good hits as there are hits in the true track
                                              // i.e. the true track is represented entirely in this track
-         dominantTrueTrack->isFoundCompletely = true;
+         assigendTrueTrack->isFoundCompletely = true;
          
          
-         if (nHitsOneTrack < nHitsTrack){       // there are still additional hits stored in the track, it's a
-            _nCompletePlus++;                    // complete track with extra points
+         if (nHitsFromAssignedTrueTrack < nHitsTrack){        // there are still additional hits stored in the track, it's a
+            _nCompletePlus++;                                 // complete track with extra points
             trackType = COMPLETE_PLUS;
          }
-         else{                                   // there are no additional points, finally, this is the perfect
-            _nComplete++;                        // complete track
+         else{                                                  // there are no additional points, finally, this is the perfect
+            _nComplete++;                                       // complete track
             trackType= COMPLETE;
-            dominantTrueTrack->completeVersionExists = true;
+            assigendTrueTrack->completeVersionExists = true;
          }
       }
       
-      //we want the true track to know all reconstructed tracks containing him
-      dominantTrueTrack->map_track_type.insert( std::pair<Track*, TrackType> ( track ,trackType ) );  
+      // we want the true track to know all reconstructed tracks containing him
+      assigendTrueTrack->map_track_type.insert( std::pair<Track*, TrackType> ( track ,trackType ) );  
       
    }   
  
  
+}
+
+
+TrueTrack* TrackingFeedbackProcessor::getAssignedTrueTrack( std::vector<TrueTrack*> relatedTrueTracks , unsigned& nHitsFromAssignedTrueTrack ){
+
+   TrueTrack* assignedTrueTrack = NULL;    //the true track most represented in the track 
+   
+   sort ( relatedTrueTracks.begin() , relatedTrueTracks.end() ); //Sorting, so all the same elements are at one place
+   
+   
+   // Find the true track with the most hits in the reconstructed one
+   
+   TrueTrack* previousTT = NULL;  // used to store the previous true track
+   unsigned n=0;
+   unsigned nMax=0;
+   
+   for (unsigned j=0; j< relatedTrueTracks.size(); j++){ 
+      
+      if ( relatedTrueTracks[j] == previousTT ) n++;   //for every repeating element count 1. (that's the reason we sorted before, so we can just count them like this)
+      else n = 1;                                      //previous was different --> we start again with 1
+      
+      previousTT = relatedTrueTracks[j];
+      
+      if (n > nMax){ //we have a new winner (a true track) with (currently) the most hits in this track
+         
+         nMax = n;
+         assignedTrueTrack = relatedTrueTracks[j];
+         
+      }
+      
+   }
+   
+   
+   
+   if( assignedTrueTrack == NULL ) return NULL; // no track could be associated
+   if( relatedTrueTracks.empty() ) return NULL; // no true tracks were passed
+   
+   unsigned nHitsAssignedTT = assignedTrueTrack->getTrueTrack()->getTrackerHits().size();
+   if( nHitsAssignedTT == 0 )      return NULL; // assigned true track has no hits (should really not be)
+   
+
+   // Now we still might want to do some checks on the reconstructed and the true track, if we really want
+   // to assign them to each other:
+   
+   bool assign = true;
+   
+   
+   float rateOfAssignedHitsMin = 0.5;  //more than this number of hits of the reco track mus belong to the assigned true track
+   if( float( nMax ) / float( relatedTrueTracks.size() )  < rateOfAssignedHitsMin ) assign = false;
+   
+   float rateOfFoundHitsMin = 0.5;  //more than this number of hits of the real track must be in the reco track
+   if( float( nMax ) / float( nHitsAssignedTT )  < rateOfFoundHitsMin ) assign = false;
+   
+   
+   if ( assign ){
+      
+      nHitsFromAssignedTrueTrack = nMax;
+      return assignedTrueTrack;
+      
+   }
+   
+   return NULL;
+   
+   
 }

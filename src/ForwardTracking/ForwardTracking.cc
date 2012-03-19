@@ -482,7 +482,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
             trackCand->fit();
             
-            streamlog_out( DEBUG7 ) << " Track " << trackCand 
+            streamlog_out( DEBUG2 ) << " Track " << trackCand 
                                     << " chi2Prob = " << trackCand->getChi2Prob() 
                                     << "( chi2=" << trackCand->getChi2() 
                                     <<", Ndf=" << trackCand->getNdf() << " )\n";
@@ -511,7 +511,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          if( _takeBestVersionOfTrack ){ // we want to take only the best version
             
             
-            streamlog_out( DEBUG7 ) << "Take the version of the track with best quality from " << overlappingTrackCands.size() << " track candidates\n";
+            streamlog_out( DEBUG2 ) << "Take the version of the track with best quality from " << overlappingTrackCands.size() << " track candidates\n";
             
             if( !overlappingTrackCands.empty() ){
                
@@ -531,7 +531,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                   }
                   
                }
-               streamlog_out( DEBUG7 ) << "Adding best track candidate with " << bestTrack->getHits().size() << " hits\n";
+               streamlog_out( DEBUG2 ) << "Adding best track candidate with " << bestTrack->getHits().size() << " hits\n";
                
                trackCandidates.push_back( bestTrack );
                
@@ -540,7 +540,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          }
          else{ // we take all versions
             
-            streamlog_out( DEBUG7 ) << "Taking all " << overlappingTrackCands.size() << " versions of the track\n";
+            streamlog_out( DEBUG2 ) << "Taking all " << overlappingTrackCands.size() << " versions of the track\n";
             trackCandidates.insert( trackCandidates.end(), overlappingTrackCands.begin(), overlappingTrackCands.end() );
             
          }

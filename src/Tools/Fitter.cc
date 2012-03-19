@@ -1,9 +1,12 @@
 #include "Fitter.h"
 
-#include <gear/GEAR.h>
-#include <marlin/Global.h>
-#include "FTrackTools.h"
 #include <algorithm>
+
+#include "gear/GEAR.h"
+#include "marlin/Global.h"
+#include "UTIL/ILDConf.h"
+
+#include "FTrackTools.h"
 
 using namespace FTrack;
 
@@ -49,13 +52,47 @@ Fitter::Fitter( std::vector < TrackerHit* > trackerHits ){
 void Fitter::fit(){
    
  
-      
    if ( Fitter::_trkSystem == NULL ) Fitter::init(); //if it is not already initialise, do it now
    
 
    //Create a new MarlinTrack
    MarlinTrk::IMarlinTrack* marlin_trk = _trkSystem->createTrack();
    
+   
+   //-----------------------------------------------------------------------------
+   // For fitting, we need to make sure,
+   // that SpacePoints get seperated into the hits they consist of.
+   
+   EVENT::TrackerHitVec trkHitsWithSplittedSpacePoints;
+   
+   for( unsigned i=0; i<_trackerHits.size(); i++ ){
+      
+      TrackerHit* trkHit = _trackerHits[i];
+      
+      if( BitSet32( trkHit->getType() )[ UTIL::ILDTrkHitTypeBit::COMPOSITE_SPACEPOINT ]  ){ //spacepoint --> split it up
+         
+         const LCObjectVec rawObjects = trkHit->getRawHits();
+         
+         for( unsigned j=0; j< rawObjects.size(); j++ ){
+            
+            TrackerHit* rawHit = dynamic_cast< TrackerHit* >( rawObjects[j] );
+            trkHitsWithSplittedSpacePoints.push_back( rawHit );
+            
+         }
+         
+      }
+      else{ //no spacepoint --> use hit as it is
+         
+         trkHitsWithSplittedSpacePoints.push_back( trkHit );
+         
+      }
+      
+   }
+   _trackerHits = trkHitsWithSplittedSpacePoints; //write it back into the original vector (reason a: the name is shorter ;), reason b: then this block might be just commented out for testing)
+   
+   //-----------------------------------------------------------------------------
+   
+      
    
    // sort the hits
    std::sort( _trackerHits.begin(), _trackerHits.end(), compare_TrackerHit_z );
@@ -95,15 +132,10 @@ void Fitter::fit(){
    
    marlin_trk->propagate(IP, *trkState, _chi2, _Ndf ) ;
    
-
-   
    
    
    delete marlin_trk;
 
-
-   
-   
    
 }
    
