@@ -34,7 +34,7 @@ TrueTrackCritAnalyser aTrueTrackCritAnalyser ;
 TrueTrackCritAnalyser::TrueTrackCritAnalyser() : Processor("TrueTrackCritAnalyser") {
    
    // modify processor description
-   _description = "TrueTrackCritAnalyser: Analysis of different criteria for true tracks in the FTD" ;
+   _description = "TrueTrackCritAnalyser: Analysis of different criteria for true tracks in the FTD" ; //TODO
    
    
    // register steering parameters: name, description, class-variable, default value
@@ -43,14 +43,14 @@ TrueTrackCritAnalyser::TrueTrackCritAnalyser() : Processor("TrueTrackCritAnalyse
                            "MCTrueTrackRelCollectionName",
                            "Name of the TrueTrack MC Relation collection",
                            _colNameMCTrueTracksRel,
-                           std::string("TrueTracksMCP"));
+                           std::string("TruthTracksMCP"));
    
    
    
    registerProcessorParameter("RootFileName",
                               "Name of the root file for saving the results",
                               _rootFileName,
-                              std::string("TrueTracksCritAnalysis.root") );
+                              std::string("Feedback/TrueTracksCritAnalysis.root") );
    
    
    //For fitting:

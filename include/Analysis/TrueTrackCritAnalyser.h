@@ -25,7 +25,7 @@ using namespace FTrack;
  * 
  * 
  *  <h4>Input - Prerequisites</h4>
- *  The cheated tracks in the FTDs
+ *  The true tracks to be analysed
  *
  *  <h4>Output</h4> 
  *  A root file

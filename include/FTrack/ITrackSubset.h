@@ -41,6 +41,7 @@ namespace FTrack {
        */
       std::vector< ITrack* > getRejectedTracks(){ return _rejectedTracks;} ;
       
+      virtual ~ITrackSubset(){ /*no_op*/ }
       
    
    protected:

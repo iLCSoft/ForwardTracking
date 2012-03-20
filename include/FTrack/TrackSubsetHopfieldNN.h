@@ -22,6 +22,8 @@ namespace FTrack {
       
       std::vector< ITrack* > getCompatibleTracks(){ return _compatibleTracks;} ;
       
+      virtual ~TrackSubsetHopfieldNN(){ /*no_op*/ }
+      
       
    private:
       

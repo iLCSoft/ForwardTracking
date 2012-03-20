@@ -18,6 +18,8 @@ namespace FTrack {
      
       void virtual calculateBestSet();
       
+      virtual ~TrackSubsetSimple(){ /*no_op*/ }
+      
      
    private:
       
