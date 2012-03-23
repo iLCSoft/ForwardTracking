@@ -1,11 +1,15 @@
 #include "FTDTrack.h"
-#include "FTrackILDTools.h"
+
+
+
+#include <algorithm>
+
+#include "UTIL/ILDConf.h"
 
 // Root, for calculating the chi2 probability. 
 #include "Math/ProbFunc.h"
-#include <algorithm>
 
-#include <UTIL/ILDConf.h>
+#include "FTrackILDTools.h"
 
 
 using namespace FTrack;
@@ -18,20 +22,20 @@ bool compare_IHit_z( IHit* a, IHit* b ){
 }
 
 
-MarlinTrk::IMarlinTrkSystem* FTDTrack::_trkSystem ;
 
-FTDTrack::FTDTrack(){
+FTDTrack::FTDTrack( MarlinTrk::IMarlinTrkSystem* trkSystem ){
    
-   
+   _trkSystem = trkSystem;
  
    _lcioTrack = new TrackImpl();
    
    
 }
 
-FTDTrack::FTDTrack( std::vector< IHit* > hits ){
+FTDTrack::FTDTrack( std::vector< IHit* > hits , MarlinTrk::IMarlinTrkSystem* trkSystem ){
    
    
+   _trkSystem = trkSystem;
    
    _lcioTrack = new TrackImpl();
    
@@ -53,6 +57,7 @@ FTDTrack::FTDTrack( const FTDTrack& f ){
    
    _hits = f._hits;
    _chi2Prob = f._chi2Prob;
+   _trkSystem = f._trkSystem;
 
 }
 
@@ -65,6 +70,7 @@ FTDTrack & FTDTrack::operator= (const FTDTrack & f){
    
    _hits = f._hits;
    _chi2Prob = f._chi2Prob;
+   _trkSystem = f._trkSystem;
    
    return *this;
    
@@ -94,31 +100,6 @@ void FTDTrack::addHit( IHit* hit ){
    
 }
 
-
-
-void FTDTrack::initialiseFitter( const std::string& systemType,  
-                               const gear::GearMgr* mgr , 
-                               const std::string& options ,
-                               const bool MSOn ,
-                               const bool ElossOn ,
-                               const bool SmoothOn
-                             ) {
-   
-   
-   // set upt the geometry
-   _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( systemType , mgr , options ) ;
-   
-   // set the options   
-   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS,        MSOn ) ;       //multiple scattering
-   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx,       ElossOn) ;     //energy loss
-   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing,  SmoothOn) ;    //smoothing
-   
-   // initialise the tracking system
-   _trkSystem->init() ;
-   
-   
-   
-}
 
 
 

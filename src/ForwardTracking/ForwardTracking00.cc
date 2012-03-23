@@ -163,9 +163,6 @@ void ForwardTracking00::init() {
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
 
 
-   //Initialise the TrackFitter of the tracks:
-   FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
-
 
 
    // store the criteria where they belong
@@ -203,6 +200,24 @@ void ForwardTracking00::init() {
 
    }
 
+
+   /**********************************************************************************************/
+   /*       Initialise the MarlinTrkSystem, needed by the tracks for fitting                     */
+   /**********************************************************************************************/
+
+   // set upt the geometry
+   _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
+
+   if( _trkSystem == 0 ) throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
+                                                            
+                                                            
+                                                            // set the options   
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS,        _MSOn ) ;       //multiple scattering
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx,       _ElossOn) ;     //energy loss
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing,  _SmoothOn) ;    //smoothing
+
+   // initialise the tracking system
+   _trkSystem->init() ;
 
 
 }
@@ -398,7 +413,7 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
       std::vector < std::vector< IHit* > > autTracks = automaton.getTracks(); //TODO: the method should have a different name
       std::vector <ITrack*> autTrackCandidates;
       
-      for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new FTDTrack( autTracks[i] ) );
+      for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new FTDTrack( autTracks[i] , _trkSystem ) );
       
 //       for( unsigned i=0; i < autTrackCandidates.size(); i++ ) drawTrack( autTrackCandidates[i] , 0x00ffff , 3 );
 //       std::vector< ITrack* > tracks = autTrackCandidates;

@@ -1,14 +1,16 @@
 #ifndef ForwardTracking_h
 #define ForwardTracking_h 1
 
+#include <string>
+
 #include "marlin/Processor.h"
 #include "lcio.h"
-#include <string>
-#include <EVENT/TrackerHit.h>
-#include <EVENT/Track.h>
-#include "Segment.h"
+#include "EVENT/TrackerHit.h"
+#include "EVENT/Track.h"
+#include "MarlinTrk/IMarlinTrkSystem.h"
+#include "gear/BField.h"
 
-#include <gear/BField.h>
+#include "Segment.h"
 #include "Criteria.h"
 #include "SectorSystemFTD.h"
 
@@ -184,7 +186,7 @@ class ForwardTracking : public Processor {
    /** @return Info on the content of _map_sector_hits */
    std::string getInfo_map_sector_hits();
    
-   
+   MarlinTrk::IMarlinTrkSystem* _trkSystem;
 
    
 } ;

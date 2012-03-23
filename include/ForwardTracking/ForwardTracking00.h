@@ -1,18 +1,19 @@
 #ifndef ForwardTracking00_h
 #define ForwardTracking00_h 1
 
+#include <string>
+
 #include "marlin/Processor.h"
 #include "lcio.h"
-#include <string>
-#include <EVENT/TrackerHit.h>
-#include <EVENT/Track.h>
-#include "Segment.h"
+#include "EVENT/TrackerHit.h"
+#include "EVENT/Track.h"
+#include "gear/BField.h"
+#include "MarlinTrk/IMarlinTrkSystem.h"
 
-#include <gear/BField.h>
+#include "Segment.h"
+#include "ITrack.h"
 #include "Criteria.h"
 #include "SectorSystemFTD.h"
-
-#include "ITrack.h"
 
 using namespace lcio ;
 using namespace marlin ;
@@ -131,6 +132,8 @@ class ForwardTracking00 : public Processor {
    const SectorSystemFTD* _sectorSystemFTD;
    
    bool _useCED;
+   
+   MarlinTrk::IMarlinTrkSystem* _trkSystem;
    
 } ;
 

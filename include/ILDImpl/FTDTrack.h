@@ -24,8 +24,14 @@ namespace FTrack{
       
    public:
       
-      FTDTrack();
-      FTDTrack( std::vector< IHit* > hits );
+      /** @param trkSystem An IMarlinTrkSystem, which is needed for fitting of the tracks
+       */
+      FTDTrack( MarlinTrk::IMarlinTrkSystem* trkSystem );
+      
+      /** @param hits The hits the track consists of 
+       * @param trkSystem An IMarlinTrkSystem, which is needed for fitting of the tracks
+       */
+      FTDTrack( std::vector< IHit* > hits , MarlinTrk::IMarlinTrkSystem* trkSystem );
       FTDTrack( const FTDTrack& f );
       FTDTrack & operator= (const FTDTrack & f);
       
@@ -48,16 +54,6 @@ namespace FTrack{
       
       virtual double getQI() const;
       
-      /** For the fitting of a track an environment (containing detector information and so on) has to be set and this
-       * is done via this method. It is static, as there is only one environment and therefore only one initilisation
-       * necessary for all tracks
-       */
-      static void initialiseFitter( const std::string& systemType,  
-                                    const gear::GearMgr* mgr , 
-                                    const std::string& options ,
-                                    const bool MSon ,
-                                    const bool ElossOn ,
-                                    const bool SmoothOn );
       
       /** Fits the track and sets chi2, Ndf etc.
        */
@@ -75,7 +71,7 @@ namespace FTrack{
       IMPL::TrackImpl* _lcioTrack;
       
       // for fitting
-      static MarlinTrk::IMarlinTrkSystem* _trkSystem;
+      MarlinTrk::IMarlinTrkSystem* _trkSystem;
       
       
       double _chi2Prob;

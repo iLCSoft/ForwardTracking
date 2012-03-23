@@ -9,6 +9,8 @@
 #include "Segment.h"
 #include <EVENT/LCRelation.h>
 
+#include "MarlinTrk/IMarlinTrkSystem.h"
+
 #include "ICriterion.h"
 #include <string>
 #include "SectorSystemFTD.h"
@@ -112,6 +114,9 @@ protected:
    int _nHitsMin;
    
    const SectorSystemFTD* _sectorSystemFTD;
+   
+   MarlinTrk::IMarlinTrkSystem* _trkSystem;
+   
    
 } ;
 

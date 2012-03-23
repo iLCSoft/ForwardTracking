@@ -305,9 +305,19 @@ void TrueTrackCritAnalyser::init() {
    /*                Set up the track fitter                                                     */
    /**********************************************************************************************/
    
+   // set upt the geometry
+   _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
    
-   //Initialise the TrackFitter of the tracks:
-   FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
+   if( _trkSystem == 0 ) throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
+   
+   
+   // set the options   
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS,        _MSOn ) ;       //multiple scattering
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx,       _ElossOn) ;     //energy loss
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing,  _SmoothOn) ;    //smoothing
+   
+   // initialise the tracking system
+   _trkSystem->init() ;
    
    
 }
@@ -406,7 +416,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit00( trackerHits[j] , _sectorSystemFTD ) );
         
          
-         FTDTrack myTrack;
+         FTDTrack myTrack( _trkSystem );
          for( unsigned j=0; j<hits.size(); j++ ) myTrack.addHit( hits[j] );
          
          myTrack.fit();

@@ -197,9 +197,7 @@ void ForwardTracking::init() {
    
    _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
    
-   //Initialise the TrackFitter of the tracks:
-   FTDTrack::initialiseFitter( "KalTest" , marlin::Global::GEAR , "" , _MSOn , _ElossOn , _SmoothOn  );
-
+   
 
 
    // store the criteria 
@@ -237,6 +235,24 @@ void ForwardTracking::init() {
 
    }
 
+
+   /**********************************************************************************************/
+   /*       Initialise the MarlinTrkSystem, needed by the tracks for fitting                     */
+   /**********************************************************************************************/
+
+   // set upt the geometry
+   _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
+
+   if( _trkSystem == 0 ) throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
+
+   
+   // set the options   
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS,        _MSOn ) ;       //multiple scattering
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx,       _ElossOn) ;     //energy loss
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing,  _SmoothOn) ;    //smoothing
+
+   // initialise the tracking system
+   _trkSystem->init() ;
 
 
 }
@@ -468,7 +484,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          for( unsigned j=0; j < autRawTracksPlus.size(); j++ ){
             
             
-            ITrack* trackCand = new FTDTrack( autRawTracksPlus[j] );
+            ITrack* trackCand = new FTDTrack( autRawTracksPlus[j] , _trkSystem );
             streamlog_out( DEBUG2 ) << "Fitting track candidate with " << trackCand->getHits().size() << " hits\n";
             
 //             std::vector< IHit* > testHits = trackCand->getHits();
