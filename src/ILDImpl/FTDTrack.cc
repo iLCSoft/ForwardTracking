@@ -9,7 +9,6 @@
 // Root, for calculating the chi2 probability. 
 #include "Math/ProbFunc.h"
 
-#include "FTrackILDTools.h"
 
 
 using namespace FTrack;
@@ -104,10 +103,27 @@ void FTDTrack::addHit( IHit* hit ){
 
 
 
-void FTDTrack::fit(){
+void FTDTrack::fit() throw( FitterException ){
    
+   
+   Fitter fitter( _lcioTrack , _trkSystem );
+   
+   //TODO: add a try catch
+   _lcioTrack->setChi2( fitter.getChi2( lcio::TrackState::AtIP ) );
+   _lcioTrack->setNdf( fitter.getChi2( lcio::TrackState::AtIP ) );
+   _chi2Prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
+   
+   TrackStateImpl* trkState = new TrackStateImpl( fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
+   trkState->setLocation( TrackState::AtIP ) ;
+   
+//    //check if this trackstate is already there
+//    if( _lcioTrack->getTrackState( TrackState::AtIP ) == NULL ){
+//       
+//       _lcioTrack->addTrackState(trkState);
+//       
+//    }
 
-   
+   /*
    //Create a new MarlinTrack
    MarlinTrk::IMarlinTrack* marlin_trk = _trkSystem->createTrack();
    
@@ -224,7 +240,7 @@ void FTDTrack::fit(){
    }
 
    delete marlin_trk;
-  
+  */
  
    
    

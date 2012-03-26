@@ -45,10 +45,10 @@ std::string TrueTrack::getTrueTrackInfo(){
       
    
    // The Fit Information 
-   Fitter fitter( _trueTrack );
-   trackInfo << "Chi2Prob = " << fitter.getChi2Prob() 
-               << ", Chi2 = " << fitter.getChi2() 
-               << ", Ndf = " << fitter.getNdf() << "\n";
+   Fitter fitter( _trueTrack, _trkSystem );
+   trackInfo << "Chi2Prob = " << fitter.getChi2Prob( lcio::TrackState::AtIP ) 
+   << ", Chi2 = " << fitter.getChi2( lcio::TrackState::AtIP ) 
+   << ", Ndf = " << fitter.getNdf( lcio::TrackState::AtIP ) << "\n";
                
    // Information about the hits:
    std::vector< TrackerHit* > hits= _trueTrack->getTrackerHits();
@@ -131,8 +131,8 @@ std::string TrueTrack::getRelatedTracksInfo(){
       // the chi2 prob
       try{
       
-      Fitter fitter( track );
-      info << "Chi2Prob = " << fitter.getChi2Prob() << "\n";
+      Fitter fitter( track, _trkSystem );
+      info << "Chi2Prob = " << fitter.getChi2Prob( lcio::TrackState::AtIP ) << "\n";
       }
       catch(MarlinTrk::Exception){
          

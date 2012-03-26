@@ -5,6 +5,8 @@
 #include <EVENT/MCParticle.h>
 #include <EVENT/Track.h>
 #include "lcio.h"
+#include "MarlinTrk/IMarlinTrkSystem.h"
+#include "MarlinTrk/IMarlinTrack.h"
 
 using namespace lcio;
 
@@ -46,7 +48,8 @@ public:
     */
    std::map<Track*,TrackType> map_track_type;
    
-   TrueTrack( Track* trueTrack , MCParticle* mcp ):_trueTrack(trueTrack), _mcp(mcp) {isLost = true; isFoundCompletely = false; completeVersionExists = false;}
+   TrueTrack( Track* trueTrack , MCParticle* mcp , MarlinTrk::IMarlinTrkSystem* trkSystem):
+      _trueTrack(trueTrack), _mcp(mcp), _trkSystem(trkSystem) {isLost = true; isFoundCompletely = false; completeVersionExists = false;}
    
    /** Info about the Monte Carlo Particle */
    std::string getMCPInfo();
@@ -73,6 +76,8 @@ private:
    
    Track* _trueTrack;
    MCParticle* _mcp;
+   
+   MarlinTrk::IMarlinTrkSystem* _trkSystem; // for fitting
    
    
 };

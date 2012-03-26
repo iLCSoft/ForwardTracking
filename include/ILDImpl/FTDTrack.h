@@ -14,6 +14,8 @@
 #include "IFTDHit.h"
 #include "ITrack.h"
 
+#include "Fitter.h"
+
 
 namespace FTrack{
 
@@ -57,7 +59,7 @@ namespace FTrack{
       
       /** Fits the track and sets chi2, Ndf etc.
        */
-      virtual void fit();
+      virtual void fit() throw( FitterException );
       
       virtual ~FTDTrack(){ delete _lcioTrack; }
       

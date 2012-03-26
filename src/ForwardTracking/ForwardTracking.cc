@@ -494,25 +494,36 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 //                streamlog_out( DEBUG2) << "(" << testHits[k]->getX() << "," << testHits[k]->getY() << "," << testHits[k]->getZ() << ")" << inf;
 //             }
 //             streamlog_out(DEBUG2) << "\n";
-            
-            trackCand->fit();
-            
-            streamlog_out( DEBUG2 ) << " Track " << trackCand 
-                                    << " chi2Prob = " << trackCand->getChi2Prob() 
-                                    << "( chi2=" << trackCand->getChi2() 
-                                    <<", Ndf=" << trackCand->getNdf() << " )\n";
-            
-            
-            if ( trackCand->getChi2Prob() > _chi2ProbCut ){
-               
-               overlappingTrackCands.push_back( trackCand );
-               streamlog_out( DEBUG2 ) << "Track accepted (chi2prob " << trackCand->getChi2Prob() << " > " << _chi2ProbCut << "\n";
+            try{
+                  
+               trackCand->fit();
+                  
+               streamlog_out( DEBUG2 ) << " Track " << trackCand 
+                                       << " chi2Prob = " << trackCand->getChi2Prob() 
+                                       << "( chi2=" << trackCand->getChi2() 
+                                       <<", Ndf=" << trackCand->getNdf() << " )\n";
+                  
+                  
+               if ( trackCand->getChi2Prob() > _chi2ProbCut ){
+                  
+                  overlappingTrackCands.push_back( trackCand );
+                  streamlog_out( DEBUG2 ) << "Track accepted (chi2prob " << trackCand->getChi2Prob() << " > " << _chi2ProbCut << "\n";
+                  
+               }
+               else{
+                  
+                  streamlog_out( DEBUG2 ) << "Track rejected (chi2prob " << trackCand->getChi2Prob() << " <= " << _chi2ProbCut << "\n";
+                  delete trackCand;
+                  
+               }
                
             }
-            else{
+            catch( FitterException e ){
                
-               streamlog_out( DEBUG2 ) << "Track rejected (chi2prob " << trackCand->getChi2Prob() << " <= " << _chi2ProbCut << "\n";
+               
+               streamlog_out( DEBUG3 ) << "Track rejected, because fit failed: " <<  e.what() << "\n";
                delete trackCand;
+               
                
             }
             

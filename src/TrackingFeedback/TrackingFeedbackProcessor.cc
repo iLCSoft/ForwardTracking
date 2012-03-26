@@ -131,6 +131,25 @@ void TrackingFeedbackProcessor::init() {
    _nRecoTracks_Sum          = 0;
    _nDismissedTrueTracks_Sum = 0; 
    
+   
+   /**********************************************************************************************/
+   /*       Initialise the MarlinTrkSystem, needed by the tracks for fitting                     */
+   /**********************************************************************************************/
+   
+   // set upt the geometry
+   _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
+   
+   if( _trkSystem == 0 ) throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
+   
+   
+   // set the options   
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS,        _MSOn ) ;       //multiple scattering
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx,       _ElossOn) ;     //energy loss
+   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing,  _SmoothOn) ;    //smoothing
+   
+   // initialise the tracking system
+   _trkSystem->init() ;
+   
 }
 
 
@@ -196,8 +215,22 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       
       double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
-      Fitter fitter( track );
-      double chi2Prob = fitter.getChi2Prob();
+      
+      double chi2Prob;
+      
+      try{
+      
+      Fitter fitter( track, _trkSystem );
+      chi2Prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
+      
+      }
+      catch( FitterException e ){
+         
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because fit failed: " <<  e.what() << "\n";
+         _nDismissedTrueTracks++;
+         continue;
+         
+      }
       
       //Only store the good tracks
       if (( getDistToIP( mcp ) < _distToIPMax )&&                       //distance to IP
@@ -205,7 +238,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          ((int) track->getTrackerHits().size() >= _nHitsMin )&&         //number of hits in track        
          ( chi2Prob > _chi2ProbCut )){                      //chi2 probability
         
-         _trueTracks.push_back( new TrueTrack( track, mcp ) );
+         _trueTracks.push_back( new TrueTrack( track, mcp , _trkSystem ) );
          
       }
       else _nDismissedTrueTracks++;

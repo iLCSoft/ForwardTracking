@@ -112,6 +112,9 @@ class TrackingFeedbackProcessor : public Processor {
    
    double getDistToIP( MCParticle* mcp );
    
+   MarlinTrk::IMarlinTrkSystem* _trkSystem;
+   
+   
 } ;
 
 #endif
