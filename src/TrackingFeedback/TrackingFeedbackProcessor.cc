@@ -214,7 +214,6 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       if ( _drawMCPTracks ) MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
       
       
-      double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
       
       double chi2Prob;
       
@@ -232,16 +231,57 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
       }
       
+      
       //Only store the good tracks
-      if (( getDistToIP( mcp ) < _distToIPMax )&&                       //distance to IP
-         ( pt > _ptMin )&&                                              //transversal momentum
-         ((int) track->getTrackerHits().size() >= _nHitsMin )&&         //number of hits in track        
-         ( chi2Prob > _chi2ProbCut )){                      //chi2 probability
-        
-         _trueTracks.push_back( new TrueTrack( track, mcp , _trkSystem ) );
+      
+      //distance to IP
+      double dist= getDistToIP( mcp );
+      if( dist > _distToIPMax ){
+         
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because it is too far from the IP. " 
+            <<  "distance to IP = " << dist << ", distToIPMax = " << _distToIPMax << "\n";
+         _nDismissedTrueTracks++;
+         continue;
          
       }
-      else _nDismissedTrueTracks++;
+      
+      //transversal momentum
+      double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
+      if( pt < _ptMin ){
+         
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because pt is too low. " 
+         <<  "pt = " << pt << ", ptMin = " << _ptMin << "\n";
+         _nDismissedTrueTracks++;
+         continue;
+         
+      }
+      
+      //number of hits in track
+      unsigned hitsInTrack = track->getTrackerHits().size();
+      if( int( hitsInTrack ) < _nHitsMin ){
+         
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because it has too few hits. " 
+         <<  "hits in track = " << hitsInTrack << ", hits in Track min = " << _nHitsMin << "\n";
+         _nDismissedTrueTracks++;
+         continue;
+         
+      }
+      
+      //chi2 probability
+      if( chi2Prob < _chi2ProbCut ){
+         
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because chi2prob is too low. " 
+         <<  "chi2prob = " << chi2Prob << ", chi2ProbMin = " << _chi2ProbCut << "\n";
+         _nDismissedTrueTracks++;
+         continue;
+         
+      }
+      
+      
+      
+      _trueTracks.push_back( new TrueTrack( track, mcp , _trkSystem ) );
+      
+      
       
    }
    
@@ -277,7 +317,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       
       /**********************************************************************************************/
-      /*              Print various information on the true track and related ones                  */
+      /*              Print various information on the true track and the related reco tracks       */
       /**********************************************************************************************/
       
       streamlog_out( DEBUG4 ).precision (4);

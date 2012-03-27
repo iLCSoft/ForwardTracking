@@ -53,6 +53,8 @@ std::string TrueTrack::getTrueTrackInfo(){
    // Information about the hits:
    std::vector< TrackerHit* > hits= _trueTrack->getTrackerHits();
    
+   std::sort( hits.begin(), hits.end(), FTrackILD::compare_TrackerHit_z );
+   
    for( unsigned i=0; i < hits.size(); i++ ){
       
       TrackerHit* hit = hits[i];
