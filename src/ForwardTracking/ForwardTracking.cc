@@ -912,6 +912,7 @@ void ForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
    
    Fitter fitter( trackImpl , _trkSystem );
    
+   trackImpl->trackStates().clear();
    
    TrackStateImpl* trkStateIP = new TrackStateImpl( fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
    trkStateIP->setLocation( TrackState::AtIP );
