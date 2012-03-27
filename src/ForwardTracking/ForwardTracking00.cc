@@ -510,7 +510,9 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
          
          FTDTrack* myTrack = dynamic_cast< FTDTrack* >( tracks[i] );
          
-         if( myTrack != NULL ) trkCol->addElement( myTrack->getLcioTrack() );
+         TrackImpl* trackImpl = new TrackImpl( *(myTrack->getLcioTrack()) );
+         
+         if( myTrack != NULL ) trkCol->addElement( trackImpl );
          
          
       }

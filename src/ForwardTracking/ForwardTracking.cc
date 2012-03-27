@@ -613,7 +613,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       /**********************************************************************************************/
-      /*               Finally: save the tracks                                                     */
+      /*               Finally: Finalise and save the tracks                                        */
       /**********************************************************************************************/
       streamlog_out( DEBUG4 ) << "\t\t---Save Tracks---\n" ;
       
@@ -622,12 +622,30 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       LCFlagImpl hitFlag(0) ;
       hitFlag.setBit( LCIO::TRBIT_HITS ) ;
       trkCol->setFlag( hitFlag.getFlag()  ) ;
-
+      
       for (unsigned int i=0; i < tracks.size(); i++){
          
          FTDTrack* myTrack = dynamic_cast< FTDTrack* >( tracks[i] );
          
-         if( myTrack != NULL ) trkCol->addElement( myTrack->getLcioTrack() );
+         if( myTrack != NULL ){
+            
+            
+            TrackImpl* trackImpl = new TrackImpl( *(myTrack->getLcioTrack()) );
+            
+            try{
+               
+               finaliseTrack( trackImpl );
+               trkCol->addElement( trackImpl );
+               
+            }
+            catch( FitterException e ){
+               
+               streamlog_out( DEBUG4 ) << "ForwardTracking: track couldn't be finalized due to fitter error: " << e.what() << "\n";
+               delete trackImpl;
+            }
+            
+            
+         }
          
          
       }
@@ -888,5 +906,74 @@ std::vector < RawTrack > ForwardTracking::getRawTracksPlusOverlappingHits( RawTr
    
 }
 
+
+void ForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
+   
+   
+   Fitter fitter( trackImpl , _trkSystem );
+   
+   
+   TrackStateImpl* trkStateIP = new TrackStateImpl( fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
+   trkStateIP->setLocation( TrackState::AtIP );
+   trackImpl->addTrackState( trkStateIP );
+   
+   TrackStateImpl* trkStateFirstHit = new TrackStateImpl( fitter.getTrackState( TrackState::AtFirstHit ) ) ;
+   trkStateFirstHit->setLocation( TrackState::AtFirstHit );
+   trackImpl->addTrackState( trkStateFirstHit );
+   
+   TrackStateImpl* trkStateLastHit = new TrackStateImpl( fitter.getTrackState( TrackState::AtLastHit ) ) ;
+   trkStateLastHit->setLocation( TrackState::AtLastHit );
+   trackImpl->addTrackState( trkStateLastHit );
+   
+   TrackStateImpl* trkStateAtCalo = new TrackStateImpl( fitter.getTrackState( TrackState::AtCalorimeter ) ) ;
+   trkStateAtCalo->setLocation( TrackState::AtCalorimeter );
+   trackImpl->addTrackState( trkStateAtCalo );
+   
+   trackImpl->setChi2( fitter.getChi2( TrackState::AtIP ) );
+   trackImpl->setNdf(  fitter.getNdf ( TrackState::AtIP ) );
+   
+   const float* p = trkStateFirstHit->getReferencePoint();
+   trackImpl->setRadiusOfInnermostHit( sqrt( p[0]*p[0] + p[1]*p[1] + p[2]*p[2] ) );
+   
+   std::map<int, int> hitNumbers; 
+   
+   hitNumbers[lcio::ILDDetID::VXD] = 0;
+   hitNumbers[lcio::ILDDetID::SIT] = 0;
+   hitNumbers[lcio::ILDDetID::FTD] = 0;
+   hitNumbers[lcio::ILDDetID::TPC] = 0;
+   hitNumbers[lcio::ILDDetID::SET] = 0;
+   hitNumbers[lcio::ILDDetID::ETD] = 0;
+   
+   std::vector< TrackerHit* > trackerHits = trackImpl->getTrackerHits();
+   for( unsigned j=0; j < trackerHits.size(); j++ ){
+      
+      UTIL::BitField64 encoder( ILDCellID0::encoder_string );
+      encoder.setValue( trackerHits[j]->getCellID0() );
+      int subdet =  encoder[lcio::ILDCellID0::subdet];
+     
+      
+      ++hitNumbers[ subdet ];
+      
+   }
+   
+   trackImpl->subdetectorHitNumbers().resize(2 * lcio::ILDDetID::ETD);
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::VXD - 2 ] = hitNumbers[lcio::ILDDetID::VXD];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::FTD - 2 ] = hitNumbers[lcio::ILDDetID::FTD];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::SIT - 2 ] = hitNumbers[lcio::ILDDetID::SIT];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::TPC - 2 ] = hitNumbers[lcio::ILDDetID::TPC];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::SET - 2 ] = hitNumbers[lcio::ILDDetID::SET];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::ETD - 2 ] = hitNumbers[lcio::ILDDetID::ETD];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::VXD - 1 ] = hitNumbers[lcio::ILDDetID::VXD];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::FTD - 1 ] = hitNumbers[lcio::ILDDetID::FTD];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::SIT - 1 ] = hitNumbers[lcio::ILDDetID::SIT];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::TPC - 1 ] = hitNumbers[lcio::ILDDetID::TPC];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::SET - 1 ] = hitNumbers[lcio::ILDDetID::SET];
+   trackImpl->subdetectorHitNumbers()[ 2 * lcio::ILDDetID::ETD - 1 ] = hitNumbers[lcio::ILDDetID::ETD];
+   
+   
+   return;
+   
+   
+}
 
 

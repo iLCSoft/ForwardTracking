@@ -40,7 +40,7 @@ namespace FTrack{
       
       /** @return a track in the lcio format
        */
-      Track* getLcioTrack(){ return ( new IMPL::TrackImpl(*_lcioTrack) );}
+      TrackImpl* getLcioTrack(){ return ( _lcioTrack );}
       
     
       void addHit( IHit* hit );

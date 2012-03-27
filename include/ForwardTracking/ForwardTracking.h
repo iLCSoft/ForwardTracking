@@ -7,6 +7,7 @@
 #include "lcio.h"
 #include "EVENT/TrackerHit.h"
 #include "EVENT/Track.h"
+#include "IMPL/TrackImpl.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
 #include "gear/BField.h"
 
@@ -160,6 +161,12 @@ class ForwardTracking : public Processor {
     * are in an overlapping region behind them. (TODO: what this function does is actually more general, maybe rename)
     */
    std::vector < RawTrack > getRawTracksPlusOverlappingHits( RawTrack rawTrack , std::map< IHit* , std::vector< IHit* > >& map_hitFront_hitsBack );
+      
+   /** Finalises the track: fits it and adds TrackStates at IP, Calorimeter Face, inner- and outermost hit.
+    * Sets the subdetector hit numbers and the radius of the innermost hit.
+    * Also sets chi2 and Ndf.
+    */
+   void finaliseTrack( TrackImpl* trackImpl );
       
    
    std::vector< std::string > _criteriaNames;
