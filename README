@@ -1,54 +1,73 @@
-
-
-Quick steps to build the mymarlin example:
-------------------------------------------
-
-    . /path/to/ilcsoft/installation/v01-XX/init_ilcsoft.sh
-    mkdir build
-    cd build
-    cmake -C $ILCSOFT/ILCSoft.cmake ..
-    make install # this should create library: lib/libmymarlin.so
-
-
-
-Quick steps to load mymarlin example into Marlin:
--------------------------------------------------
-
-    export MARLIN_DLL=$PWD/lib/libmymarlin.so
-    Marlin -x > mysteer.xml
-    grep mymarlin mysteer.xml # should display ... Loading shared library ... (lib/libmymarlin.so)
-
-
-
-Quick steps to change this example into your own Marlin plugin:
----------------------------------------------------------------
-
-    1.) rename source files:
-        
-        mv include/MyProcessor.h include/ChooseAReasonableNameForThisClass.h
-        mv src/MyProcessor.cc src/ChooseAReasonableNameForThisClass.cc
-
-    2.) change CMakeLists.txt:
-
-        PROJECT( ChooseAReasonableName )
-
-        Check DEPENDENCIES for additional required / optional packages
-
-
-    3.) compile your new plugin and load it into Marlin as described above
+############################################################################################################
+#
+#    ForwardTracking
+#
+#    Track Reconstruction for the Forward Direction (for the FTD)
+#
+#    Robin Glattauer, HEPHY 2012
+#
+#
+############################################################################################################
 
 
 
 
-Infos and support:
-------------------
 
-iLCSoft general documentation:
-http://ilcsoft.desy.de/portal/general_documentation/index_eng.html
 
-CMake website:
-http://www.cmake.org
 
-The Linear Collider Forum:
-http://forum.linearcollider.org
 
+
+
+Version History
+=============================================================================================================
+ 
+
+  -----------------------------
+ | changes since last version  |
+  -----------------------------
+ 
+
+  ---------
+ | v01-02  |
+  ---------
+
+      - added finalising of tracks (final refit, radius of innermost hit, hitnumbers of detectors,... see method ForwardTracking::finaliseTrack )
+      - modified fitting: now done in one central place by the class Fitter
+      - changed initialisation of FTDTrack: now a MarlinTrkSystem* has to be passed, which can be used by the track to fit
+      - Modified to use spacepoints
+      - Added steering parameter: TakeBestVersionOfTrack
+      - Added steering parameter for the best track subset
+      - Use new gear params for FTD (getNSensors)
+      - patched memory leaks
+      - some renaming of classes and documentation
+
+
+  -----------
+ | v01-01-01 |
+  -----------
+
+
+      - lengthenSegments() modified to be able to deal with 0 hits situation
+      - Made an ITrackSubset Interface and added TrackSubsetSimple
+      - Added new executable to run Marlin (worker.cc) with different backgrounds
+      - Added a regulator for all the background (FTDBackgroundProcessor) to easily make it stronger or weaker with just one parameter
+      - Rewrote the TrackingFeedbackProcessor. Changed the MyRelation struct to a class called TrueTrack and modified it. 
+      - Added the Fitter class, which is just a class that fits some hits or a track and returns chi2, chi2prob and Ndf.
+      - Made the hit connector more specific and thus track finding faster. 
+      - Corrected error in FTDHit01 with the setting of the layer. 
+      - Added more info to StepAnalyser
+
+
+
+  ---------
+ | v01-01  |
+  ---------
+      
+      - added processor to check overlapping of tracks
+      - added collection flag to write the hits to the LCIO file
+      - added location AtIP to the TrackStates
+
+  --------
+ | v01-00 |
+  --------
+      - initial import
