@@ -117,7 +117,7 @@ void Fitter::fit()throw( FitterException ){
          ++number_of_added_hits;
       }
       else{
-         streamlog_out(DEBUG4) << "Fitter::fit(): Hit " << it - _trackerHits.begin() << " Dropped " << std::endl;          
+         streamlog_out(DEBUG2) << "Fitter::fit(): Hit " << it - _trackerHits.begin() << " Dropped " << std::endl;          
       }
       
    }

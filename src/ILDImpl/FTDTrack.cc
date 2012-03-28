@@ -110,7 +110,7 @@ void FTDTrack::fit() throw( FitterException ){
    
    
    _lcioTrack->setChi2( fitter.getChi2( lcio::TrackState::AtIP ) );
-   _lcioTrack->setNdf( fitter.getChi2( lcio::TrackState::AtIP ) );
+   _lcioTrack->setNdf( fitter.getNdf( lcio::TrackState::AtIP ) );
    _chi2Prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
    
    TrackStateImpl* trkState = new TrackStateImpl( fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
