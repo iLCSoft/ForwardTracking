@@ -310,7 +310,21 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
    for( unsigned iCol=0; iCol < _FTDHitCollections.size(); iCol++ ){
       
       
-      LCCollection* col = evt->getCollection( _FTDHitCollections[iCol] ) ;
+      LCCollection* col;
+      
+      
+      try {
+         
+         col = evt->getCollection( _FTDHitCollections[iCol] ) ;
+         
+      }
+      catch(DataNotAvailableException &e) {
+         
+         streamlog_out( ERROR ) << "Collection " <<  _FTDHitCollections[iCol] <<  " is not available!\n";     
+         continue;
+         
+      }
+      
       unsigned nHits = col->getNumberOfElements();
       
       streamlog_out( DEBUG4 ) << "Number of hits in collection " << _FTDHitCollections[iCol] << ": " << nHits <<"\n";
