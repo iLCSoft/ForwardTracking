@@ -91,7 +91,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
    registerProcessorParameter( "HitsPerTrackMin",
                                "The minimum number of hits to create a track",
                                _hitsPerTrackMin,
-                               int( 3 ) );
+                               int( 4 ) );
    
    
    registerProcessorParameter( "BestSubsetFinder",
@@ -609,7 +609,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          //Calculate the best subset:
          subset->calculateBestSet();
          
-         std::vector< ITrack* > tracks = subset->getAcceptedTracks();
+         tracks = subset->getAcceptedTracks();
          std::vector< ITrack* > rejectedTracks = subset->getRejectedTracks();
          
          // immediately delete the rejected ones
@@ -667,7 +667,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
-      streamlog_out (MESSAGE0) << "\nForward Tracking found and saved " << tracks.size() << " tracks.\n"; 
+      streamlog_out (DEBUG5) << "Forward Tracking found and saved " << tracks.size() << " tracks.\n"; 
       
       
       /**********************************************************************************************/

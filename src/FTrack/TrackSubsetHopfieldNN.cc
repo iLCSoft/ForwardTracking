@@ -227,16 +227,16 @@ void TrackSubsetHopfieldNN::calculateBestSet(){
       }
       
       
-      streamlog_out( DEBUG3 ) << "\n\t Hopfield Neural Network accepted " << nAccepted 
+      streamlog_out( DEBUG3 ) << "Hopfield Neural Network accepted " << nAccepted 
                               << " tracks and rejected " << nRejected << " tracks of all in all " 
-                              << nAccepted + nRejected << "incomaptible tracks.";
+                              << nAccepted + nRejected << "incomaptible tracks.\n";
       
       
    }
    
  
-      streamlog_out( DEBUG3 )   << "\n So in sum " << nAccepted + nCompWithAll
-                                << " tracks survived and " << nRejected << " tracks got rejected.";
+      streamlog_out( DEBUG3 )   << "So in sum " << nAccepted + nCompWithAll
+                                << " tracks survived and " << nRejected << " tracks got rejected.\n";
    
 }
 
