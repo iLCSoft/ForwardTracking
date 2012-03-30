@@ -112,6 +112,8 @@ protected:
    double _distToIPMax;
    double _chi2ProbCut;
    int _nHitsMin;
+   double _overlappingHitsDistMax;
+   bool _writeNewRootFile;
    
    const SectorSystemFTD* _sectorSystemFTD;
    

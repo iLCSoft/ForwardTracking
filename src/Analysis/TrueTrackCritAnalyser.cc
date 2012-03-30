@@ -6,19 +6,16 @@
 #include "EVENT/LCCollection.h"
 #include "EVENT/MCParticle.h"
 #include "EVENT/Track.h"
-#include "EVENT/MCParticle.h"
-#include "IMPL/TrackerHitPlaneImpl.h"
 #include "marlin/VerbosityLevels.h"
 #include "marlin/Global.h"
-
-#include "TVector3.h"
-#include "Math/ProbFunc.h"  // Root, for calculating the chi2 probability. 
-
+#include "gear/FTDParameters.h"
+#include "gear/FTDLayerLayout.h"
 
 #include "FTrackILDTools.h"
 #include "Criteria.h"
-#include "FTDTrack.h"
-#include "FTDHit00.h"
+#include "FTDHit01.h"
+#include "Fitter.h"
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -34,7 +31,7 @@ TrueTrackCritAnalyser aTrueTrackCritAnalyser ;
 TrueTrackCritAnalyser::TrueTrackCritAnalyser() : Processor("TrueTrackCritAnalyser") {
    
    // modify processor description
-   _description = "TrueTrackCritAnalyser: Analysis of different criteria for true tracks in the FTD" ; //TODO
+   _description = "TrueTrackCritAnalyser: Analysis of criteria for the Cellular Automaton" ;
    
    
    // register steering parameters: name, description, class-variable, default value
@@ -93,6 +90,17 @@ TrueTrackCritAnalyser::TrueTrackCritAnalyser() : Processor("TrueTrackCritAnalyse
                               _nHitsMin,
                               int (4)  );   
    
+   registerProcessorParameter("OverlappingHitsDistMax",
+                              "The maximum distance of hits from overlapping petals belonging to one track",
+                              _overlappingHitsDistMax,
+                              double(3.5));
+   
+   registerProcessorParameter("WriteNewRootFile",
+                              "What to do with older root file: true = rename it, false = leave it and append new one",
+                              _writeNewRootFile,
+                              bool( true ) );
+                              
+   
 }
 
 
@@ -105,10 +113,18 @@ void TrueTrackCritAnalyser::init() {
    printParameters() ;
    
    
-   // TODO: get this from gear
-   unsigned int nLayers = 8; // layer 0 is for the IP
-   unsigned int nModules = 16;
-   unsigned int nSensors = 2;  
+   const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
+   const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
+   int nLayers = ftdLayers.getNLayers() + 1;
+   int nModules = ftdLayers.getNPetals(0);
+   int nSensors = ftdLayers.getNSensors(0);
+   
+   for( int i=1; i<nLayers; i++){
+      
+      if( ftdLayers.getNPetals(i) > nModules ) nModules = ftdLayers.getNPetals(i); 
+      if( ftdLayers.getNSensors(i) > nSensors ) nSensors = ftdLayers.getNSensors(i);
+      
+   }
    
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
    
@@ -116,29 +132,19 @@ void TrueTrackCritAnalyser::init() {
    _nRun = 0 ;
    _nEvt = 0 ;
    
+   std::set< std::string > critNames = Criteria::getAllCriteriaNames();
+   std::set< std::string >::iterator it;
    
-   //Add the criteria that will be checked
-   _crits2.push_back( new Crit2_RZRatio( 1. , 1. ) ); 
-   _crits2.push_back( new Crit2_StraightTrackRatio( 1. , 1. ) );
-   _crits2.push_back( new Crit2_DeltaPhi( 0. , 0. ) );
-   _crits2.push_back( new Crit2_HelixWithIP ( 1. , 1. ) );
-   _crits2.push_back( new Crit2_DeltaRho( 0. , 0. ) );
-   
-   
-   _crits3.push_back( new Crit3_ChangeRZRatio( 1. , 1. ) );
-   _crits3.push_back( new Crit3_PT (0.1 , 0.1) );
-   _crits3.push_back( new Crit3_2DAngle (0. , 0.) );
-   _crits3.push_back( new Crit3_3DAngle (0. , 0.) );
-   _crits3.push_back( new Crit3_IPCircleDist (0. , 0.) );
-   
-   _crits4.push_back( new  Crit4_2DAngleChange ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_3DAngleChange ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_PhiZRatioChange ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_DistToExtrapolation ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_DistOfCircleCenters ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_NoZigZag ( 1. , 1. ) );
-   _crits4.push_back( new  Crit4_RChange ( 1. , 1. ) );
-   
+   for( it = critNames.begin(); it!= critNames.end(); it++ ){
+      
+      ICriterion* crit = Criteria::createCriterion( (*it) );
+      
+      if ( crit->getType() == "2Hit" ) _crits2.push_back( crit );
+      else if ( crit->getType() == "3Hit" ) _crits3.push_back( crit );
+      else if ( crit->getType() == "4Hit" ) _crits4.push_back( crit );
+      else delete crit;
+      
+   }
 
    
    
@@ -177,7 +183,7 @@ void TrueTrackCritAnalyser::init() {
       std::map < std::string , float > ::iterator it;
       
       for ( it = newMap.begin() ; it != newMap.end() ; it++ ){ //over all values in the map
-
+         
          
          branchNames2.insert( it->first ); //store the names of the values in the set critNames
          
@@ -193,7 +199,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames2.insert( "distance" ); // the distance between two hits
    // Set up the root file with the tree and the branches
    _treeName2 = "2Hit";
-   FTrackILD::setUpRootFile( _rootFileName, _treeName2, branchNames2 );      //prepare the root file.
+   FTrackILD::setUpRootFile( _rootFileName, _treeName2, branchNames2, _writeNewRootFile );      //prepare the root file.
    
    
    
@@ -305,7 +311,7 @@ void TrueTrackCritAnalyser::init() {
    /*                Set up the track fitter                                                     */
    /**********************************************************************************************/
    
-   // set upt the geometry
+   // set up the geometry
    _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
    
    if( _trkSystem == 0 ) throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
@@ -350,50 +356,71 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
 
       
       unsigned nUsedRelations = 0;
-
+      
+      streamlog_out(DEBUG3) << "There are " << nMCTracks << " MCPTrackRelations in the collection " << _colNameMCTrueTracksRel << "\n";
+      
       for( int i=0; i < nMCTracks; i++){ // for every true track
-      
-
-         bool isOfInterest = true;  // A bool to hold information wether this track we are looking at is interesting for us at all
-                                    // So we might apply different criteria to it.
-                                    // For example: if a track is very curly we might not want to consider it at all.
-
-     
-      
+         
+         
          LCRelation* rel = dynamic_cast <LCRelation*> (col->getElementAt(i) );
          MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );
          Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
-
+         
+         
+         
+         /**********************************************************************************************/
+         /*               First: check if the track is of interest                                     */
+         /**********************************************************************************************/
+         // (we don't necessarily want or are able to reconstruct all tracks. Tracks with a really bad
+         // multiple scattering and therefore bad chi2prob are unlikely to be reconstructed.
+         // Same goes for tracks with very low pt )
          
          
          
          //////////////////////////////////////////////////////////////////////////////////
-         //If distance from origin is not too high      
-         double dist = sqrt(mcp->getVertex()[0]*mcp->getVertex()[0] + 
-         mcp->getVertex()[1]*mcp->getVertex()[1] + 
-         mcp->getVertex()[2]*mcp->getVertex()[2] );
+         //If distance from origin is not too high   
+         const double * vtx = mcp->getVertex();
+         double distToIP = sqrt(vtx[0]*vtx[0] + vtx[1]*vtx[1] + vtx[2]*vtx[2] );
          
+         // exclude vertices too far away from the origin. 
+          
+         if ( distToIP > _distToIPMax ){
+            
+            streamlog_out( DEBUG3 ) << "True track " << i << " is discarded because the distance of the vertex from the origin is too high: "
+            << distToIP << " > _distToIPMax( " << _distToIPMax << ")\n";
+            continue;   
+            
+         }
          
-         
-         if ( dist > _distToIPMax ) isOfInterest = false;   // exclude point too far away from the origin. Of course we want them reconstructed too,
-                                                // but at the moment we are only looking at the points that are reconstructed by a simple
-                                                // Cellular Automaton, which uses the point 0 as a point in the track
-                                                //
-                                                //////////////////////////////////////////////////////////////////////////////////
-                                                
          //////////////////////////////////////////////////////////////////////////////////
          //If pt is not too low
-                                                
-         double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
          
-         if ( pt < _ptMin ) isOfInterest = false;
+         const double* p = mcp->getMomentum();
+         
+         double pt=  sqrt( p[0]*p[0]+p[1]*p[1] );
+         
+         
+         if ( pt < _ptMin ){
+            
+            streamlog_out( DEBUG3 ) << "True track " << i << " is discarded because the pt is too low: "
+            << pt << " < _ptMin( " << _ptMin << ")\n";
+            continue;   
+            
+         }
          //
          //////////////////////////////////////////////////////////////////////////////////
          
          //////////////////////////////////////////////////////////////////////////////////
-         //If there are more than 4 hits in the track
+         //If there are enough hits in the track
          
-         if ( (int) track->getTrackerHits().size() < _nHitsMin ) isOfInterest = false;
+         int nHits = track->getTrackerHits().size();
+         if ( nHits < _nHitsMin ){
+            
+            streamlog_out( DEBUG3 ) << "True track " << i << " is discarded because there are too few hits in the track: "
+            << nHits << " < _nHitsMin( " << _nHitsMin << ")\n";
+            continue;   
+            
+         }
          //
          //////////////////////////////////////////////////////////////////////////////////
          
@@ -402,297 +429,298 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          //If the chi2 probability is too low
          
          //Fit the track
+         double chi2;
+         double Ndf;
+         double chi2Prob;
+         
+         try{
+            
+            Fitter fitter( track, _trkSystem );
+            chi2 = fitter.getChi2( lcio::TrackState::AtIP );
+            Ndf = fitter.getNdf( lcio::TrackState::AtIP );
+            chi2Prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
+            
+         }
+         catch( FitterException e ){
+            
+            streamlog_out( DEBUG3 ) << "True track " << i << " is discarded because fit failed: " << e.what() << "\n";
+            continue;   
+            
+         }
+         
+         if ( chi2Prob < _chi2ProbCut ){
+            
+            streamlog_out( DEBUG3 ) << "True track " << i << " is discarded because chi2 probability is too low: "
+            << chi2Prob << " < _chi2ProbCut( " << _chi2ProbCut << ")\n";
+            continue;   
+            
+         }
+         //
+         //////////////////////////////////////////////////////////////////////////////////
+         
+         
+         /**********************************************************************************************/
+         /*      If we reached this point the track is of interest  -> create FTDHits                  */
+         /**********************************************************************************************/
+         
+         nUsedRelations++;
          
          std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
          // sort the hits in the track
          sort( trackerHits.begin(), trackerHits.end(), FTrackILD::compare_TrackerHit_z );
          // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
-         // So the direction of the hits when following the index from 0 on is:
-         // from inside out: from the IP into the distance.
         
-         
+         // make FTDHits from them (because Criteria need IHit pointers and FTDHits are derrived from IHit )
          std::vector <IHit*> hits;
+         for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit01( trackerHits[j] , _sectorSystemFTD ) );
          
-         for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit00( trackerHits[j] , _sectorSystemFTD ) );
         
          
-         FTDTrack myTrack( _trkSystem );
-         for( unsigned j=0; j<hits.size(); j++ ) myTrack.addHit( hits[j] );
          
-         myTrack.fit();
+         /**********************************************************************************************/
+         /*                Manipulate the hits (for example erase some or add some)                    */
+         /**********************************************************************************************/
          
-         if ( myTrack.getChi2Prob() < _chi2ProbCut ) isOfInterest = false;
-         //
-         //////////////////////////////////////////////////////////////////////////////////
+         ///////////////////////////////////////////////////////////////////////////////////////////////
+         // Add the IP as a hit
+         IHit* virtualIPHit = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
          
-         if ( isOfInterest ){ 
+         hits.insert( hits.begin() , virtualIPHit );
+         ///////////////////////////////////////////////////////////////////////////////////////////////
+         
+         
+         ///////////////////////////////////////////////////////////////////////////////////////////////
+         //Erase hits that are too close. For those will be from overlapping petals
+         for ( unsigned j=1; j < hits.size() ; j++ ){
+            
+            IHit* hitA = hits[j-1];
+            IHit* hitB = hits[j];
+            
+            float dist = hitA->distTo( hitB );
+            
+            if( dist < _overlappingHitsDistMax ){
+               
+               hits.erase( hits.begin() + j );
+               j--;
+               
+            }               
+            
+         }
+         ///////////////////////////////////////////////////////////////////////////////////////////////
+         
+         /**********************************************************************************************/
+         /*                Build the segments                                                          */
+         /**********************************************************************************************/
+         
+         // Now we have a vector of hits starting with the IP followed by all (or most) hits from the track.
+         // So we now are able to build segments from them
+         
+         std::vector <Segment*> segments1; // 1-hit segments
+         
+         for ( unsigned j=0; j < hits.size(); j++ ){
             
             
-            nUsedRelations++;
-               
-            // Additional information on the track
-            const double* p = mcp->getMomentum();
+            std::vector <IHit*> segHits;
+            segHits.insert( segHits.begin() , hits.begin()+j , hits.begin()+j+1 );
             
-            double pt=  sqrt( p[0]*p[0]+p[1]*p[1] );
+            segments1.push_back( new Segment( segHits ) );
             
-            const double* vtx = mcp->getVertex();
-            double distToIP = sqrt( vtx[0]*vtx[0] + vtx[1]*vtx[1] + vtx[2]*vtx[2] );
-            
-            
-            
-            
-            // Add the IP as a hit
-            IHit* virtualIPHit = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
-           
-            hits.insert( hits.begin() , virtualIPHit );
-            
-           
-            /**********************************************************************************************/
-            /*                Manipulate the hits (for example erase some or add some)                    */
-            /**********************************************************************************************/
-            
-            float distMin = 5.;
-            //Erase hits that are too close. For those will be from overlapping petals
-            for ( unsigned j=1; j < hits.size() ; j++ ){
-               
-               IHit* hitA = hits[j-1];
-               IHit* hitB = hits[j];
-               
-               float dist = hitA->distTo( hitB );
-               
-               if( dist < distMin ){
-                  
-                  hits.erase( hits.begin() + j );
-                  j--;
-                  
-               }               
-               
-            }
-            
-            /**********************************************************************************************/
-            /*                Build the segments                                                          */
-            /**********************************************************************************************/
-            
-            // Now we have a vector of autHits starting with the IP followed by all the hits from the track.
-            // So we now are able to build segments from them
-            
-            std::vector <Segment*> segments1;
-            
-            for ( unsigned j=0; j < hits.size(); j++ ){
-               
-               
-               std::vector <IHit*> segHits;
-               segHits.insert( segHits.begin() , hits.begin()+j , hits.begin()+j+1 );
-               
-               segments1.push_back( new Segment( segHits ) );
-               
-            }
-            
-            std::vector <Segment*> segments2;
-            
-            for ( unsigned j=0; j < hits.size()-1; j++ ){
-               
-               
-               std::vector <IHit*> segHits;
-               
-               segHits.push_back( hits[j+1] );
-               segHits.push_back( hits[j] );
-               
-               segments2.push_back( new Segment( segHits ) );
-               
-            }
-            
-            std::vector <Segment*> segments3;
-            
-            for ( unsigned j=0; j < hits.size()-2; j++ ){
-               
-               
-               std::vector <IHit*> segHits;
-               
-               segHits.push_back( hits[j+2] );
-               segHits.push_back( hits[j+1] );
-               segHits.push_back( hits[j] );
-               
-               segments3.push_back( new Segment( segHits ) );
-               
-            }
-            
-            // Now we have the segments of the track ( ordered) in the vector
-            
-            /**********************************************************************************************/
-            /*                Use the criteria on the segments                                            */
-            /**********************************************************************************************/
-            
-                     
-            for ( unsigned j=0; j < segments1.size()-1; j++ ){
-               
-               // the data that will get stored
-               std::map < std::string , float > rootData;
-               
-               //make the check on the segments, store it in the the map...
-               Segment* child = segments1[j];
-               Segment* parent = segments1[j+1];
-               
-               
-               for( unsigned iCrit=0; iCrit < _crits2 .size(); iCrit++){ // over all criteria
-
-                  
-                  //get the map
-                  _crits2 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
-                  
-                  std::map < std::string , float > newMap = _crits2 [iCrit]->getMapOfValues(); //get the values that were calculated
-                  
-                  rootData.insert( newMap.begin() , newMap.end() );
-                  
-               }
-               
-               rootData["MCP_pt"] = pt;
-               rootData["MCP_distToIP"] = distToIP;
-               rootData["layers"] = child->getHits()[0]->getLayer() *10 + parent->getHits()[0]->getLayer();
-               
-               IHit* childHit = child->getHits()[0];
-               IHit* parentHit = parent->getHits()[0];
-               float dx = childHit->getX() - parentHit->getX();
-               float dy = childHit->getY() - parentHit->getY();
-               float dz = childHit->getZ() - parentHit->getZ();
-               rootData["distance"] = sqrt( dx*dx + dy*dy + dz*dz );
-               
-               rootDataVec2.push_back( rootData );
-               
-            }
+         }
+         
+         std::vector <Segment*> segments2; // 2-hit segments
+         
+         for ( unsigned j=0; j < hits.size()-1; j++ ){
             
             
-            for ( unsigned j=0; j < segments2.size()-1; j++ ){
-               
-               // the data that will get stored
-               std::map < std::string , float > rootData;
-               
-               //make the check on the segments, store it in the the map...
-               Segment* child = segments2[j];
-               Segment* parent = segments2[j+1];
-               
-               
-               for( unsigned iCrit=0; iCrit < _crits3 .size(); iCrit++){ // over all criteria
-
-                  
-                  //get the map
-                  _crits3 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
-                  
-                  std::map < std::string , float > newMap = _crits3 [iCrit]->getMapOfValues(); //get the values that were calculated
-                  
-                  rootData.insert( newMap.begin() , newMap.end() );
-                  
-               }
-               
-               rootData["MCP_pt"] = pt;
-               rootData["MCP_distToIP"] = distToIP;
-               rootData["layers"] = child->getHits()[1]->getLayer() *100 +
-                                    child->getHits()[0]->getLayer() *10 + 
-                                    parent->getHits()[0]->getLayer();
-               
-               rootDataVec3.push_back( rootData );
-               
-            }
+            std::vector <IHit*> segHits;
+            
+            segHits.push_back( hits[j+1] );
+            segHits.push_back( hits[j] );
+            
+            segments2.push_back( new Segment( segHits ) );
+            
+         }
+         
+         std::vector <Segment*> segments3; // 3-hit segments
+         
+         for ( unsigned j=0; j < hits.size()-2; j++ ){
             
             
-            for ( unsigned j=0; j < segments3.size()-1; j++ ){
-               
-               // the data that will get stored
-               std::map < std::string , float > rootData;
-               
-               //make the check on the segments, store it in the the map...
-               Segment* child = segments3[j];
-               Segment* parent = segments3[j+1];
-               
-               
-               for( unsigned iCrit=0; iCrit < _crits4 .size(); iCrit++){ // over all criteria
-
-                  
-                  //get the map
-                  _crits4 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
-                  
-                  std::map < std::string , float > newMap = _crits4 [iCrit]->getMapOfValues(); //get the values that were calculated
-                  
-                  rootData.insert( newMap.begin() , newMap.end() );
-                  
-               }
-               
-               rootData["MCP_pt"] = pt;
-               rootData["MCP_distToIP"] = distToIP;
-               rootData["layers"] = child->getHits()[2]->getLayer() *1000 +
-                                    child->getHits()[1]->getLayer() *100 +
-                                    child->getHits()[0]->getLayer() *10 + 
-                                    parent->getHits()[0]->getLayer();
-               
-               rootDataVec4.push_back( rootData );
-               
-            }
+            std::vector <IHit*> segHits;
             
+            segHits.push_back( hits[j+2] );
+            segHits.push_back( hits[j+1] );
+            segHits.push_back( hits[j] );
             
+            segments3.push_back( new Segment( segHits ) );
             
-            /**********************************************************************************************/
-            /*                Save the fit of the track                                                   */
-            /**********************************************************************************************/
+         }
+         
+         // Now we have the segments of the track (ordered) in the vector
+         
+         /**********************************************************************************************/
+         /*                Use the criteria on the segments                                            */
+         /**********************************************************************************************/
+         
+         
+         for ( unsigned j=0; j < segments1.size()-1; j++ ){
             
             // the data that will get stored
             std::map < std::string , float > rootData;
-               
-               
-               
-            float chi2 = myTrack.getChi2();
-            int Ndf = int( myTrack.getNdf() );
-            float chi2Prob = myTrack.getChi2Prob();
+            
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments1[j];
+            Segment* parent = segments1[j+1];
             
             
-            
-            rootData[ "chi2" ]          = chi2;
-            rootData[ "Ndf" ]           = Ndf;
-            rootData[ "nHits" ]         = myTrack.getHits().size();
-            rootData[ "chi2prob" ]      = chi2Prob;
+            for( unsigned iCrit=0; iCrit < _crits2 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits2 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits2 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               rootData.insert( newMap.begin() , newMap.end() );
+               
+            }
             
             rootData["MCP_pt"] = pt;
             rootData["MCP_distToIP"] = distToIP;
+            rootData["layers"] = child->getHits()[0]->getLayer() *10 + parent->getHits()[0]->getLayer();
             
-            rootDataVecKalman.push_back( rootData );
+            IHit* childHit = child->getHits()[0];
+            IHit* parentHit = parent->getHits()[0];
+            float dx = childHit->getX() - parentHit->getX();
+            float dy = childHit->getY() - parentHit->getY();
+            float dz = childHit->getZ() - parentHit->getZ();
+            rootData["distance"] = sqrt( dx*dx + dy*dy + dz*dz );
             
-            
-            
-            
-            /**********************************************************************************************/
-            /*                Clean up                                                                    */
-            /**********************************************************************************************/
-            
-            for (unsigned i=0; i<segments1.size(); i++) delete segments1[i];
-            segments1.clear();
-            for (unsigned i=0; i<segments2.size(); i++) delete segments2[i];
-            segments2.clear();
-            for (unsigned i=0; i<segments3.size(); i++) delete segments3[i];
-            segments3.clear();
-            for (unsigned i=0; i<hits.size(); i++) delete hits[i];
-            hits.clear();
-            
-            
-            
-            
+            rootDataVec2.push_back( rootData );
             
          }
+         
+         
+         for ( unsigned j=0; j < segments2.size()-1; j++ ){
+            
+            // the data that will get stored
+            std::map < std::string , float > rootData;
+            
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments2[j];
+            Segment* parent = segments2[j+1];
+            
+            
+            for( unsigned iCrit=0; iCrit < _crits3 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits3 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits3 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               rootData.insert( newMap.begin() , newMap.end() );
+               
+            }
+            
+            rootData["MCP_pt"] = pt;
+            rootData["MCP_distToIP"] = distToIP;
+            rootData["layers"] = child->getHits()[1]->getLayer() *100 +
+                                 child->getHits()[0]->getLayer() *10 + 
+                                 parent->getHits()[0]->getLayer();
+            
+            rootDataVec3.push_back( rootData );
+            
+         }
+         
+         
+         for ( unsigned j=0; j < segments3.size()-1; j++ ){
+            
+            // the data that will get stored
+            std::map < std::string , float > rootData;
+            
+            //make the check on the segments, store it in the the map...
+            Segment* child = segments3[j];
+            Segment* parent = segments3[j+1];
+            
+            
+            for( unsigned iCrit=0; iCrit < _crits4 .size(); iCrit++){ // over all criteria
+
+               
+               //get the map
+               _crits4 [iCrit]->areCompatible( parent , child ); //calculate their compatibility
+               
+               std::map < std::string , float > newMap = _crits4 [iCrit]->getMapOfValues(); //get the values that were calculated
+               
+               rootData.insert( newMap.begin() , newMap.end() );
+               
+            }
+            
+            rootData["MCP_pt"] = pt;
+            rootData["MCP_distToIP"] = distToIP;
+            rootData["layers"] = child->getHits()[2]->getLayer() *1000 +
+                                 child->getHits()[1]->getLayer() *100 +
+                                 child->getHits()[0]->getLayer() *10 + 
+                                 parent->getHits()[0]->getLayer();
+            
+            rootDataVec4.push_back( rootData );
+            
+         }
+         
+         
+         
+         /**********************************************************************************************/
+         /*                Save the fit of the track                                                   */
+         /**********************************************************************************************/
+         
+         
+         std::map < std::string , float > rootData;
+         
+         
+         rootData[ "chi2" ]          = chi2;
+         rootData[ "Ndf" ]           = Ndf;
+         rootData[ "nHits" ]         = nHits;
+         rootData[ "chi2prob" ]      = chi2Prob;
+         
+         rootData["MCP_pt"] = pt;
+         rootData["MCP_distToIP"] = distToIP;
+         
+         rootDataVecKalman.push_back( rootData );
+         
+         
+         
+         
+         /**********************************************************************************************/
+         /*                Clean up                                                                    */
+         /**********************************************************************************************/
+         
+         for (unsigned i=0; i<segments1.size(); i++) delete segments1[i];
+         segments1.clear();
+         for (unsigned i=0; i<segments2.size(); i++) delete segments2[i];
+         segments2.clear();
+         for (unsigned i=0; i<segments3.size(); i++) delete segments3[i];
+         segments3.clear();
+         for (unsigned i=0; i<hits.size(); i++) delete hits[i];
+         hits.clear();
+         
+         
        
       }
-         
-        
-        
+      
+      
+      
       /**********************************************************************************************/
       /*                Save all the data to ROOT                                                   */
       /**********************************************************************************************/
-        
-
+      
+      
       FTrackILD::saveToRoot( _rootFileName, _treeName2, rootDataVec2 );
       FTrackILD::saveToRoot( _rootFileName, _treeName3, rootDataVec3 );
       FTrackILD::saveToRoot( _rootFileName, _treeName4, rootDataVec4 );
       FTrackILD::saveToRoot( _rootFileName, _treeNameKalman, rootDataVecKalman );
       
-         
-      streamlog_out (MESSAGE) << "\n Number of used mcp-track relations: " << nUsedRelations <<"\n";
+      
+      streamlog_out (DEBUG5) << "Number of used mcp-track relations: " << nUsedRelations <<"\n";
     
    }
  

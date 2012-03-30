@@ -49,7 +49,7 @@ ForwardTracking aForwardTracking ;
 ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
 
    // modify processor description
-   _description = "ForwardTracking reconstructs tracks through the FTDs" ;
+   _description = "ForwardTracking reconstructs tracks through the FTD" ;
 
 
    // register steering parameters: name, description, class-variable, default value
