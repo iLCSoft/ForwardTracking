@@ -1,28 +1,22 @@
 #include "StepAnalyser.h"
+
 #include <iostream>
-
-#include <EVENT/LCCollection.h>
-#include <EVENT/MCParticle.h>
-
-// ----- include for verbosity dependend logging ---------
-#include "marlin/VerbosityLevels.h"
-
-#include <EVENT/LCRelation.h>
-#include <EVENT/Track.h>
-#include <EVENT/MCParticle.h>
 #include <cmath>
 #include <algorithm>
-#include "UTIL/ILDConf.h"
 
+#include "marlin/VerbosityLevels.h"
+#include "EVENT/LCCollection.h"
+#include "EVENT/MCParticle.h"
+#include "EVENT/LCRelation.h"
+#include "EVENT/Track.h"
+#include "IMPL/TrackerHitPlaneImpl.h"
+#include "UTIL/ILDConf.h"
 
 #include "TROOT.h"
 #include "TTree.h"
 #include "TFile.h"
 
-
-#include "FTrackILDTools.h"
-
-#include <IMPL/TrackerHitPlaneImpl.h>
+#include "Tools/KiTrackMarlinTools.h"
 
 
 
@@ -30,8 +24,6 @@
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
-
 
 
 
@@ -95,7 +87,7 @@ void StepAnalyser::init() {
    
    // Set up the root file with the tree and the branches
    _treeName = "values";
-   FTrackILD::setUpRootFile( _rootFileName, _treeName, branchNames );      //prepare the root file.
+   KiTrackMarlin::setUpRootFile( _rootFileName, _treeName, branchNames );      //prepare the root file.
    
    
    branchNames.clear();
@@ -111,7 +103,7 @@ void StepAnalyser::init() {
    branchNames.insert("pt");
    
    _treeName2 = "hitPairs";
-   FTrackILD::setUpRootFile( _rootFileName, _treeName2, branchNames , false );   
+   KiTrackMarlin::setUpRootFile( _rootFileName, _treeName2, branchNames , false );   
    
    
    
@@ -151,7 +143,7 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
       std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
       
       //sort the hits
-      sort( trackerHits.begin(), trackerHits.end(), FTrackILD::compare_TrackerHit_z ); 
+      sort( trackerHits.begin(), trackerHits.end(), KiTrackMarlin::compare_TrackerHit_z ); 
       
 
       int lastLayerBeforeIP = 0;
@@ -218,8 +210,8 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
    
    streamlog_out(DEBUG) << "Saving " << rootDataVec2.size() << "\n";
 
-   FTrackILD::saveToRoot( _rootFileName, _treeName , rootDataVec );
-   FTrackILD::saveToRoot( _rootFileName, _treeName2 , rootDataVec2 );
+   KiTrackMarlin::saveToRoot( _rootFileName, _treeName , rootDataVec );
+   KiTrackMarlin::saveToRoot( _rootFileName, _treeName2 , rootDataVec2 );
 
 
    //-- note: this will not be printed if compiled w/o MARLINDEBUG4=1 !

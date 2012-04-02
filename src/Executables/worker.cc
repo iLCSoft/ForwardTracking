@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "Timer.h"
+#include "Tools/Timer.h"
 
 /**
  * This small executable is there to automically run Marlin for different values of the 
@@ -82,7 +82,7 @@ int main(int argc,char *argv[]){
       myfile << "quantile size\t" << quantSize << "\t\t";
       
       
-      myfile << "elapsed time\t" << FTrack::Timer::lap();
+      myfile << "elapsed time\t" << KiTrackMarlin::Timer::lap();
       
       
       myfile.close();

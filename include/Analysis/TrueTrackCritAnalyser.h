@@ -1,23 +1,23 @@
 #ifndef TrueTrackCritAnalyser_h
-#define TrueTrackCritAnalyser_h 1
+#define TrueTrackCritAnalyser_h
+
+#include <string>
 
 #include "marlin/Processor.h"
 #include "lcio.h"
-
-#include <EVENT/TrackerHit.h>
-#include <EVENT/Track.h>
-#include "Segment.h"
-#include <EVENT/LCRelation.h>
-
+#include "EVENT/TrackerHit.h"
+#include "EVENT/Track.h"
+#include "EVENT/LCRelation.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
 
-#include "ICriterion.h"
-#include <string>
-#include "SectorSystemFTD.h"
+#include "KiTrack/Segment.h"
+#include "Criteria/ICriterion.h"
+
+#include "ILDImpl/SectorSystemFTD.h"
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
+using namespace KiTrackMarlin;
 
 
 

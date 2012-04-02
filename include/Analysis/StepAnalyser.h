@@ -1,20 +1,21 @@
 #ifndef StepAnalyser_h
 #define StepAnalyser_h 1
 
-#include "marlin/Processor.h"
-#include "lcio.h"
-
-#include <EVENT/TrackerHit.h>
-#include <EVENT/Track.h>
-#include "Segment.h"
-
 
 #include <string>
 
+#include "marlin/Processor.h"
+#include "lcio.h"
+#include <EVENT/TrackerHit.h>
+#include <EVENT/Track.h>
+
+#include "KiTrack/Segment.h"
+
+
+
+
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
-
 
 
 

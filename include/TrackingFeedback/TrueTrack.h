@@ -2,8 +2,8 @@
 #define TrueTrack_h
 
 
-#include <EVENT/MCParticle.h>
-#include <EVENT/Track.h>
+#include "EVENT/MCParticle.h"
+#include "EVENT/Track.h"
 #include "lcio.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
 #include "MarlinTrk/IMarlinTrack.h"

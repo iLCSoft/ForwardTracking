@@ -1,36 +1,34 @@
 #include "ForwardTracking00.h"
+
 #include <algorithm>
 
-#include <EVENT/TrackerHit.h>
-#include <EVENT/Track.h>
-#include <EVENT/LCCollection.h>
-#include <IMPL/LCCollectionVec.h>
-
-
-// ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
+#include "EVENT/TrackerHit.h"
+#include "EVENT/Track.h"
+#include "EVENT/LCCollection.h"
+#include "IMPL/LCCollectionVec.h"
 
-#include <MarlinCED.h>
 
-#include <gear/GEAR.h>
-#include <gear/GearParameters.h>
-#include <gear/BField.h>
+#include "MarlinCED.h"
+
+#include "gear/GEAR.h"
+#include "gear/GearParameters.h"
+#include "gear/BField.h"
 #include "gear/FTDParameters.h"
 #include "gear/FTDLayerLayout.h"
 
 
-#include "FTDTrack.h"
-#include "FTrackILDTools.h"
-#include "TrackSubsetHopfieldNN.h"
-#include "SegmentBuilder.h"
-#include "Automaton.h"
-#include "FTDHit00.h"
-#include "FTDSecCon00.h"
+#include "ILDImpl/FTDTrack.h"
+#include "Tools/KiTrackMarlinTools.h"
+#include "KiTrack/TrackSubsetHopfieldNN.h"
+#include "KiTrack/SegmentBuilder.h"
+#include "KiTrack/Automaton.h"
+#include "ILDImpl/FTDHit00.h"
+#include "ILDImpl/FTDSecCon00.h"
 
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
 using namespace MarlinTrk ;
 
 
@@ -301,11 +299,11 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
       }
       
       
-      IHit* virtualIPHitForward = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
+      IHit* virtualIPHitForward = KiTrackMarlin::createVirtualIPHit(1 , _sectorSystemFTD );
       hitsTBD.push_back( virtualIPHitForward );
       map_sector_hits[ virtualIPHitForward->getSector() ].push_back( virtualIPHitForward );
       
-      IHit* virtualIPHitBackward = FTrackILD::createVirtualIPHit(-1 , _sectorSystemFTD );
+      IHit* virtualIPHitBackward = KiTrackMarlin::createVirtualIPHit(-1 , _sectorSystemFTD );
       hitsTBD.push_back( virtualIPHitBackward );
       map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
       
@@ -344,7 +342,7 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
       
       streamlog_out( MESSAGE0 ) << "\n--Automaton--" ;
       
-      if( _useCED ) automaton.drawSegments();
+//       if( _useCED ) automaton.drawSegments();
       
       
       automaton.clearCriteria();

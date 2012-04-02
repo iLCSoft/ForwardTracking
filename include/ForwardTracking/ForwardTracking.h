@@ -11,13 +11,14 @@
 #include "MarlinTrk/IMarlinTrkSystem.h"
 #include "gear/BField.h"
 
-#include "Segment.h"
-#include "Criteria.h"
-#include "SectorSystemFTD.h"
+#include "KiTrack/Segment.h"
+#include "Criteria/Criteria.h"
+#include "ILDImpl/SectorSystemFTD.h"
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
+using namespace KiTrack;
+using namespace KiTrackMarlin;
 
 /** a simple typedef, making writing shorter. And it makes sense: a track consists of hits. But as a real track
  * has more information, a vector of hits can be considered as a "raw track". */

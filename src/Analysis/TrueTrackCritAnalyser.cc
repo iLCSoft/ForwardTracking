@@ -11,15 +11,15 @@
 #include "gear/FTDParameters.h"
 #include "gear/FTDLayerLayout.h"
 
-#include "FTrackILDTools.h"
-#include "Criteria.h"
-#include "FTDHit01.h"
-#include "Fitter.h"
+#include "Tools/KiTrackMarlinTools.h"
+#include "Criteria/Criteria.h"
+#include "ILDImpl/FTDHit01.h"
+#include "Tools/Fitter.h"
 
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
+using namespace KiTrack;
 
 
 
@@ -158,7 +158,7 @@ void TrueTrackCritAnalyser::init() {
    // Therefore first get all the possible names of the branches
    
    // create a virtual hit
-   IHit* virtualIPHit = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
+   IHit* virtualIPHit = KiTrackMarlin::createVirtualIPHit(1 , _sectorSystemFTD );
 
    
    std::vector <IHit*> hitVec;
@@ -199,7 +199,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames2.insert( "distance" ); // the distance between two hits
    // Set up the root file with the tree and the branches
    _treeName2 = "2Hit";
-   FTrackILD::setUpRootFile( _rootFileName, _treeName2, branchNames2, _writeNewRootFile );      //prepare the root file.
+   KiTrackMarlin::setUpRootFile( _rootFileName, _treeName2, branchNames2, _writeNewRootFile );      //prepare the root file.
    
    
    
@@ -242,7 +242,7 @@ void TrueTrackCritAnalyser::init() {
    // Set up the root file with the tree and the branches
    _treeName3 = "3Hit"; 
    
-   FTrackILD::setUpRootFile( _rootFileName, _treeName3, branchNames3 , false );      //prepare the root file.
+   KiTrackMarlin::setUpRootFile( _rootFileName, _treeName3, branchNames3 , false );      //prepare the root file.
   
    
    
@@ -283,7 +283,7 @@ void TrueTrackCritAnalyser::init() {
    // Set up the root file with the tree and the branches
    _treeName4 = "4Hit"; 
    
-   FTrackILD::setUpRootFile( _rootFileName, _treeName4, branchNames4 , false );      //prepare the root file.
+   KiTrackMarlin::setUpRootFile( _rootFileName, _treeName4, branchNames4 , false );      //prepare the root file.
    
  
    delete virtualIPHit;
@@ -304,7 +304,7 @@ void TrueTrackCritAnalyser::init() {
    // Set up the root file with the tree and the branches
    _treeNameKalman = "KalmanFit"; 
    
-   FTrackILD::setUpRootFile( _rootFileName, _treeNameKalman, branchNamesKalman , false );      //prepare the root file.
+   KiTrackMarlin::setUpRootFile( _rootFileName, _treeNameKalman, branchNamesKalman , false );      //prepare the root file.
    
  
    /**********************************************************************************************/
@@ -467,7 +467,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          
          std::vector <TrackerHit*> trackerHits = track->getTrackerHits();
          // sort the hits in the track
-         sort( trackerHits.begin(), trackerHits.end(), FTrackILD::compare_TrackerHit_z );
+         sort( trackerHits.begin(), trackerHits.end(), KiTrackMarlin::compare_TrackerHit_z );
          // now at [0] is the hit with the smallest |z| and at [1] is the one with a bigger |z| and so on
         
          // make FTDHits from them (because Criteria need IHit pointers and FTDHits are derrived from IHit )
@@ -483,7 +483,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          
          ///////////////////////////////////////////////////////////////////////////////////////////////
          // Add the IP as a hit
-         IHit* virtualIPHit = FTrackILD::createVirtualIPHit(1 , _sectorSystemFTD );
+         IHit* virtualIPHit = KiTrackMarlin::createVirtualIPHit(1 , _sectorSystemFTD );
          
          hits.insert( hits.begin() , virtualIPHit );
          ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -714,10 +714,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       
       
-      FTrackILD::saveToRoot( _rootFileName, _treeName2, rootDataVec2 );
-      FTrackILD::saveToRoot( _rootFileName, _treeName3, rootDataVec3 );
-      FTrackILD::saveToRoot( _rootFileName, _treeName4, rootDataVec4 );
-      FTrackILD::saveToRoot( _rootFileName, _treeNameKalman, rootDataVecKalman );
+      KiTrackMarlin::saveToRoot( _rootFileName, _treeName2, rootDataVec2 );
+      KiTrackMarlin::saveToRoot( _rootFileName, _treeName3, rootDataVec3 );
+      KiTrackMarlin::saveToRoot( _rootFileName, _treeName4, rootDataVec4 );
+      KiTrackMarlin::saveToRoot( _rootFileName, _treeNameKalman, rootDataVecKalman );
       
       
       streamlog_out (DEBUG5) << "Number of used mcp-track relations: " << nUsedRelations <<"\n";

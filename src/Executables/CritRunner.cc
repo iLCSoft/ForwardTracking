@@ -8,11 +8,12 @@
 #include <iostream>
 
 
-#include "Criteria.h"
-#include "FTDHitSimple.h"
+#include "Criteria/Criteria.h"
+#include "ILDImpl/FTDHitSimple.h"
 
 
-using namespace FTrack;
+using namespace KiTrack;
+using namespace KiTrackMarlin;
 
 void checkCrits( std::vector< ICriterion* > critVec, Segment* parent, Segment* child ){
    

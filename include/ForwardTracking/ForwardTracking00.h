@@ -10,14 +10,15 @@
 #include "gear/BField.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
 
-#include "Segment.h"
-#include "ITrack.h"
-#include "Criteria.h"
-#include "SectorSystemFTD.h"
+#include "KiTrack/Segment.h"
+#include "KiTrack/ITrack.h"
+#include "Criteria/Criteria.h"
+#include "ILDImpl/SectorSystemFTD.h"
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
+using namespace KiTrack;
+using namespace KiTrackMarlin;
 
 
 

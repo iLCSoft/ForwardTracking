@@ -21,22 +21,20 @@
 
 
 //--------------------------------------------------------------
-#include "FTDTrack.h"
-#include "FTrackILDTools.h"
-#include "TrackSubsetHopfieldNN.h"
-#include "TrackSubsetSimple.h"
-#include "SegmentBuilder.h"
-#include "Automaton.h"
-#include "FTDHit01.h"
-#include "FTDNeighborPetalSecCon.h"
-#include "FTDSecCon01.h"
+#include "ILDImpl/FTDTrack.h"
+#include "Tools/KiTrackMarlinTools.h"
+#include "KiTrack/TrackSubsetHopfieldNN.h"
+#include "KiTrack/TrackSubsetSimple.h"
+#include "KiTrack/SegmentBuilder.h"
+#include "KiTrack/Automaton.h"
+#include "ILDImpl/FTDHit01.h"
+#include "ILDImpl/FTDNeighborPetalSecCon.h"
+#include "ILDImpl/FTDSecCon01.h"
 //--------------------------------------------------------------
 
 
 using namespace lcio ;
 using namespace marlin ;
-using namespace FTrack;
-using namespace FTrackILD;
 using namespace MarlinTrk ;
 
 
@@ -335,7 +333,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          TrackerHit* trackerHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
          
-         streamlog_out(DEBUG1) << "hit" << i << " " << FTrackILD::getCellID0Info( trackerHit->getCellID0() );
+         streamlog_out(DEBUG1) << "hit" << i << " " << KiTrackMarlin::getCellID0Info( trackerHit->getCellID0() );
          
          //Make an FTDHit01 from the TrackerHit 
          
@@ -412,7 +410,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       streamlog_out( DEBUG4 ) << "\t\t---Automaton---\n" ;
       
-      if( _useCED ) automaton.drawSegments();
+//       if( _useCED ) automaton.drawSegments(); TODO: this needs alternate approach
       
       /*******************************/
       /*      2-hit segments         */

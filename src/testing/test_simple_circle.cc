@@ -8,7 +8,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "SimpleCircle.h"
+#include "Criteria/SimpleCircle.h"
 
 using namespace std ;
 
@@ -28,7 +28,7 @@ int main(int argc, char** argv ){
 
         ilctest.log( "testing SimpleCircle with arguments 0.0, 1.0, 0.0, 1.0, 2.0, 2.0" );
 
-        FTrack::SimpleCircle s( 0.0, 1.0, 0.0, 1.0, 2.0, 2.0 );
+        KiTrack::SimpleCircle s( 0.0, 1.0, 0.0, 1.0, 2.0, 2.0 );
 
 
         if( ! std::isinf( s.getRadius() ))

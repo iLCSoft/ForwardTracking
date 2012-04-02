@@ -9,10 +9,11 @@
 #include "TFile.h"
 #include "TTree.h"
 
-#include "Criteria.h"
+#include "Criteria/Criteria.h"
 
 
-using namespace FTrack;
+using namespace KiTrack;
+
 
 
 /** Calculates the minimum and maximum value, so that all values between them are inside a quantile.

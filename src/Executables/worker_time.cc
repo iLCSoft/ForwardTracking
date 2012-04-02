@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "Timer.h"
+#include "Tools/Timer.h"
 
 /**
  * This small executable is there to automically run Marlin for different values of the 

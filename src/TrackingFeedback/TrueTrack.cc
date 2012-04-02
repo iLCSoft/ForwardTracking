@@ -2,10 +2,13 @@
 
 #include <sstream>
 #include <cmath>
-#include "Fitter.h"
-#include "UTIL/ILDConf.h"
-#include "FTrackILDTools.h"
 #include <algorithm>
+
+#include "UTIL/ILDConf.h"
+
+#include "Tools/Fitter.h"
+#include "Tools/KiTrackMarlinTools.h"
+
 
 std::string TrueTrack::getMCPInfo(){
    
@@ -53,7 +56,7 @@ std::string TrueTrack::getTrueTrackInfo(){
    // Information about the hits:
    std::vector< TrackerHit* > hits= _trueTrack->getTrackerHits();
    
-   std::sort( hits.begin(), hits.end(), FTrackILD::compare_TrackerHit_z );
+   std::sort( hits.begin(), hits.end(), KiTrackMarlin::compare_TrackerHit_z );
    
    for( unsigned i=0; i < hits.size(); i++ ){
       
@@ -126,7 +129,7 @@ std::string TrueTrack::getRelatedTracksInfo(){
       
       //the positions of the hits
       std::vector< TrackerHit* > hits = track->getTrackerHits();
-      std::sort( hits.begin(), hits.end(), FTrackILD::compare_TrackerHit_z );
+      std::sort( hits.begin(), hits.end(), KiTrackMarlin::compare_TrackerHit_z );
       for (unsigned i=0; i<hits.size(); i++ ) info << positionInfo( hits[i] );
       
       
