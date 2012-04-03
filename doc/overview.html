@@ -6,50 +6,88 @@
 
 <h3>Forward Tracking is the software for track search in the forward direction of the ILD.</h3>
 
-Here is a short descrption of the folders in the include and src directories:
+Here is a short description of the folders in the include and src directories:
 
 <dl>
-<dt>FTrack</dt>
-<dd>The core package. In here the abstract base classes are defined, the Cellular Automaton, the Hopfield Neural Network etc. are kept.
-Together with the Criteria folder this is the heart of everything and is independent from Marlin or lcio. (Except there 
-are a few streamlogs in there, which belong to Marlin) </dd>
 
-<dt>Criteria</dt>
-<dd>- Here the criteria classes are stored. </dd>
 
 <dt>Analysis</dt>
 <dd>
+   Processors for analysing some part of an event.
    <dl>
-   <dt> TrueTrackCritAnalyser </dt>
+      <dt> TrueTrackCritAnalyser </dt>
+      <dd> For analysing the values of the criteria (as used by the Cellular Automaton) when applied to true tracks </dd>
+
+      <dt> OverlapChecker </dt>
+      <dd> Very small processor to see what tracks are sharing hits </dd>
+
+      <dt> StepAnalyser </dt>
+      <dd> Processor to analyse the path a track takes through the FTD </dd>
    </dl>
-
-
 </dd>
 
 
 
 <dt>Executables</dt>
-<dd></dd>
+<dd>
+   A bunch of executables for different tasks
+   <dl>
+      <dt> CritRunner </dt>
+      <dt> QuantileAnalyser </dt>
+      <dt> worker </dt>
+      <dt> worker_time </dt>
+   </dl>
+</dd>
 
 <dt>ForwardTracking</dt>
-<dd></dd>
+<dd>
+   Standallone track reconstruction of tracks in the FTD
+   <dl>
+      <dt> ForwardTracking00 </dt>
+      <dd> Reconstructs tracks for the old representation of the FTD ( v00 in Mokka ) </dd>
+
+      <dt> ForwardTracking </dt>
+      <dd> Reconstructs tracks for the current representation of the FTD ( currently v02 in Mokka ) </dd>
+   </dl>
+</dd>
 
 <dt>FTDNoise</dt>
-<dd></dd>
+<dd>
+   Processors to add artificial background on the FTD to simulate more accurate events
+   <dl>
+      <dt> FTDBackgroundProcessor00 <dt/>
+      <dd> Simulates background for the old representation of the FTD (v00 in Mokka). </dd>
 
+      <dt> FTDBackgroundProcessor01 </dt>
+      <dd> Simulates background for the current representation of the FTD ( currently v02 in Mokka ) </dd>
 
+      <dt> FTDGhostProcessor </dt>
+      <dd> Simulates ghost hits for the v01-Mokka FTD version. As meanwhile ghosthits are created automatically by the SpacePoint processors, not needed anymore </dd>
+   </dl>
+</dd>
 
-<dt>ILDImpl</dt>
-<dd>- white cold drink</dd>
-
-<dt>Tools</dt>
-<dd></dd>
 
 <dt>TrackingFeedback</dt>
-<dd></dd>
+<dd>
+   Feedback about the track reconstruction quality
+   <dl>
+      <dt> TrackingFeedbackProcessor </dt>
+      <dd> Gives feedback about the quality of track reconstruction </dd>
+
+      <dt> TrueTrack </dt>
+      <dd> A class to help the TrackingFeedbackProcessor </dd>
+   </dl>
+</dd>
 
 <dt>TrackPicker</dt>
-<dd></dd>
+<dd>
+   <dl>
+      <dt> TrackPickProcessor </dt>
+      <dd> A small processor to pick single tracks or a group from some basic tracks and stores them in as a collection.
+      Pretty much hardcoded and only used for debugging so far, so beware. </dd>
+   </dl>
+</dd>
+
 </dl>
 
 
@@ -59,9 +97,7 @@ Additional info:
  <li>
     <a href="../CellularAutomaton.pdf">Introduction to the Cellular Automaton</a><br>
     A good idea to read this before the class documentation of the Cellular Automaton
- </li>
 </ul>
 
-.
 
 */
