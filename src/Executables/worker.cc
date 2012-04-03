@@ -58,7 +58,7 @@ int main(int argc,char *argv[]){
          quantFile.close();
       }
       
-   
+      
       
       /**********************************************************************************************/
       /*                Run Marlin                                                                  */
@@ -66,7 +66,7 @@ int main(int argc,char *argv[]){
       command.str("");
       command << "Marlin " << STEERING_FILE << " " << parameters;
       returnValue = system( command.str().c_str() );
-
+      
       if( returnValue != 0 ){
          
          std::cout << "\n\n Marlin did not return 0. Error!!!\n\n";
@@ -74,10 +74,10 @@ int main(int argc,char *argv[]){
          
       }
       
-
+      
       std::ofstream myfile;
       myfile.open (FEEDBACK_FILE.c_str() , std::ios::app);
-   
+      
       
       myfile << "quantile size\t" << quantSize << "\t\t";
       
@@ -86,7 +86,7 @@ int main(int argc,char *argv[]){
       
       
       myfile.close();
-   
+      
    }
    
    

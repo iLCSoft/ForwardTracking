@@ -385,7 +385,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       //Create a segmentbuilder
       SegmentBuilder segBuilder( _map_sector_hits );
       
-      
       segBuilder.addCriteria ( _crit2Vec );
       
       //Also load hit connectors

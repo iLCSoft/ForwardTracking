@@ -28,6 +28,23 @@ Version History
  
 
   ---------
+ | v01-03  |
+  ---------
+
+      - Splitted ForwardTracking into 3: 
+         + the core is now in the package KiTrack
+         + an implementation of the ABCs in the core is in the package KiTrackMarlin
+         + and ForwardTracking now contains all the processors 
+         
+         This means: 
+            ~ The folder FTrack got renamed to KiTrack and is now in the package KiTrack
+            ~ The folder Criteria is now in KiTrack as well
+            ~ The folder ILDImpl is now in KiTrackMarlin
+            ~ The folder Tools is now in KiTrackMarlin
+            ~ Each package has now its namespace: "KiTrack" and "KiTrackMarlin"
+         
+         
+  ---------
  | v01-02  |
   ---------
 
