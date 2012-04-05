@@ -35,35 +35,35 @@ typedef std::vector< IHit* > RawTrack;
  *  A collection of Tracks.
  * 
  * @param FTDHitCollections The collections containing the FTD hits <br>
- * (default value "FTDTrackerHits FTDSpacePoints" (string vector) ) <br>
+ * (default value "FTDTrackerHits FTDSpacePoints" (string vector) )
  * 
- * @param ForwardTrackCollection Name of the Forward Tracking output collection
+ * @param ForwardTrackCollection Name of the Forward Tracking output collection<br>
  * (default value  "ForwardTracks" (output collection) )
  * 
- * @param MultipleScatteringOn Whether to take multiple scattering into account when fitting the tracks
+ * @param MultipleScatteringOn Whether to take multiple scattering into account when fitting the tracks<br>
  * (default value true )
  * 
- * @param EnergyLossOn Whether to take energyloss into account when fitting the tracks
+ * @param EnergyLossOn Whether to take energyloss into account when fitting the tracks<br>
  * (default value true )
  * 
- * @param SmoothOn Whether to smooth all measurement sites in fit
+ * @param SmoothOn Whether to smooth all measurement sites in fit<br>
  * (default value false )
  * 
- * @param Chi2ProbCut Tracks with a chi2 probability below this will get sorted out
+ * @param Chi2ProbCut Tracks with a chi2 probability below this will get sorted out<br>
  * (default value 0.005 )
  * 
- * @param OverlappingHitsDistMax The maximum distance of hits from overlapping petals belonging to one track
+ * @param OverlappingHitsDistMax The maximum distance of hits from overlapping petals belonging to one track<br>
  * (default value 3.5 )
  * 
- * @param HitsPerTrackMin The minimum number of hits to create a track
+ * @param HitsPerTrackMin The minimum number of hits to create a track<br>
  * (default value 3 )
  * 
  * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: TrackSubsetHopfieldNN and TrackSubsetSimple.
  * Any other value means, that no final search for the best subset is done and overlapping tracks are possible. (If you want that, don't
- * leave the string empty or the default value will be used!)
+ * leave the string empty or the default value will be used!)<br>
  * (default value TrackSubsetHopfieldNN )
  * 
- * @param Criteria A vector of the criteria that are going to be used. For every criterion a min and max needs to be set!!!
+ * @param Criteria A vector of the criteria that are going to be used. For every criterion a min and max needs to be set!!!<br>
  * (default value is defined in class Criteria )
  * 
  * @param NameOfACriterion_min/max For every used criterion a minimum and maximum value needs to be set. If a criterion is
