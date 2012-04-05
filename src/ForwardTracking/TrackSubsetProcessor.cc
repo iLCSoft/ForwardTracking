@@ -2,6 +2,12 @@
 
 
 #include <EVENT/LCCollection.h>
+#include "EVENT/TrackerHit.h"
+#include "EVENT/Track.h"
+#include "IMPL/LCCollectionVec.h"
+#include "IMPL/LCFlagImpl.h"
+#include "IMPL/TrackImpl.h"
+
 
 
 #include "marlin/VerbosityLevels.h"
@@ -216,11 +222,38 @@ void TrackSubsetProcessor::processEvent( LCEvent * evt ) {
   }
   
   /**********************************************************************************************/
-  /*                            */
+  /*            Save the tracks to a collection (make new TrackImpls from them)                 */
   /**********************************************************************************************/
   
+  LCCollectionVec* trackVec = new LCCollectionVec( LCIO::TRACK )  ;    
   
+  // if we want to point back to the hits we need to set the flag
+  LCFlagImpl trkFlag(0) ;
+  trkFlag.setBit( LCIO::TRBIT_HITS ) ;
+  trackVec->setFlag( trkFlag.getFlag()  ) ;
+  
+  for( unsigned i=0; i < accepted.size(); i++ ){
+    
+    
+    TrackImpl* trackImpl = new TrackImpl();
+    
+    Track* track = accepted[i];
+    std::vector< TrackerHit* > trackerHits = track->getTrackerHits();
+    for( unsigned j=0; j<trackerHits.size(); j++ ) trackImpl->addHit( trackerHits[j] );
+    
+    
+    Fitter fitter( trackImpl , _trkSystem );
+    
+    TrackStateImpl* trkStateIP = new TrackStateImpl( fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
+    trkStateIP->setLocation( TrackState::AtIP );
+    trackImpl->addTrackState( trkStateIP );
+    
+    trackVec->addElement(trackImpl);
+    
+    
+  }
 
+  evt->addCollection( trackVec , _trackOutputColName) ;
 
 
   _nEvt ++ ;
