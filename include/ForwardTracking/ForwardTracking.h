@@ -12,6 +12,7 @@
 #include "gear/BField.h"
 
 #include "KiTrack/Segment.h"
+#include "KiTrack/ITrack.h"
 #include "Criteria/Criteria.h"
 #include "ILDImpl/SectorSystemFTD.h"
 
@@ -198,6 +199,47 @@ class ForwardTracking : public Processor {
 
    
 } ;
+
+
+/** A functor to return whether two tracks are compatible: The criterion is if the share a TrackerHit or more */
+class TrackCompatibilityShare1SP{
+  
+public:
+   
+   inline bool operator()( ITrack* trackA, ITrack* trackB ){
+      
+      
+      std::vector< IHit* > hitsA = trackA->getHits();
+      std::vector< IHit* > hitsB = trackB->getHits();
+      
+      
+      for( unsigned i=0; i < hitsA.size(); i++){
+         
+         for( unsigned j=0; j < hitsB.size(); j++){
+            
+            if ( hitsA[i] == hitsB[j] ) return false;      // a hit is shared -> incompatible
+            
+         }
+         
+      }
+      
+      return true;      
+      
+   }
+   
+};
+
+
+/** A functor to return the quality of a track, which is currently the chi2 probability. */
+class TrackQIChi2Prob{
+   
+public:
+   
+   inline double operator()( ITrack* track ){ return track->getChi2Prob(); }
+  
+   
+};
+
 
 #endif
 

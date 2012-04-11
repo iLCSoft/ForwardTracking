@@ -23,8 +23,8 @@
 //--------------------------------------------------------------
 #include "ILDImpl/FTDTrack.h"
 #include "Tools/KiTrackMarlinTools.h"
-#include "KiTrack/TrackSubsetHopfieldNN.h"
-#include "KiTrack/TrackSubsetSimple.h"
+#include "KiTrack/SubsetHopfieldNN.h"
+#include "KiTrack/SubsetSimple.h"
 #include "KiTrack/SegmentBuilder.h"
 #include "KiTrack/Automaton.h"
 #include "ILDImpl/FTDHit01.h"
@@ -93,9 +93,9 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
    
    
    registerProcessorParameter( "BestSubsetFinder",
-                               "The method used to find the best non overlapping subset of tracks. Available are: TrackSubsetHopfieldNN and TrackSubsetSimple",
+                               "The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN and SubsetSimple",
                                _bestSubsetFinder,
-                               std::string( "TrackSubsetHopfieldNN" ) );
+                               std::string( "SubsetHopfieldNN" ) );
    
    registerProcessorParameter( "TakeBestVersionOfTrack",
                                "Whether when adding hits to a track only the track with highest quality should be further processed",
@@ -591,35 +591,47 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       streamlog_out( DEBUG4 ) << "\t\t---Get best subset of tracks---\n" ;
       
       std::vector< ITrack* > tracks;
+      std::vector< ITrack* > rejected;
       
-      ITrackSubset* subset = NULL;
-      
-      // Make a TrackSubset
-      if( _bestSubsetFinder == "TrackSubsetHopfieldNN" ) subset = new TrackSubsetHopfieldNN();
-      if( _bestSubsetFinder == "TrackSubsetSimple" ) subset = new TrackSubsetSimple();
+      TrackCompatibilityShare1SP comp;
+      TrackQIChi2Prob trackQI;
       
       
-      if( subset != NULL ){
-        
-         subset->addTracks( trackCandidates ); 
+      if( _bestSubsetFinder == "SubsetHopfieldNN" ){
          
-         //Calculate the best subset:
-         subset->calculateBestSet();
+         streamlog_out( DEBUG3 ) << "Use SubsetHopfieldNN for getting the best subset\n" ;
          
-         tracks = subset->getAcceptedTracks();
-         std::vector< ITrack* > rejectedTracks = subset->getRejectedTracks();
-         
-         // immediately delete the rejected ones
-         for ( unsigned i=0; i<rejectedTracks.size(); i++){
-            
-            delete rejectedTracks[i];
-            
-         }
-         
-         delete subset;
+         SubsetHopfieldNN< ITrack* > subset;
+         subset.add( trackCandidates );
+         subset.calculateBestSet( comp, trackQI );
+         tracks = subset.getAccepted();
+         rejected = subset.getRejected();
          
       }
-      else tracks = trackCandidates;
+      else if( _bestSubsetFinder == "SubsetSimple" ){
+         
+         streamlog_out( DEBUG3 ) << "Use SubsetSimple for getting the best subset\n" ;
+         
+         SubsetSimple< ITrack* > subset;
+         subset.add( trackCandidates );
+         subset.calculateBestSet( comp, trackQI );
+         tracks = subset.getAccepted();
+         rejected = subset.getRejected();
+         
+      }
+      else{ // in any other case take all tracks
+         
+         streamlog_out( DEBUG3 ) << "Input for subset = \"" << _bestSubsetFinder << "\". As this is unknown all tracks are kept\n" ;
+         
+         tracks = trackCandidates;
+         
+      }
+      
+      for ( unsigned i=0; i<rejected.size(); i++){
+         
+         delete rejected[i];
+         
+      }
       
       
       

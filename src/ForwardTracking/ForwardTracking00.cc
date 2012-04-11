@@ -20,7 +20,7 @@
 
 #include "ILDImpl/FTDTrack.h"
 #include "Tools/KiTrackMarlinTools.h"
-#include "KiTrack/TrackSubsetHopfieldNN.h"
+#include "KiTrack/SubsetHopfieldNN.h"
 #include "KiTrack/SegmentBuilder.h"
 #include "KiTrack/Automaton.h"
 #include "ILDImpl/FTDHit00.h"
@@ -469,31 +469,23 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
-     
       
-      // Make a TrackSubset
-      TrackSubsetHopfieldNN subset;
-      subset.addTracks( trackCandidates ); 
+      streamlog_out( DEBUG3 ) << "Use SubsetHopfieldNN for getting the best subset\n" ;
       
-      //Calculate the best subset:
-      subset.calculateBestSet();
       
-      std::vector< ITrack* > tracks = subset.getAcceptedTracks();
-      std::vector< ITrack* > rejectedTracks = subset.getRejectedTracks();
-//       for( unsigned i=0; i < tracks.size(); i++ ) drawTrack( tracks[i], 0x00ff00 , 2 );
+      TrackCompatibilityShare1SP comp;
+      TrackQIChi2Prob trackQI;
       
-//       ///////////////////
-//       std::vector< ITrack* > incompatibleTracks = subset.getIncompatilbeTracks();      
-//       std::vector< ITrack* > compatibleTracks = subset.getCompatilbeTracks();    
-//       
-//       for( unsigned i=0; i < incompatibleTracks.size(); i++ ) drawTrack( incompatibleTracks[i], 0xff8888 , 1 );
-//       for( unsigned i=0; i < compatibleTracks.size(); i++ ) drawTrack( compatibleTracks[i], 0x00F5FF , 1 );
-      ////////////////////
+      SubsetHopfieldNN< ITrack* > subset;
+      subset.add( trackCandidates );
+      subset.calculateBestSet( comp, trackQI );
       
-      // immediately delete the rejected ones
-      for ( unsigned i=0; i<rejectedTracks.size(); i++){
+      std::vector< ITrack* > tracks   = subset.getAccepted();
+      std::vector< ITrack* > rejected = subset.getRejected();
+      
+      for ( unsigned i=0; i<rejected.size(); i++){
          
-         delete rejectedTracks[i];
+         delete rejected[i];
          
       }
       
