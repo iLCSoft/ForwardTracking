@@ -139,6 +139,9 @@ TARGET_LINK_LIBRARIES( worker ${PROJECT_NAME} )
 ADD_EXECUTABLE( worker_time ./src/Executables/worker_time.cc )
 TARGET_LINK_LIBRARIES( worker_time ${PROJECT_NAME} )
 
+ADD_EXECUTABLE( param_runner ./src/Executables/param_runner.cc )
+TARGET_LINK_LIBRARIES( param_runner ${PROJECT_NAME} )
+
 
 ### TESTING #################################################################
 
