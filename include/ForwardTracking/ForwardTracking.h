@@ -59,7 +59,7 @@ typedef std::vector< IHit* > RawTrack;
  * @param HitsPerTrackMin The minimum number of hits to create a track<br>
  * (default value 3 )
  * 
- * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: TrackSubsetHopfieldNN and TrackSubsetSimple.
+ * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN and SubsetSimple.
  * Any other value means, that no final search for the best subset is done and overlapping tracks are possible. (If you want that, don't
  * leave the string empty or the default value will be used!)<br>
  * (default value TrackSubsetHopfieldNN )

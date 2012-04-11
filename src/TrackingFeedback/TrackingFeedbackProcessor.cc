@@ -190,8 +190,22 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    _nRecoTracks = 0;          
    _nDismissedTrueTracks = 0; 
    
-   LCCollection* col = evt->getCollection( _colNameMCTrueTracksRel ) ;
+   LCCollection* col = NULL;
    
+   
+   try {
+      
+      col = evt->getCollection( _colNameMCTrueTracksRel ) ;
+      
+   }
+   catch(DataNotAvailableException &e) {
+      
+      streamlog_out( ERROR ) << "Collection " <<  _colNameMCTrueTracksRel <<  " is not available!\n";     
+      return;
+      
+   }
+   
+      
    int nMCTracks = col->getNumberOfElements();
    
    streamlog_out( DEBUG4 ) << "Number of MCP Track Relations: " << nMCTracks << "\n";
@@ -288,7 +302,17 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    _nTrueTracks = _trueTracks.size();
    
    //The restored tracks, that we want to check for how good they are
-   col = evt->getCollection( _TrackCollection ) ;
+   try {
+      
+      col = evt->getCollection(  _TrackCollection ) ;
+      
+   }
+   catch(DataNotAvailableException &e) {
+      
+      streamlog_out( ERROR ) << "Collection " <<   _TrackCollection <<  " is not available!\n";     
+      return;
+      
+   }
    
 
    /**********************************************************************************************/

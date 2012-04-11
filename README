@@ -27,6 +27,7 @@ Version History
   -----------------------------
  
       - wrote overview for the doxygen
+      - switched to new subset classes (SubsetHopfieldNN and SubsetSimple)
 
   ---------
  | v01-03  |
