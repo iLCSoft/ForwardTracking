@@ -8,6 +8,7 @@
 
 #include "marlin/VerbosityLevels.h"
 #include "MarlinCED.h"
+#include "gear/BField.h"
 
 #include "Tools/Fitter.h"
 
@@ -48,24 +49,24 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               _tableFileName,
                               std::string("TrackingFeedback.csv") );   
    
-   registerProcessorParameter("PtMin",
+   registerProcessorParameter("CutPtMin",
                               "The minimum transversal momentum pt above which tracks are of interest in GeV ",
-                              _ptMin,
-                              double (0.2)  );   
+                              _cutPtMin,
+                              double (0.1)  );   
    
-   registerProcessorParameter("DistToIPMax",
+   registerProcessorParameter("CutDistToIPMax",
                               "The maximum distance from the origin of the MCP to the IP (0,0,0)",
-                              _distToIPMax,
-                              double (250. ) );   
+                              _cutDistToIPMax,
+                              double (10000 ) );   
    
-   registerProcessorParameter("Chi2ProbCut",
+   registerProcessorParameter("CutChi2Prob",
                               "Tracks with a chi2 probability below this value won't be considered",
-                              _chi2ProbCut,
+                              _cutChi2Prob,
                               double (0.005) ); 
    
-   registerProcessorParameter("NumberOfHitsMin",
+   registerProcessorParameter("CutNumberOfHitsMin",
                               "The minimum number of hits a track must have",
-                              _nHitsMin,
+                              _cutNHitsMin,
                               int (4)  );   
    
    
@@ -99,6 +100,11 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               _summaryFileName,
                               std::string("TrackingFeedbackSum.csv") );   
    
+   registerProcessorParameter("RootFileName",
+                              "Name for the root file where the tracks are saved",
+                              _rootFileName,
+                              std::string("Feedback.root") );
+   
 }
 
 
@@ -117,7 +123,9 @@ void TrackingFeedbackProcessor::init() {
    _nEvt = 0 ;
 
 
-
+   _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
+   
+   
    if ( _drawMCPTracks ) MarlinCED::init(this) ;
 
    _nComplete_Sum            = 0;
@@ -150,6 +158,24 @@ void TrackingFeedbackProcessor::init() {
    // initialise the tracking system
    _trkSystem->init() ;
    
+   
+   /**********************************************************************************************/
+   /*       Prepare the root output                                                              */
+   /**********************************************************************************************/
+   
+   _rootFile = new TFile( _rootFileName.c_str(),  "RECREATE" );
+   
+   _treeNameTrueTracks = "trueTracks";
+   _treeTrueTracks = new TTree( _treeNameTrueTracks.c_str(), _treeNameTrueTracks.c_str() );
+   
+   _treeNameRecoTracks = "recoTracks";
+   _treeRecoTracks = new TTree( _treeNameRecoTracks.c_str(), _treeNameRecoTracks.c_str() );
+   
+   makeRootBranches();
+   
+   
+
+   
 }
 
 
@@ -177,8 +203,6 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 //-----------------------------------------------------------------------
 
 
-
-   
    _nComplete = 0;         
    _nCompletePlus = 0;     
    _nLost = 0;             
@@ -250,10 +274,10 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       //distance to IP
       double dist= getDistToIP( mcp );
-      if( dist > _distToIPMax ){
+      if( dist > _cutDistToIPMax ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because it is too far from the IP. " 
-            <<  "distance to IP = " << dist << ", distToIPMax = " << _distToIPMax << "\n";
+            <<  "distance to IP = " << dist << ", distToIPMax = " << _cutDistToIPMax << "\n";
          _nDismissedTrueTracks++;
          continue;
          
@@ -261,10 +285,10 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       //transversal momentum
       double pt = sqrt( mcp->getMomentum()[0]*mcp->getMomentum()[0] + mcp->getMomentum()[1]*mcp->getMomentum()[1] );
-      if( pt < _ptMin ){
+      if( pt < _cutPtMin ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because pt is too low. " 
-         <<  "pt = " << pt << ", ptMin = " << _ptMin << "\n";
+         <<  "pt = " << pt << ", ptMin = " << _cutPtMin << "\n";
          _nDismissedTrueTracks++;
          continue;
          
@@ -272,20 +296,20 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       //number of hits in track
       unsigned hitsInTrack = track->getTrackerHits().size();
-      if( int( hitsInTrack ) < _nHitsMin ){
+      if( int( hitsInTrack ) < _cutNHitsMin ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because it has too few hits. " 
-         <<  "hits in track = " << hitsInTrack << ", hits in Track min = " << _nHitsMin << "\n";
+         <<  "hits in track = " << hitsInTrack << ", hits in Track min = " << _cutNHitsMin << "\n";
          _nDismissedTrueTracks++;
          continue;
          
       }
       
       //chi2 probability
-      if( chi2Prob < _chi2ProbCut ){
+      if( chi2Prob < _cutChi2Prob ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because chi2prob is too low. " 
-         <<  "chi2prob = " << chi2Prob << ", chi2ProbMin = " << _chi2ProbCut << "\n";
+         <<  "chi2prob = " << chi2Prob << ", chi2ProbMin = " << _cutChi2Prob << "\n";
          _nDismissedTrueTracks++;
          continue;
          
@@ -318,7 +342,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    /**********************************************************************************************/
    /*              Check the reconstructed tracks (to what true tracks they belong)              */
    /**********************************************************************************************/
-   
+   _recoTracks.clear();
    
    if( col != NULL ){
       
@@ -329,15 +353,18 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       for(unsigned i=0; i< _nRecoTracks ; i++){
          
          Track* track = dynamic_cast <Track*> ( col->getElementAt(i) ); 
-         checkTheTrack( track );
+         RecoTrack* recoTrack = new RecoTrack( track, _trkSystem );
+         _recoTracks.push_back( recoTrack );
+         checkTheTrack( recoTrack );
          
       }
       
       //check the relations for lost ones and completes
       for( unsigned int i=0; i < _trueTracks.size(); i++){
-         if ( _trueTracks[i]->isLost == true ) _nLost++;
-         if ( _trueTracks[i]->isFoundCompletely ==true ) _nFoundCompletely++;
+         if ( _trueTracks[i]->isLost() == true ) _nLost++;
+         if ( _trueTracks[i]->isFoundCompletely() ==true ) _nFoundCompletely++;
       }
+      
       
       
       /**********************************************************************************************/
@@ -427,6 +454,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       myfile.close();
 
       
+      /**********************************************************************************************/
+      /*              Save the root information                                                     */
+      /**********************************************************************************************/
+      
+      saveRootInformation();
+      
+      
       
  
    }
@@ -437,6 +471,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 
    for( unsigned int k=0; k < _trueTracks.size(); k++) delete _trueTracks[k];
    _trueTracks.clear();
+   for( unsigned int k=0; k < _recoTracks.size(); k++) delete _recoTracks[k];
+   _recoTracks.clear();   
 
    _nEvt ++ ;
 }
@@ -473,6 +509,10 @@ void TrackingFeedbackProcessor::end(){
       
    }   
    
+   _rootFile->Write();
+   _rootFile->Close();
+   delete _rootFile;
+   
 
 }
 
@@ -490,9 +530,10 @@ double TrackingFeedbackProcessor::getDistToIP( MCParticle* mcp ){
  
  
  
-void TrackingFeedbackProcessor::checkTheTrack( Track* track ){ 
+ void TrackingFeedbackProcessor::checkTheTrack( RecoTrack* recoTrack ){ 
  
    
+   const Track* track = recoTrack->getTrack();
    std::vector <TrackerHit*> hitVec = track->getTrackerHits();
    unsigned nHitsTrack = hitVec.size();   //number of hits of the reconstructed track
    
@@ -526,22 +567,21 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
    // at all (a ghost).
    
    unsigned nHitsFromAssignedTrueTrack = 0;
-   TrueTrack* assigendTrueTrack = getAssignedTrueTrack( relatedTrueTracks , nHitsFromAssignedTrueTrack );
-   streamlog_out(DEBUG5) << "Assigned true track = " << assigendTrueTrack << "\n";
+   TrueTrack* assignedTrueTrack = getAssignedTrueTrack( relatedTrueTracks , nHitsFromAssignedTrueTrack );
+   streamlog_out(DEBUG5) << "Assigned true track = " << assignedTrueTrack << "\n";
 
 
-   if ( assigendTrueTrack == NULL ){    // no true track could be assigned --> a ghost track
+   if ( assignedTrueTrack == NULL ){    // no true track could be assigned --> a ghost track
       _nGhost++;                           
      
    }
    else{                                   // assigned to a true track
       
-      unsigned nHitsTrueTrack = assigendTrueTrack->getTrueTrack()->getTrackerHits().size();
+      unsigned nHitsTrueTrack = assignedTrueTrack->getTrueTrack()->getTrackerHits().size();
       
       TrackType trackType;
       
-      assigendTrueTrack->isLost = false;      // this is guaranteed no lost track  
-         
+      
       if (nHitsFromAssignedTrueTrack < nHitsTrueTrack){    // there are too few good hits,, something is missing --> incomplete
          
          if (nHitsFromAssignedTrueTrack < nHitsTrack){       // besides the hits from the true track there are also additional ones-->
@@ -556,8 +596,6 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
       }
       else{                                  // there are as many good hits as there are hits in the true track
                                              // i.e. the true track is represented entirely in this track
-         assigendTrueTrack->isFoundCompletely = true;
-         
          
          if (nHitsFromAssignedTrueTrack < nHitsTrack){        // there are still additional hits stored in the track, it's a
             _nCompletePlus++;                                 // complete track with extra points
@@ -566,12 +604,16 @@ void TrackingFeedbackProcessor::checkTheTrack( Track* track ){
          else{                                                  // there are no additional points, finally, this is the perfect
             _nComplete++;                                       // complete track
             trackType= COMPLETE;
-            assigendTrueTrack->completeVersionExists = true;
+            
          }
       }
       
-      // we want the true track to know all reconstructed tracks containing him
-      assigendTrueTrack->map_track_type.insert( std::pair<Track*, TrackType> ( track ,trackType ) );  
+      recoTrack->setType( trackType );      
+      
+      // we want the true track to know all reconstructed tracks and vice versa
+      assignedTrueTrack->addRecoTrack( recoTrack );
+      recoTrack->addTrueTrack( assignedTrueTrack );
+      
       
    }   
  
@@ -623,7 +665,7 @@ TrueTrack* TrackingFeedbackProcessor::getAssignedTrueTrack( std::vector<TrueTrac
    bool assign = true;
    
    
-   float rateOfAssignedHitsMin = 0.5;  //more than this number of hits of the reco track mus belong to the assigned true track
+   float rateOfAssignedHitsMin = 0.5;  //more than this number of hits of the reco track must belong to the assigned true track
    if( float( nMax ) / float( relatedTrueTracks.size() )  < rateOfAssignedHitsMin ) assign = false;
    
    float rateOfFoundHitsMin = 0.5;  //more than this number of hits of the real track must be in the reco track
@@ -641,3 +683,72 @@ TrueTrack* TrackingFeedbackProcessor::getAssignedTrueTrack( std::vector<TrueTrac
    
    
 }
+
+
+void TrackingFeedbackProcessor::saveRootInformation(){
+   
+   for( unsigned i=0; i < _trueTracks.size(); i++ ){
+      
+      TrueTrack* trueTrack = _trueTracks[i];
+      
+      _trueTrack_nComplete =       trueTrack->getNumberOfTracksWithType( COMPLETE );
+      _trueTrack_nCompletePlus =   trueTrack->getNumberOfTracksWithType( COMPLETE_PLUS );
+      _trueTrack_nIncomplete =     trueTrack->getNumberOfTracksWithType( INCOMPLETE );
+      _trueTrack_nIncompletePlus = trueTrack->getNumberOfTracksWithType( INCOMPLETE_PLUS );
+      
+      const double* p = trueTrack->getMCP()->getMomentum();
+      double pt = sqrt( p[0]*p[0] + p[1]*p[1] );
+      _trueTrack_pt = pt;   
+      
+      _treeTrueTracks->Fill();
+      
+   }
+   
+   for( unsigned i=0; i < _recoTracks.size(); i++ ){
+      
+      RecoTrack* recoTrack = _recoTracks[i];
+      
+      
+      // |omega| = K*Bz/pt --> pt = K*Bz/ |omega|
+      const double K= 0.00029979;
+      const double omegaAbs = fabs( recoTrack->getTrack()->getOmega() );
+      
+      
+      double pt = 0;
+      if( omegaAbs > 0.00000001 ) pt = K*_Bz / omegaAbs; // make sure not to divide by 0 
+      // ( an omega of 0.00000001 would mean a track of about 100TeV for a 3.5 Tesla field )
+      
+      
+      
+      
+      
+      _recoTrack_nTrueTracks = recoTrack->getTrueTracks().size();
+      _recoTrack_pt = pt;
+      
+      _treeRecoTracks->Fill();
+      
+      
+   }  
+   
+   
+   
+}
+
+
+void TrackingFeedbackProcessor::makeRootBranches(){
+   
+   _treeTrueTracks->Branch( "nComplete", &_trueTrack_nComplete );
+   _treeTrueTracks->Branch( "nCompletePlus", &_trueTrack_nCompletePlus );
+   _treeTrueTracks->Branch( "nIncomplete", &_trueTrack_nIncomplete );
+   _treeTrueTracks->Branch( "nIncompletePlus", &_trueTrack_nIncompletePlus );
+   _treeTrueTracks->Branch( "pT" , &_trueTrack_pt );
+   
+   _treeRecoTracks->Branch( "nTrueTracks", &_recoTrack_nTrueTracks );
+   _treeRecoTracks->Branch( "pT" , &_recoTrack_pt );
+   
+}
+
+
+
+
+

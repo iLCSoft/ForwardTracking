@@ -8,74 +8,72 @@
 #include "MarlinTrk/IMarlinTrkSystem.h"
 #include "MarlinTrk/IMarlinTrack.h"
 
+#include "RecoTrack.h"
+
 using namespace lcio;
 
-static const char* TRACK_TYPE_NAMES[] = {"COMPLETE" , "COMPLETE_PLUS" , "INCOMPLETE" , "INCOMPLETE_PLUS" , "GHOST" , "LOST"}; 
 
-/** COMPLETE: a track containing all hits of a true track, and has no further hits.
- * COMPLETE_PLUS: a track containing all hits of a true track and additional hits not belonging to the true track
- * INCOMPLETE: every hit of the track belongs to a true track, but some hits are missing
- * INCOMPLETE_PLUS: more than half of the hits of the track belong to a true track, but there are a) still true hits
- * missing in the track and b) there are additional hits not belonging to the true track.
- * (to avoid ambiguity, to which true track such a track belongs, a track should belong to a true track if the true
- * track holds more than 50% of the track.)
- * GHOST: a track that does not correspond to a true track.
- * LOST: a true track, that is not found
+/** A class to make linking reconstructed tracks and true tracks easier.
+ * 
+ * It represents a true track, so i wrapps a Track* and a MCParticle* ( accessible by getTrack() and getMCP() ) 
+ * and offers additional functionality. 
  */
-enum TrackType { COMPLETE , COMPLETE_PLUS , INCOMPLETE , INCOMPLETE_PLUS , GHOST , LOST };
-
-//TODO: this is still all very unclean and bad encapsulated etc.
-
-/** A class to help with categorising tracks.
- * It consists of a true track and the corresponding Monte Carlo Particle and can store
- * related Tracks. 
- */ 
 class TrueTrack{
    
 public:
    
-   /** whether this true track is lost */  
-   bool isLost;
-   
-   /** whether this true track was found completely (complete or complete_plus) */
-   bool isFoundCompletely;
-   
-   /** whether a complete version (with no additional hits) was found */
-   bool completeVersionExists;
-   
-   /** Here all the found tracks related to the true track are stored.
-    * The second value, the TrackType tells, which kind of track it is
-    */
-   std::map<Track*,TrackType> map_track_type;
    
    TrueTrack( Track* trueTrack , MCParticle* mcp , MarlinTrk::IMarlinTrkSystem* trkSystem):
-      _trueTrack(trueTrack), _mcp(mcp), _trkSystem(trkSystem) {isLost = true; isFoundCompletely = false; completeVersionExists = false;}
+   _trueTrack(trueTrack), _mcp(mcp), _trkSystem(trkSystem) {}
    
-   /** Info about the Monte Carlo Particle */
-   std::string getMCPInfo();
+   /** @return the true track */
+   const Track* getTrueTrack() const { return _trueTrack; }
    
-   /** Info about the true Track */
-   std::string getTrueTrackInfo();
+   /** @return the monte carlo particle of the true track */
+   const MCParticle* getMCP() const { return _mcp; }
    
-   /** Info about all the tracks associated to the true track */
-   std::string getRelatedTracksInfo();
-   
-   /** Info about the status of the track concerning if it was found or lost */
-   std::string getFoundInfo();
-   
-   /** @return a string containing information about the CellID of a hit
-    */
-   std::string cellIDInfo( TrackerHit* hit );
-   
-   std::string positionInfo( TrackerHit* hit );
+      /** @return the reco tracks related to the true track */
+   std::vector< const RecoTrack* > getRecoTracks() const{ return _recoTracks; }
    
    
-   const Track* getTrueTrack(){ return _trueTrack; }
+   void addRecoTrack( RecoTrack* recoTrack ){ _recoTracks.push_back( recoTrack ); }
+   
+   
+   
+   
+   /** @return whether this true track is lost */  
+   bool isLost() const;
+   
+   /** @return whether this true track was found completely (complete or complete_plus) */
+   bool isFoundCompletely() const;
+   
+   /** @return whether a complete version (with no additional hits) was found */
+   bool completeVersionExists() const;
+   
+
+   
+   /** @return Info about the Monte Carlo Particle */
+   std::string getMCPInfo() const;
+   
+   /** @return Info about the true Track */
+   std::string getTrueTrackInfo() const;
+   
+   /** @return Info about all the tracks associated to the true track */
+   std::string getRelatedTracksInfo() const;
+   
+   /** @return Info about the status of the track concerning if it was found or lost */
+   std::string getFoundInfo() const;
+   
+   /** @return number of linked reco tracks that have a certain type */
+   unsigned getNumberOfTracksWithType( TrackType type ) const;   
+   
+   
    
 private:
    
    Track* _trueTrack;
    MCParticle* _mcp;
+   std::vector< const RecoTrack* > _recoTracks;
    
    MarlinTrk::IMarlinTrkSystem* _trkSystem; // for fitting
    

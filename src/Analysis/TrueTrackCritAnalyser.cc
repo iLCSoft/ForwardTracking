@@ -47,7 +47,12 @@ TrueTrackCritAnalyser::TrueTrackCritAnalyser() : Processor("TrueTrackCritAnalyse
    registerProcessorParameter("RootFileName",
                               "Name of the root file for saving the results",
                               _rootFileName,
-                              std::string("Feedback/TrueTracksCritAnalysis.root") );
+                              std::string("TrueTracksCritAnalysis.root") );
+   
+   registerProcessorParameter("WriteNewRootFile",
+                              "What to do with older root file: true = rename it, false = leave it and append new one",
+                              _writeNewRootFile,
+                              bool( true ) );
    
    
    //For fitting:
@@ -68,38 +73,35 @@ TrueTrackCritAnalyser::TrueTrackCritAnalyser() : Processor("TrueTrackCritAnalyse
                               bool(false));
    
    
-   registerProcessorParameter("Chi2ProbCut",
+   // The cuts
+   registerProcessorParameter("CutChi2Prob",
                               "Tracks with a chi2 probability below this value won't be considered",
                               _chi2ProbCut,
                               double (0.005) ); 
-   
-   
-   
-   registerProcessorParameter("PtMin",
+      
+   registerProcessorParameter("CutPtMin",
                               "The minimum transversal momentum pt above which tracks are of interest in GeV ",
                               _ptMin,
-                              double (0.2)  );   
+                              double (0.1)  );   
    
-   registerProcessorParameter("DistToIPMax",
+   registerProcessorParameter("CutDistToIPMax",
                               "The maximum distance from the origin of the MCP to the IP (0,0,0)",
                               _distToIPMax,
                               double (100. ) );   
    
-   registerProcessorParameter("NumberOfHitsMin",
+   registerProcessorParameter("CutNumberOfHitsMin",
                               "The minimum number of hits a track must have",
                               _nHitsMin,
                               int (4)  );   
    
+   
+   
    registerProcessorParameter("OverlappingHitsDistMax",
                               "The maximum distance of hits from overlapping petals belonging to one track",
                               _overlappingHitsDistMax,
-                              double(3.5));
+                              double(4));
    
-   registerProcessorParameter("WriteNewRootFile",
-                              "What to do with older root file: true = rename it, false = leave it and append new one",
-                              _writeNewRootFile,
-                              bool( true ) );
-                              
+
    
 }
 
@@ -152,6 +154,7 @@ void TrueTrackCritAnalyser::init() {
    std::set < std::string > branchNames3;
    std::set < std::string > branchNames4;
    std::set < std::string > branchNamesKalman;
+   std::set < std::string > branchNamesHitDist;
    
    
    // Set up the root file
@@ -308,6 +311,16 @@ void TrueTrackCritAnalyser::init() {
    
  
    /**********************************************************************************************/
+   /*                Set up the tree for the distance of hits                                    */
+   /**********************************************************************************************/
+   
+   branchNamesHitDist.insert( "distToPrevHit" );
+   branchNamesHitDist.insert( "MCP_pt" );
+   
+   _treeNameHitDist = "HitDist"; 
+   KiTrackMarlin::setUpRootFile( _rootFileName, _treeNameHitDist, branchNamesHitDist , false );      //prepare the root file.
+   
+   /**********************************************************************************************/
    /*                Set up the track fitter                                                     */
    /**********************************************************************************************/
    
@@ -344,6 +357,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
    std::vector < std::map < std::string , float > > rootDataVec3;
    std::vector < std::map < std::string , float > > rootDataVec4;
    std::vector < std::map < std::string , float > > rootDataVecKalman;
+   std::vector < std::map < std::string , float > > rootDataVecHitDist;
   
    // get the true tracks 
    LCCollection* col = evt->getCollection( _colNameMCTrueTracksRel ) ;
@@ -474,8 +488,21 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          std::vector <IHit*> hits;
          for ( unsigned j=0; j< trackerHits.size(); j++ ) hits.push_back( new FTDHit01( trackerHits[j] , _sectorSystemFTD ) );
          
-        
          
+         /**********************************************************************************************/
+         /*     Store the distances of the hits                                                        */
+         /**********************************************************************************************/
+         
+         for( unsigned j=0; j< hits.size()-1; j++ ){
+            
+            std::map < std::string , float > rootData;
+            
+            rootData[ "distToPrevHit" ] = hits[j]->distTo(hits[j+1]);
+            rootData["MCP_pt"] = pt;
+            
+            rootDataVecHitDist.push_back( rootData );
+            
+         }         
          
          /**********************************************************************************************/
          /*                Manipulate the hits (for example erase some or add some)                    */
@@ -674,18 +701,18 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          /**********************************************************************************************/
          
          
-         std::map < std::string , float > rootData;
+         std::map < std::string , float > rootDataFit;
          
          
-         rootData[ "chi2" ]          = chi2;
-         rootData[ "Ndf" ]           = Ndf;
-         rootData[ "nHits" ]         = nHits;
-         rootData[ "chi2prob" ]      = chi2Prob;
+         rootDataFit[ "chi2" ]          = chi2;
+         rootDataFit[ "Ndf" ]           = Ndf;
+         rootDataFit[ "nHits" ]         = nHits;
+         rootDataFit[ "chi2prob" ]      = chi2Prob;
          
-         rootData["MCP_pt"] = pt;
-         rootData["MCP_distToIP"] = distToIP;
+         rootDataFit["MCP_pt"] = pt;
+         rootDataFit["MCP_distToIP"] = distToIP;
          
-         rootDataVecKalman.push_back( rootData );
+         rootDataVecKalman.push_back( rootDataFit );
          
          
          
@@ -718,6 +745,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
       KiTrackMarlin::saveToRoot( _rootFileName, _treeName3, rootDataVec3 );
       KiTrackMarlin::saveToRoot( _rootFileName, _treeName4, rootDataVec4 );
       KiTrackMarlin::saveToRoot( _rootFileName, _treeNameKalman, rootDataVecKalman );
+      KiTrackMarlin::saveToRoot( _rootFileName, _treeNameHitDist, rootDataVecHitDist );
       
       
       streamlog_out (DEBUG5) << "Number of used mcp-track relations: " << nUsedRelations <<"\n";

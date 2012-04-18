@@ -28,6 +28,17 @@ Version History
  
       - wrote overview for the doxygen
       - switched to new subset classes (SubsetHopfieldNN and SubsetSimple)
+      - TrueTrackCritAnalyser:
+         + added output of the distances of 2 hits in the tracks
+         + renamed the cut steer parameters to start with Cut
+         + added doxygen documentation
+      - TrackingFeedback:
+         + added new class RecoTrack and reworked TrueTrack as well
+            (now every true track gets a TrueTrack object and every reconstructed track gets a RecoTrack object.
+            In the checking they are then linked: RecoTracks now their assigned TrueTracks and vice versa )
+         + added output to a root file
+         + renamed the cut steer parameters to start with Cut
+         + added doxygen documentation
 
   ---------
  | v01-03  |
