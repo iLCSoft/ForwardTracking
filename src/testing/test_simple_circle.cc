@@ -40,7 +40,7 @@ int main(int argc, char** argv ){
             ilctest.error( "not expecting getRadius() to be infinite" );
         }    
 
-        if( ilctest.last_test_status() == "PASSED" ){
+      if( strcmp(ilctest.last_test_status(),"PASSED") ){
 
             // should actually be able to name the tests and check status by name
             ilctest.log( "testing something which only makes sense if getRadius() is not infinite" );
