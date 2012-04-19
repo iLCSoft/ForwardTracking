@@ -10,6 +10,8 @@
 #include "Tools/Fitter.h"
 #include "Tools/KiTrackMarlinTools.h"
 
+static const char* TRACK_TYPE_NAMES[] = {"COMPLETE" , "COMPLETE_PLUS" , "INCOMPLETE" , "INCOMPLETE_PLUS" , "GHOST" , "LOST"}; 
+
 std::string RecoTrack::cellIDInfo( TrackerHit* hit ){
    
    
