@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <cstring>
 
 #include "Criteria/SimpleCircle.h"
 
