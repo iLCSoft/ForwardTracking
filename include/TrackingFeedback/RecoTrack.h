@@ -8,7 +8,6 @@
 
 using namespace lcio;
 
-static const char* TRACK_TYPE_NAMES[] = {"COMPLETE" , "COMPLETE_PLUS" , "INCOMPLETE" , "INCOMPLETE_PLUS" , "GHOST" , "LOST"}; 
 
 /** COMPLETE: a track containing all hits of a true track, and has no further hits.
  * COMPLETE_PLUS: a track containing all hits of a true track and additional hits not belonging to the true track
