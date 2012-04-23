@@ -21,15 +21,16 @@
 
 
 //--------------------------------------------------------------
-#include "ILDImpl/FTDTrack.h"
-#include "Tools/KiTrackMarlinTools.h"
 #include "KiTrack/SubsetHopfieldNN.h"
 #include "KiTrack/SubsetSimple.h"
 #include "KiTrack/SegmentBuilder.h"
 #include "KiTrack/Automaton.h"
+#include "ILDImpl/FTDTrack.h"
 #include "ILDImpl/FTDHit01.h"
 #include "ILDImpl/FTDNeighborPetalSecCon.h"
 #include "ILDImpl/FTDSecCon01.h"
+#include "Tools/KiTrackMarlinTools.h"
+#include "Tools/KiTrackMarlinCEDTools.h"
 //--------------------------------------------------------------
 
 
@@ -170,7 +171,7 @@ void ForwardTracking::init() {
    _nRun = 0 ;
    _nEvt = 0 ;
 
-   _useCED = false;
+   _useCED = true;
    if( _useCED )MarlinCED::init(this) ;    //CED
    
     
@@ -409,7 +410,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       streamlog_out( DEBUG4 ) << "\t\t---Automaton---\n" ;
       
-//       if( _useCED ) automaton.drawSegments(); TODO: this needs alternate approach
+      if( _useCED ) KiTrackMarlin::drawAutomatonSegments( automaton ); // draws the 1-segments (i.e. hits)
+      
       
       /*******************************/
       /*      2-hit segments         */
@@ -423,16 +425,20 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // Let the automaton lengthen its 1-segments to 2-segments
       automaton.lengthenSegments();
       
+      
       // So now we have 2-segments and are ready to perform the cellular automaton.
       
       // Perform the automaton
       automaton.doAutomaton();
       
+      
       //Clean segments with bad states
       automaton.cleanBadStates();
       
+      
       //Clean connections of segments (this uses the same criteria again as before)
       automaton.cleanBadConnections();
+      
       
       //Reset the states of all segments
       automaton.resetStates();
@@ -584,6 +590,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
       }
       
+      if( _useCED ){
+//          for( unsigned i=0; i < trackCandidates.size(); i++ ) KiTrackMarlin::drawTrackRandColor( trackCandidates[i] );
+      }
       
       /**********************************************************************************************/
       /*               Get the best subset of tracks                                                */
@@ -626,6 +635,13 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          tracks = trackCandidates;
          
       }
+      
+      
+      if( _useCED ){
+//          for( unsigned i=0; i < tracks.size(); i++ ) KiTrackMarlin::drawTrack( tracks[i] , 0x00ff00 );
+//          for( unsigned i=0; i < rejected.size(); i++ ) KiTrackMarlin::drawTrack( rejected[i] , 0xff0000 );
+      }
+      
       
       for ( unsigned i=0; i<rejected.size(); i++){
          
