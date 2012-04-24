@@ -157,7 +157,6 @@ protected:
    
    const SectorSystemFTD* _sectorSystemFTD;
    
-   MarlinTrk::IMarlinTrkSystem* _trkSystem;
    
    
 } ;

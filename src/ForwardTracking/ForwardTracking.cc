@@ -61,12 +61,6 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _FTDHitCollections,
                                collections); 
    
-//    registerInputCollection(LCIO::TRACKERHIT,
-//                            "FTDHitCollections",
-//                            "FTD Hit Collections",
-//                            _FTDHitCollections,
-//                            collections); 
-
 
    registerOutputCollection(LCIO::TRACK,
                            "ForwardTrackCollection",

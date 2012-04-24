@@ -11,10 +11,12 @@
 #include "gear/FTDParameters.h"
 #include "gear/FTDLayerLayout.h"
 
+#include "Math/ProbFunc.h"
+
 #include "Tools/KiTrackMarlinTools.h"
 #include "Criteria/Criteria.h"
 #include "ILDImpl/FTDHit01.h"
-#include "Tools/Fitter.h"
+
 
 
 using namespace lcio ;
@@ -200,6 +202,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames2.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    branchNames2.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    branchNames2.insert( "distance" ); // the distance between two hits
+   branchNames2.insert( "chi2Prob" ); //the chi2 probability
    // Set up the root file with the tree and the branches
    _treeName2 = "2Hit";
    KiTrackMarlin::setUpRootFile( _rootFileName, _treeName2, branchNames2, _writeNewRootFile );      //prepare the root file.
@@ -240,6 +243,7 @@ void TrueTrackCritAnalyser::init() {
    // Also insert branches for additional information
    branchNames3.insert( "MCP_pt" ); //transversal momentum
    branchNames3.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   branchNames3.insert( "chi2Prob" ); //the chi2 probability
    branchNames3.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
@@ -281,6 +285,7 @@ void TrueTrackCritAnalyser::init() {
    // Also insert branches for additional information
    branchNames4.insert( "MCP_pt" ); //transversal momentum
    branchNames4.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   branchNames4.insert( "chi2Prob" ); //the chi2 probability
    branchNames4.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    
    // Set up the root file with the tree and the branches
@@ -297,7 +302,7 @@ void TrueTrackCritAnalyser::init() {
    /*                Set up the tree for Kalman Fits                                             */
    /**********************************************************************************************/
    
-   branchNamesKalman.insert( "chi2prob" );
+   branchNamesKalman.insert( "chi2Prob" );
    branchNamesKalman.insert( "chi2" );
    branchNamesKalman.insert( "Ndf" );
    branchNamesKalman.insert( "nHits" );
@@ -320,24 +325,7 @@ void TrueTrackCritAnalyser::init() {
    _treeNameHitDist = "HitDist"; 
    KiTrackMarlin::setUpRootFile( _rootFileName, _treeNameHitDist, branchNamesHitDist , false );      //prepare the root file.
    
-   /**********************************************************************************************/
-   /*                Set up the track fitter                                                     */
-   /**********************************************************************************************/
-   
-   // set up the geometry
-   _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
-   
-   if( _trkSystem == 0 ) throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
-   
-   
-   // set the options   
-   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS,        _MSOn ) ;       //multiple scattering
-   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::usedEdx,       _ElossOn) ;     //energy loss
-   _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing,  _SmoothOn) ;    //smoothing
-   
-   // initialise the tracking system
-   _trkSystem->init() ;
-   
+ 
    
 }
 
@@ -386,7 +374,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          /*               First: check if the track is of interest                                     */
          /**********************************************************************************************/
          // (we don't necessarily want or are able to reconstruct all tracks. Tracks with a really bad
-         // multiple scattering and therefore bad chi2prob are unlikely to be reconstructed.
+         // multiple scattering and therefore bad chi2Prob are unlikely to be reconstructed.
          // Same goes for tracks with very low pt )
          
          
@@ -443,24 +431,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          //If the chi2 probability is too low
          
          //Fit the track
-         double chi2;
-         double Ndf;
-         double chi2Prob;
+         double chi2 = track->getChi2();
+         double Ndf = track->getNdf();
+         double chi2Prob = ROOT::Math::chisquared_cdf_c( chi2 , Ndf );
          
-         try{
-            
-            Fitter fitter( track, _trkSystem );
-            chi2 = fitter.getChi2( lcio::TrackState::AtIP );
-            Ndf = fitter.getNdf( lcio::TrackState::AtIP );
-            chi2Prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
-            
-         }
-         catch( FitterException e ){
-            
-            streamlog_out( DEBUG3 ) << "True track " << i << " is discarded because fit failed: " << e.what() << "\n";
-            continue;   
-            
-         }
          
          if ( chi2Prob < _chi2ProbCut ){
             
@@ -614,6 +588,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             rootData["MCP_pt"] = pt;
             rootData["MCP_distToIP"] = distToIP;
+            rootData["chi2Prob"] = chi2Prob;
             rootData["layers"] = child->getHits()[0]->getLayer() *10 + parent->getHits()[0]->getLayer();
             
             IHit* childHit = child->getHits()[0];
@@ -652,6 +627,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             rootData["MCP_pt"] = pt;
             rootData["MCP_distToIP"] = distToIP;
+            rootData["chi2Prob"] = chi2Prob;
             rootData["layers"] = child->getHits()[1]->getLayer() *100 +
                                  child->getHits()[0]->getLayer() *10 + 
                                  parent->getHits()[0]->getLayer();
@@ -685,6 +661,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             rootData["MCP_pt"] = pt;
             rootData["MCP_distToIP"] = distToIP;
+            rootData["chi2Prob"] = chi2Prob;
             rootData["layers"] = child->getHits()[2]->getLayer() *1000 +
                                  child->getHits()[1]->getLayer() *100 +
                                  child->getHits()[0]->getLayer() *10 + 
@@ -707,7 +684,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          rootDataFit[ "chi2" ]          = chi2;
          rootDataFit[ "Ndf" ]           = Ndf;
          rootDataFit[ "nHits" ]         = nHits;
-         rootDataFit[ "chi2prob" ]      = chi2Prob;
+         rootDataFit[ "chi2Prob" ]      = chi2Prob;
          
          rootDataFit["MCP_pt"] = pt;
          rootDataFit["MCP_distToIP"] = distToIP;

@@ -26,6 +26,9 @@ Version History
  | changes since last version  |
   -----------------------------
  
+      - TrueTrackCritAnalyser: 
+         + no more fitting is done, tracks are assumed to be already fitted 
+         + chi2prob is now stored for the criteria branches as well
       - wrote overview for the doxygen
       - switched to new subset classes (SubsetHopfieldNN and SubsetSimple)
       - TrueTrackCritAnalyser:
