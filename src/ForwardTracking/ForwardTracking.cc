@@ -165,7 +165,7 @@ void ForwardTracking::init() {
    _nRun = 0 ;
    _nEvt = 0 ;
 
-   _useCED = true;
+   _useCED = false;
    if( _useCED )MarlinCED::init(this) ;    //CED
    
     
