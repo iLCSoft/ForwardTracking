@@ -133,14 +133,11 @@ TARGET_LINK_LIBRARIES( QuantileAnalyser ${PROJECT_NAME} )
 ADD_EXECUTABLE( CritRunner ./src/Executables/CritRunner.cc )
 TARGET_LINK_LIBRARIES( CritRunner ${PROJECT_NAME} )
 
-ADD_EXECUTABLE( worker ./src/Executables/worker.cc )
-TARGET_LINK_LIBRARIES( worker ${PROJECT_NAME} )
-
-ADD_EXECUTABLE( worker_time ./src/Executables/worker_time.cc )
-TARGET_LINK_LIBRARIES( worker_time ${PROJECT_NAME} )
-
 ADD_EXECUTABLE( param_runner ./src/Executables/param_runner.cc )
 TARGET_LINK_LIBRARIES( param_runner ${PROJECT_NAME} )
+
+ADD_EXECUTABLE( param_runner_background ./src/Executables/param_runner_background.cc )
+TARGET_LINK_LIBRARIES( param_runner_background ${PROJECT_NAME} )
 
 
 ### TESTING #################################################################
