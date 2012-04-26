@@ -497,12 +497,12 @@ void TrackingFeedbackProcessor::end(){
       
       double efficiency = double( _nTrueTracks_Sum - _nLost_Sum ) / double( _nTrueTracks_Sum );
       double ghostrate = double( _nGhost_Sum ) / double( _nRecoTracks_Sum );
-      double rateOfCompletes = double( _nComplete_Sum ) / double( _nTrueTracks_Sum );
+      
       
       myfile << "\n";
       myfile << "Efficiency\t" << efficiency << "\t\t";
       myfile << "ghostrate\t"  << ghostrate  << "\t\t";
-      myfile << "rateOfCompletes\t"  << rateOfCompletes  << "\t\t";
+      
       
       
       myfile.close();
