@@ -21,7 +21,9 @@ using namespace KiTrack;
 using namespace KiTrackMarlin;
 
 
-
+/** a simple typedef, making writing shorter. And it makes sense: a track consists of hits. But as a real track
+ * has more information, a vector of hits can be considered as a "raw track". */
+typedef std::vector< IHit* > RawTrack;
 
 
 /**  Standallone Forward Tracking Processor for marlin.

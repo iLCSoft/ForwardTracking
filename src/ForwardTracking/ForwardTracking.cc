@@ -328,6 +328,13 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          TrackerHit* trackerHit = dynamic_cast<TrackerHit*>( col->getElementAt( i ) );
          
+         if( trackerHit == NULL ){
+            
+            streamlog_out( ERROR ) << "cast to TrackerHit* was not possible, skipping hit\n";
+            continue;
+            
+         }
+         
          streamlog_out(DEBUG1) << "hit" << i << " " << KiTrackMarlin::getCellID0Info( trackerHit->getCellID0() );
          
          //Make an FTDHit01 from the TrackerHit 
@@ -495,7 +502,19 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          for( unsigned j=0; j < autRawTracksPlus.size(); j++ ){
             
             
-            ITrack* trackCand = new FTDTrack( autRawTracksPlus[j] , _trkSystem );
+            RawTrack rawTrack = autRawTracksPlus[j];
+            
+            FTDTrack* trackCand = new FTDTrack( _trkSystem );
+            
+            // add the hits to the track
+            for( unsigned k=0; k<rawTrack.size(); k++ ){
+               
+               IFTDHit* ftdHit = dynamic_cast< IFTDHit* >( rawTrack[k] ); // cast to IFTDHits, as needed for an FTDTrack
+               if( ftdHit != NULL ) trackCand->addHit( ftdHit );
+               else streamlog_out( DEBUG4 ) << "Hit " << rawTrack[k] << " could not be casted to IFTDHit\n";
+               
+            }
+            
             streamlog_out( DEBUG2 ) << "Fitting track candidate with " << trackCand->getHits().size() << " hits\n";
             
 //             std::vector< IHit* > testHits = trackCand->getHits();

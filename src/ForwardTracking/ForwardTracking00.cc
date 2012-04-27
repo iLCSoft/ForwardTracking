@@ -411,7 +411,25 @@ void ForwardTracking00::processEvent( LCEvent * evt ) {
       std::vector < std::vector< IHit* > > autTracks = automaton.getTracks(); //TODO: the method should have a different name
       std::vector <ITrack*> autTrackCandidates;
       
-      for( unsigned i=0; i < autTracks.size(); i++) autTrackCandidates.push_back( new FTDTrack( autTracks[i] , _trkSystem ) );
+      for( unsigned i=0; i < autTracks.size(); i++){
+         
+         
+         RawTrack rawTrack = autTracks[i];
+         
+         FTDTrack* ftdTrack = new FTDTrack( _trkSystem );
+         
+         // add the hits to the track
+         for( unsigned k=0; k<rawTrack.size(); k++ ){
+            
+            IFTDHit* ftdHit = dynamic_cast< IFTDHit* >( rawTrack[k] ); // cast to IFTDHits, as needed for an FTDTrack
+            if( ftdHit != NULL ) ftdTrack->addHit( ftdHit );
+            else streamlog_out( DEBUG4 ) << "Hit " << rawTrack[k] << " could not be casted to IFTDHit\n";
+            
+         }
+         
+         autTrackCandidates.push_back( ftdTrack );
+         
+      }
       
 //       for( unsigned i=0; i < autTrackCandidates.size(); i++ ) drawTrack( autTrackCandidates[i] , 0x00ffff , 3 );
 //       std::vector< ITrack* > tracks = autTrackCandidates;
