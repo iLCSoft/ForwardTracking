@@ -26,6 +26,11 @@ Version History
  | changes since last version  |
   -----------------------------
  
+      - ForwardTracking: As FTDTrack now only takes IFTDHit pointers, the passed arguments are changed
+      - Added FTDBackgroundProcessor which adds salt and pepper background to the FTD TrackerHit collections
+      - Erased the executables worker and worker_time as they were outdated
+      - Added executable param_runner, to rerun Marlin several times while altering a steering parameter
+      - Added executable param_runner_background a version of param_runner specialised for the FTDBackgroundProcessor
       - TrueTrackCritAnalyser: 
          + no more fitting is done, tracks are assumed to be already fitted 
          + chi2prob is now stored for the criteria branches as well
@@ -42,6 +47,7 @@ Version History
          + added output to a root file
          + renamed the cut steer parameters to start with Cut
          + added doxygen documentation
+      - Added the folder rootscripts containing the root scripts I use to make graphs
 
   ---------
  | v01-03  |
