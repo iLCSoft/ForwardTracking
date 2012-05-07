@@ -25,6 +25,10 @@ Version History
   -----------------------------
  | changes since last version  |
   -----------------------------
+
+  ---------
+ | v01-04  |
+  ---------
  
       - ForwardTracking: As FTDTrack now only takes IFTDHit pointers, the passed arguments are changed
       - Added FTDBackgroundProcessor which adds salt and pepper background to the FTD TrackerHit collections
