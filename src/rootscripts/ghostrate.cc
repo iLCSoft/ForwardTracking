@@ -71,6 +71,7 @@ void ghostrate(){
    
    gROOT->SetStyle("Plain");    // a style using white instead of this horrible grey
    TCanvas* myCanvas = new TCanvas("myCanvas", "myCanvas", 0, 0, 600, 400);     //"new"-Command ist notwendig, damit die Canvas erhalten bleibt.
+   myCanvas->SetLogx();
    TLegend* legend = new TLegend( 0.6, 0.65, 0.85, 0.85 );
    legend->SetFillColor( kWhite );
    
@@ -143,6 +144,8 @@ void ghostrate(){
       histGhostrate->SetMarkerSize( markerSize );
       histGhostrate->SetLineColor( i+2 );
       histGhostrate->GetXaxis()->SetTitle( "p_{T}" );
+      histGhostrate->GetYaxis()->SetRangeUser(0.,1.);
+      
       
       if( i == 0 )histGhostrate->Draw("AP"); // for info on why "AP" see http://root.cern.ch/root/html/TGraphPainter.html
       else        histGhostrate->Draw("sameP");
@@ -155,7 +158,6 @@ void ghostrate(){
    
    legend->Draw("same");
    
-   myCanvas->SetLogx();
    myCanvas->Update();
    myCanvas->SaveAs( PICTURE_SAVE_PATH .c_str());    //Save the data to an image file
    

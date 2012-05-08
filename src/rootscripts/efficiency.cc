@@ -71,6 +71,7 @@ void efficiency(){
     
    gROOT->SetStyle("Plain");    // a style using white instead of this horrible grey
    TCanvas* myCanvas = new TCanvas("myCanvas", "myCanvas", 0, 0, 600, 400);     //"new"-Command ist notwendig, damit die Canvas erhalten bleibt.
+   myCanvas->SetLogx();
    TLegend* legend = new TLegend( 0.4, 0.15, 0.7, 0.35 );
    legend->SetFillColor( kWhite );
    
@@ -152,6 +153,7 @@ void efficiency(){
       histEfficiency->SetMarkerSize( markerSize );
       histEfficiency->SetLineColor( i+2 );
       histEfficiency->GetXaxis()->SetTitle( "p_{T}" );
+      histEfficiency->GetYaxis()->SetRangeUser(0.,1.);
       
       
       if( i == 0 )histEfficiency->Draw("AP"); // for info on why "AP" see http://root.cern.ch/root/html/TGraphPainter.html
@@ -165,7 +167,7 @@ void efficiency(){
 
    legend->Draw("same");
 
-   myCanvas->SetLogx();
+   
    myCanvas->Update();
    myCanvas->SaveAs( PICTURE_SAVE_PATH .c_str());    //Save the data to an image file
    

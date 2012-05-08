@@ -37,6 +37,8 @@ using namespace KiTrack;
  */
 void calcMinMaxOfQuantile( std::vector< float > values, float &min, float &max, float quantile , float partLeft = 0.5 , float partRight = 0.5 ){
    
+   if ( values.empty() ) return;
+   
    if (quantile < 0) quantile = 0.;
    if (quantile > 1.) quantile = 1.;
    
@@ -74,7 +76,7 @@ int main(int argc,char *argv[]){
    if( argc >= 2 ) quantile = atof( argv[1] );
    
    
-   std::string ROOT_FILE_PATH = "/scratch/ilcsoft/Steers/TrueTracksCritAnalysis.root";
+   std::string ROOT_FILE_PATH = "/home/robin/Desktop/TrueTracksCritAnalysis.root";
    if( argc >= 3 ) ROOT_FILE_PATH = argv[2];
 
    std::string OUTPUT_PATH = "quantile_analyser_output";
@@ -85,7 +87,7 @@ int main(int argc,char *argv[]){
    myfile.open (OUTPUT_PATH.c_str() );
    
    
-   
+   const float chi2ProbMin = 0.00;
 
    
    
@@ -130,8 +132,11 @@ int main(int argc,char *argv[]){
       
       
       for (unsigned j = 0; j< nTreeEntries; j++){
-      
          
+         
+         float chi2Prob = 0.;
+         tree -> SetBranchAddress ( "chi2Prob" , &chi2Prob );
+         tree->GetEntry(j);
          
          for( iCrit = crits.begin(); iCrit != crits.end() ; iCrit++){
             
@@ -140,14 +145,21 @@ int main(int argc,char *argv[]){
             
             std::string branchName = critName;
             
-            map_name_value[ critName ].push_back( 0. );
+            if( chi2Prob > chi2ProbMin ) map_name_value[ critName ].push_back( 0. ); // only if chi2prob is good
             
-            tree -> SetBranchAddress ( branchName.c_str() , &(map_name_value[ critName ].back()) );
+            TBranch* branch = tree->GetBranch( branchName.c_str() );
+            if (branch) {
+               
+               tree->SetBranchAddress ( branchName.c_str() , &(map_name_value[ critName ].back()) );
+               
+            }
+            else continue; // if there is no branch with that name skip it
+           
             
             
          }
        
-         tree->GetEntry(j);
+       if( chi2Prob > chi2ProbMin )tree->GetEntry(j); // only if chi2prob is good
        
       }
    
@@ -192,7 +204,7 @@ int main(int argc,char *argv[]){
          
       }
       
-      
+      std::cout << "\n\n" ;
       steerInfo << "\n\n";
       
       
@@ -200,10 +212,10 @@ int main(int argc,char *argv[]){
    }
    
    steerInfo << "<parameter name=\"Criteria\" type=\"StringVec\">";
-   steerInfo << steerInfob;
+   steerInfo << steerInfob.str();
    steerInfo << "</parameter>\n\n";
    
-   std::cout << steerInfo;
+   std::cout << steerInfo.str();
    
    delete rootFile;
    

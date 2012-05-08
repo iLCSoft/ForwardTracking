@@ -141,8 +141,8 @@ int main(int argc,char *argv[]){
    
    for( unsigned i=0; i<nRuns; i++ ){
       
-//       checkCrits( crit2Vec , &segment1Parent, &segment1Child );
-//       checkCrits( crit3Vec , &segment2Parent, &segment2Child );
+      checkCrits( crit2Vec , &segment1Parent, &segment1Child );
+      checkCrits( crit3Vec , &segment2Parent, &segment2Child );
       checkCrits( crit4Vec , &segment3Parent, &segment3Child );
       
       
