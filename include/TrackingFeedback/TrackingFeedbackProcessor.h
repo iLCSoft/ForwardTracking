@@ -197,6 +197,7 @@ class TrackingFeedbackProcessor : public Processor {
    
    
    int _recoTrack_nTrueTracks;
+   int _recoTrack_Type;
    double _recoTrack_pt;
    
    

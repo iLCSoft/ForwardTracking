@@ -52,8 +52,8 @@ void efficiency(){
    std::vector< std::string > LOAD_FILE_NAMES;                    // the root files to be loaded
 //    LOAD_FILE_NAMES.push_back( MYPATH + "Feedback.root" );
    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForward.root" );
-//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSilicon.root" );
-//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSubset.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSilicon.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSubset.root" );
    
    std::vector< std::string > LOAD_FILE_MEANINGS;
    LOAD_FILE_MEANINGS.push_back( "ForwardTracking" );
@@ -103,10 +103,10 @@ void efficiency(){
       
       
       TH1D *histAll = new TH1D("histAll","reco tracks;p_{T}",nBins, xMinLog10, xMaxLog10);
-      TH1D *histGhost = new TH1D("histFound","Efficiency;p_{T}",nBins, xMinLog10, xMaxLog10); 
+      TH1D *histFound = new TH1D("histFound","Efficiency;p_{T}",nBins, xMinLog10, xMaxLog10); 
       
       binLogX( histAll, "X" );
-      binLogX( histGhost, "X" );
+      binLogX( histFound, "X" );
       
       //---------- linking the branch values to our local variables:
       

@@ -723,6 +723,7 @@ void TrackingFeedbackProcessor::saveRootInformation(){
       
       
       _recoTrack_nTrueTracks = recoTrack->getTrueTracks().size();
+      _recoTrack_Type = recoTrack->getType();
       _recoTrack_pt = pt;
       
       _treeRecoTracks->Fill();
@@ -744,7 +745,9 @@ void TrackingFeedbackProcessor::makeRootBranches(){
    _treeTrueTracks->Branch( "pT" , &_trueTrack_pt );
    
    _treeRecoTracks->Branch( "nTrueTracks", &_recoTrack_nTrueTracks );
+   _treeRecoTracks->Branch( "Type", &_recoTrack_Type );
    _treeRecoTracks->Branch( "pT" , &_recoTrack_pt );
+   
    
 }
 
