@@ -14,13 +14,13 @@
 #include "Math/ProbFunc.h"
 
 #include "Tools/KiTrackMarlinTools.h"
+#include "Tools/FTDHelixFitter.h"
 #include "Criteria/Criteria.h"
 #include "ILDImpl/FTDHit01.h"
 
 
-
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 using namespace KiTrack;
 
 
@@ -302,6 +302,9 @@ void TrueTrackCritAnalyser::init() {
    /*                Set up the tree for Kalman Fits                                             */
    /**********************************************************************************************/
    
+   branchNamesKalman.insert( "helixChi2" );
+   branchNamesKalman.insert( "helixNdf" );
+   branchNamesKalman.insert( "helixChi2OverNdf" );
    branchNamesKalman.insert( "chi2Prob" );
    branchNamesKalman.insert( "chi2" );
    branchNamesKalman.insert( "Ndf" );
@@ -688,6 +691,15 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          
          rootDataFit["MCP_pt"] = pt;
          rootDataFit["MCP_distToIP"] = distToIP;
+         
+         FTDHelixFitter helixFitter( track );
+         float helixChi2 = helixFitter.getChi2();
+         float helixNdf  = helixFitter.getNdf();
+         
+         rootDataFit["helixChi2"] = helixChi2;
+         rootDataFit["helixNdf"] = helixNdf;
+         rootDataFit["helixChi2OverNdf"] = helixChi2 / helixNdf;
+         
          
          rootDataVecKalman.push_back( rootDataFit );
          

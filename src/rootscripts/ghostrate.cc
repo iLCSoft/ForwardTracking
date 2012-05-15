@@ -52,8 +52,8 @@ void ghostrate(){
    std::vector< std::string > LOAD_FILE_NAMES;                    // the root files to be loaded
 //    LOAD_FILE_NAMES.push_back( MYPATH + "Feedback.root" );
    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForward.root" );
-//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSilicon.root" );
-//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSubset.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSilicon.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSubset.root" );
    
    std::vector< std::string > LOAD_FILE_MEANINGS;
    LOAD_FILE_MEANINGS.push_back( "ForwardTracking" );
@@ -77,7 +77,7 @@ void ghostrate(){
    //---------- Values for the histograms:
    int nBins = 20;
    double xMin = 0.1;
-   double xMax = 30;
+   double xMax = 100;
    double xMinLog10 = log10( xMin ); // as we want a logartihmic scale with evenly binning we have to set the min and max accordingly( see http://root.cern.ch/root/roottalk/roottalk06/1213.html )
    double xMaxLog10 = log10( xMax );
    double markerSize = 1.;
@@ -102,7 +102,7 @@ void ghostrate(){
       
       
       TH1D *histAll = new TH1D("histAll","reco tracks;p_{T}",nBins, xMinLog10, xMaxLog10);
-      TH1D *histGhost = new TH1D("histFound","ghostrate;p_{T}",nBins, xMinLog10, xMaxLog10); 
+      TH1D *histGhost = new TH1D("histFound","Ghostrate;p_{T}",nBins, xMinLog10, xMaxLog10); 
       
       binLogX( histAll, "X" );
       binLogX( histGhost, "X" );
@@ -142,7 +142,7 @@ void ghostrate(){
       histGhostrate->SetMarkerStyle( i+20 );
       histGhostrate->SetMarkerSize( markerSize );
       histGhostrate->SetLineColor( i+2 );
-      histGhostrate->GetXaxis()->SetTitle( "p_{T}" );
+      histGhostrate->GetXaxis()->SetTitle( "p_{T}[GeV]" );
       
       if( i == 0 )histGhostrate->Draw("AP"); // for info on why "AP" see http://root.cern.ch/root/html/TGraphPainter.html
       else        histGhostrate->Draw("sameP");

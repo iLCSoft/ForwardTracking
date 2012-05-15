@@ -51,12 +51,14 @@ void efficiency(){
    const string MYPATH = "./";                                  // the current path
    std::vector< std::string > LOAD_FILE_NAMES;                    // the root files to be loaded
 //    LOAD_FILE_NAMES.push_back( MYPATH + "Feedback.root" );
-   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForward.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForwardHighPt.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForwardLowPt.root" );
 //    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSilicon.root" );
 //    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSubset.root" );
    
    std::vector< std::string > LOAD_FILE_MEANINGS;
-   LOAD_FILE_MEANINGS.push_back( "ForwardTracking" );
+   LOAD_FILE_MEANINGS.push_back( "ForwardTrackingHighPt" );
+   LOAD_FILE_MEANINGS.push_back( "ForwardTrackingLowPt" );
    LOAD_FILE_MEANINGS.push_back( "SiliconTracking" );
    LOAD_FILE_MEANINGS.push_back( "TrackSubsetProcessor" );
    
@@ -77,7 +79,7 @@ void efficiency(){
    //---------- Values for the histograms:
    int nBins = 20;
    double xMin = 0.1;
-   double xMax = 30;
+   double xMax = 100;
    double xMinLog10 = log10( xMin ); // as we want a logartihmic scale with evenly binning we have to set the min and max accordingly( see http://root.cern.ch/root/roottalk/roottalk06/1213.html )
    double xMaxLog10 = log10( xMax );
    double markerSize = 1.;
@@ -151,7 +153,7 @@ void efficiency(){
       histEfficiency->SetMarkerStyle( i+20 );
       histEfficiency->SetMarkerSize( markerSize );
       histEfficiency->SetLineColor( i+2 );
-      histEfficiency->GetXaxis()->SetTitle( "p_{T}" );
+      histEfficiency->GetXaxis()->SetTitle( "p_{T}[GeV]" );
       
       
       if( i == 0 )histEfficiency->Draw("AP"); // for info on why "AP" see http://root.cern.ch/root/html/TGraphPainter.html

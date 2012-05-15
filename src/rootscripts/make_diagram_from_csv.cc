@@ -22,13 +22,13 @@ void make_diagram_from_csv(){
    legend->SetFillColor( kWhite );
    
    
-   const string MYPATH = "Desktop/"; 
+   const string MYPATH = "./"; 
    const std::string CSV_FILE = MYPATH + "time_background.csv";
-   const string PICTURE_NAME = "ghostrate";
+   const string PICTURE_NAME = "time";
    const string PICTURE_ENDING = ".svg";
    const string PICTURE_SAVE_PATH = MYPATH + PICTURE_NAME + PICTURE_ENDING;     // where the image will be saved
-//    const string TITLE = "Time per event [s]";
-   const string TITLE = "Ghostrate";
+   const string TITLE = "Time per event [s]";
+//    const string TITLE = "Ghostrate";
    
    
    const std::string xName = "Background";
@@ -37,8 +37,8 @@ void make_diagram_from_csv(){
    std::map< std::string, std::vector<double> > map_names_values;
    
    std::vector< std::string > yNames;
-   yNames.push_back( "Ghostrate SiliconTracking" );
-   yNames.push_back( "Ghostrate ForwardTracking" );
+   yNames.push_back( "Time SiliconTracking" );
+   yNames.push_back( "Time ForwardTracking" );
    
    
    ifstream csvFile;
@@ -145,7 +145,7 @@ void make_diagram_from_csv(){
    }
    
    mg->Draw("APL");
-   mg->GetYaxis()->SetRangeUser(0.,1.);
+//    mg->GetYaxis()->SetRangeUser(0.,1.);
    mg->GetXaxis()->SetTitle( xName.c_str() );
    
    legend->Draw("same");

@@ -53,6 +53,9 @@ typedef std::vector< IHit* > RawTrack;
  * @param Chi2ProbCut Tracks with a chi2 probability below this will get sorted out<br>
  * (default value 0.005 )
  * 
+ * @param HelixFitMax the maximum chi2/Ndf that is allowed as result of a helix fit
+ * (default value 500 )
+ * 
  * @param OverlappingHitsDistMax The maximum distance of hits from overlapping petals belonging to one track<br>
  * (default value 3.5 )
  * 
@@ -133,7 +136,7 @@ class ForwardTracking : public Processor {
 
 
    double _chi2ProbCut;
-
+   double _helixFitMax;
 
 
    bool _MSOn ;

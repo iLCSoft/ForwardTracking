@@ -31,6 +31,7 @@
 #include "ILDImpl/FTDSecCon01.h"
 #include "Tools/KiTrackMarlinTools.h"
 #include "Tools/KiTrackMarlinCEDTools.h"
+#include "Tools/FTDHelixFitter.h"
 //--------------------------------------------------------------
 
 
@@ -73,6 +74,11 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               "Tracks with a chi2 probability below this will get sorted out",
                               _chi2ProbCut,
                               double(0.005));
+   
+   registerProcessorParameter("HelixFitMax",
+                              "the maximum chi2/Ndf that is allowed as result of a helix fit",
+                              _helixFitMax,
+                              double( 500 ) );
    
 
    registerProcessorParameter("OverlappingHitsDistMax",
@@ -524,6 +530,41 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 //                streamlog_out( DEBUG2) << "(" << testHits[k]->getX() << "," << testHits[k]->getY() << "," << testHits[k]->getZ() << ")" << inf;
 //             }
 //             streamlog_out(DEBUG2) << "\n";
+            
+            /*-----------------------------------------------*/
+            /*                Helix Fit                      */
+            /*-----------------------------------------------*/
+            
+            streamlog_out( DEBUG2 ) << "Fitting with Helix Fit\n";
+            try{
+            
+               FTDHelixFitter helixFitter( trackCand->getLcioTrack() );
+               float chi2OverNdf = helixFitter.getChi2() / float( helixFitter.getNdf() );
+               streamlog_out( DEBUG2 ) << "chi2OverNdf = " << chi2OverNdf << "\n";
+               
+               if( chi2OverNdf > _helixFitMax ){
+                  
+                  streamlog_out( DEBUG2 ) << "Discarding track because of bad helix fit: chi2/ndf = " << chi2OverNdf << "\n";
+                  continue;
+                  
+               }
+               else streamlog_out( DEBUG2 ) << "Keeping track because of good helix fit: chi2/ndf = " << chi2OverNdf << "\n";
+               
+            }
+            catch( FTDHelixFitterException e ){
+               
+               
+               streamlog_out( DEBUG3 ) << "Track rejected, because fit failed: " <<  e.what() << "\n";
+               delete trackCand;
+               continue;
+               
+            }
+            
+            /*-----------------------------------------------*/
+            /*                Kalman Fit                      */
+            /*-----------------------------------------------*/
+            
+            streamlog_out( DEBUG2 ) << "Fitting with Kalman Filter\n";
             try{
                   
                trackCand->fit();
@@ -553,7 +594,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                
                streamlog_out( DEBUG3 ) << "Track rejected, because fit failed: " <<  e.what() << "\n";
                delete trackCand;
-               
+               continue;
                
             }
             
@@ -705,7 +746,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
-      streamlog_out (DEBUG5) << "Forward Tracking found and saved " << tracks.size() << " tracks.\n"; 
+      streamlog_out (DEBUG5) << "Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
       
       
       /**********************************************************************************************/

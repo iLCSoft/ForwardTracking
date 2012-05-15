@@ -26,6 +26,9 @@ Version History
  | changes since last version  |
   -----------------------------
 
+      - ForwardTracking: Added a HelixFit before the Kalman Fit to increase the speed
+      - TrueTrackCritAnalyser: Added saving of chi2, Ndf and chi2/Ndf from helix fit to root file
+
   ---------
  | v01-04  |
   ---------
