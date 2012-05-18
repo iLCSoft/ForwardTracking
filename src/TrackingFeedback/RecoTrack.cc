@@ -65,7 +65,7 @@ std::string RecoTrack::getRecoTrackInfo() const{
       Fitter fitter( _track, _trkSystem );
       info << "Chi2Prob = " << fitter.getChi2Prob( lcio::TrackState::AtIP ) << "\n";
    }
-   catch(MarlinTrk::Exception){
+   catch( FitterException e ){
       
       info << "Could not be fitted!!!\n";
       

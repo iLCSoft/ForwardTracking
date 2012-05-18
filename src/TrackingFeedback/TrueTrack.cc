@@ -84,11 +84,23 @@ std::string TrueTrack::getTrueTrackInfo() const{
    
    
    // The Fit Information 
-   Fitter fitter( _trueTrack, _trkSystem );
-   trackInfo << "Chi2Prob = " << fitter.getChi2Prob( lcio::TrackState::AtIP ) 
-   << ", Chi2 = " << fitter.getChi2( lcio::TrackState::AtIP ) 
-   << ", Ndf = " << fitter.getNdf( lcio::TrackState::AtIP ) << "\n";
-               
+   
+   
+   try{
+      
+      Fitter fitter( _trueTrack, _trkSystem );
+      trackInfo << "Chi2Prob = " << fitter.getChi2Prob( lcio::TrackState::AtIP ) 
+      << ", Chi2 = " << fitter.getChi2( lcio::TrackState::AtIP ) 
+      << ", Ndf = " << fitter.getNdf( lcio::TrackState::AtIP ) << "\n";
+      
+   }
+   catch( FitterException e ){
+      
+      trackInfo << "Could not be fitted!!!\n";
+      
+   }
+   
+   
    // Information about the hits:
    std::vector< TrackerHit* > hits= _trueTrack->getTrackerHits();
    

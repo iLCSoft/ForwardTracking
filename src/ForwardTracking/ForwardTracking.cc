@@ -266,7 +266,7 @@ void ForwardTracking::processRunHeader( LCRunHeader* run) {
 
 void ForwardTracking::processEvent( LCEvent * evt ) { 
 
-   
+   streamlog_out( DEBUG4 ) << "processing event number " << _nEvt << "\n";
    
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    //                                                                                                              //
