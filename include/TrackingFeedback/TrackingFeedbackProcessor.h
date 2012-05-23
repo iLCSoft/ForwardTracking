@@ -194,6 +194,8 @@ class TrackingFeedbackProcessor : public Processor {
    int _trueTrack_nIncomplete;
    int _trueTrack_nIncompletePlus;
    double _trueTrack_pt;
+   double _trueTrack_theta;
+   int _trueTrack_nHits;
    
    
    int _recoTrack_nTrueTracks;

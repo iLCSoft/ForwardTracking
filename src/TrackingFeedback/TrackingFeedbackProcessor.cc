@@ -374,18 +374,46 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       streamlog_out( DEBUG4 ).precision (4);
       
       for( unsigned i=0; i < _trueTracks.size(); i++ ){
+         
+         TrueTrack* trueTrack = _trueTracks[i];
+         
+         const MCParticle* mcp = trueTrack->getMCP();
+         
+         double px = mcp->getMomentum()[0];
+         double py = mcp->getMomentum()[1];
+         
+         double pt = sqrt( px*px + py*py );    
+         
+         if( pt > 10 ){
+            
+            
+            
+            streamlog_out( MESSAGE4 ) << "\n\nTrue Track " << i << "\n";
+            std::string info = trueTrack->getMCPInfo();
+            streamlog_out( MESSAGE ) << info;
+            info = trueTrack->getTrueTrackInfo();
+            streamlog_out( MESSAGE4 ) << info;
+            info = trueTrack->getFoundInfo();
+            streamlog_out( MESSAGE4 ) << info;
+            info = trueTrack->getRelatedTracksInfo();
+            streamlog_out( MESSAGE4 ) << info;
+         }
+         
+      }
+      
+      for( unsigned i=0; i < _trueTracks.size(); i++ ){
        
          
-         TrueTrack* myRelation = _trueTracks[i];
+         TrueTrack* trueTrack = _trueTracks[i];
          
          streamlog_out( DEBUG4 ) << "\n\nTrue Track " << i << "\n";
-         std::string info = myRelation->getMCPInfo();
+         std::string info = trueTrack->getMCPInfo();
          streamlog_out( DEBUG4 ) << info;
-         info = myRelation->getTrueTrackInfo();
+         info = trueTrack->getTrueTrackInfo();
          streamlog_out( DEBUG4 ) << info;
-         info = myRelation->getFoundInfo();
+         info = trueTrack->getFoundInfo();
          streamlog_out( DEBUG4 ) << info;
-         info = myRelation->getRelatedTracksInfo();
+         info = trueTrack->getRelatedTracksInfo();
          streamlog_out( DEBUG4 ) << info;
          
       }
@@ -700,6 +728,11 @@ void TrackingFeedbackProcessor::saveRootInformation(){
       double pt = sqrt( p[0]*p[0] + p[1]*p[1] );
       _trueTrack_pt = pt;   
       
+      _trueTrack_theta = ( 180./M_PI ) * atan( fabs( pt / p[2] ) ) ;
+      _trueTrack_nHits = trueTrack->getTrueTrack()->getTrackerHits().size();
+      
+
+      
       _treeTrueTracks->Fill();
       
    }
@@ -742,9 +775,14 @@ void TrackingFeedbackProcessor::makeRootBranches(){
    _treeTrueTracks->Branch( "nIncomplete", &_trueTrack_nIncomplete );
    _treeTrueTracks->Branch( "nIncompletePlus", &_trueTrack_nIncompletePlus );
    _treeTrueTracks->Branch( "pT" , &_trueTrack_pt );
+   _treeTrueTracks->Branch( "theta" , &_trueTrack_theta );
+   _treeTrueTracks->Branch( "nHits" , &_trueTrack_nHits );
+   
+   
    
    _treeRecoTracks->Branch( "nTrueTracks", &_recoTrack_nTrueTracks );
    _treeRecoTracks->Branch( "pT" , &_recoTrack_pt );
+//    _treeRecoTracks->Branch( "theta" , &_recoTrack_theta );   
    
 }
 
