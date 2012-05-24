@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+enum TrackType { COMPLETE , COMPLETE_PLUS , INCOMPLETE , INCOMPLETE_PLUS , GHOST , LOST };
+
 void binLogX(TH1*h, std::string Saxis){
    
    
@@ -18,7 +20,7 @@ void binLogX(TH1*h, std::string Saxis){
       return;
    }
    int bins = axis->GetNbins();
-   
+
    Axis_t from = axis->GetXmin();
    Axis_t to = axis->GetXmax();
    Axis_t width = (to - from) / bins;
@@ -38,7 +40,7 @@ void binLogX(TH1*h, std::string Saxis){
 
 
 
-void ghostrate(){
+void splitGhostrate(){
    
    
    
@@ -47,7 +49,7 @@ void ghostrate(){
    /**********************************************************************************************/
    
    //---------- Paths to load and save:
-   
+      
    const string MYPATH = "./";                                  // the current path
    std::vector< std::string > LOAD_FILE_NAMES;                    // the root files to be loaded
 //    LOAD_FILE_NAMES.push_back( MYPATH + "Feedback.root" );
@@ -61,18 +63,12 @@ void ghostrate(){
    LOAD_FILE_MEANINGS.push_back( "TrackSubsetProcessor" );
    
    const string TREENAME = "recoTracks";                                // name of the tree
-   const string PICTURE_NAME = "Ghostrate";
+   const string PICTURE_NAME = "Ghostrate_split";
    const string PICTURE_ENDING = ".svg";
-   const string PICTURE_SAVE_PATH = MYPATH + PICTURE_NAME + PICTURE_ENDING;     // where the image will be saved
    
    
    
-   //---------- Optical settings:
-   
-   gROOT->SetStyle("Plain");    // a style using white instead of this horrible grey
-   TCanvas* myCanvas = new TCanvas("myCanvas", "myCanvas", 0, 0, 600, 400);     //"new"-Command ist notwendig, damit die Canvas erhalten bleibt.
-   TLegend* legend = new TLegend( 0.6, 0.65, 0.85, 0.85 );
-   legend->SetFillColor( kWhite );
+
    
    //---------- Values for the histograms:
    int nBins = 20;
@@ -83,8 +79,7 @@ void ghostrate(){
    double markerSize = 1.;
    
    
-   TMultiGraph *mg = new TMultiGraph();
-   mg->SetTitle( "Ghost Rate");
+   
    
    
    /**********************************************************************************************/
@@ -92,6 +87,18 @@ void ghostrate(){
    /**********************************************************************************************/
    
    for( unsigned i=0; i < LOAD_FILE_NAMES.size(); i++ ){
+      
+      
+      
+      //---------- Optical settings:
+      
+      gROOT->SetStyle("Plain");    // a style using white instead of this horrible grey
+      TCanvas* myCanvas = new TCanvas("myCanvas", "myCanvas", 0, 0, 600, 400);
+      myCanvas->SetLogx();
+      TLegend* legend = new TLegend( 0.6, 0.4, 0.9, 0.55 );
+      legend->SetFillColor( kWhite );
+      
+      
       
       
       std::string LOAD_FILE_NAME = LOAD_FILE_NAMES[i];
@@ -102,19 +109,27 @@ void ghostrate(){
       TTree* datatree = datafile->Get(TREENAME.c_str());
       
       
-      TH1D *histAll = new TH1D("histAll","reco tracks;p_{T}",nBins, xMinLog10, xMaxLog10);
-      TH1D *histGhost = new TH1D("histFound","Ghostrate;p_{T}",nBins, xMinLog10, xMaxLog10); 
+      TH1D *histAll = new TH1D("histAll","",nBins, xMinLog10, xMaxLog10);
+      TH1D *histGhost = new TH1D("histGhost","",nBins, xMinLog10, xMaxLog10); 
+      TH1D *histContamination = new TH1D("histContamination","",nBins, xMinLog10, xMaxLog10);
+      TH1D *histNoContamination = new TH1D("histNoContamination","",nBins, xMinLog10, xMaxLog10);
+      
       
       binLogX( histAll, "X" );
       binLogX( histGhost, "X" );
+      binLogX( histContamination, "X" );
+      binLogX( histNoContamination, "X" );
       
       //---------- linking the branch values to our local variables:
       
       double pT;
       int nTrueTracks;
+      TrackType type;
       
       datatree->SetBranchAddress( "pT" , &pT );
       datatree->SetBranchAddress( "nTrueTracks" , &nTrueTracks );
+      datatree->SetBranchAddress( "Type" , &type );
+      
       
       
       int nEntries = datatree->GetEntries();       //numbers of entries in the tree
@@ -127,42 +142,77 @@ void ghostrate(){
          datatree->GetEntry(j);
          
          histAll->Fill(pT);
+//          std::cout << type << "\n";
          
+         if( type == GHOST ) histGhost->Fill( pT );
+         if( ( type == COMPLETE ) || ( type == INCOMPLETE ) ) histNoContamination->Fill( pT );
+         if( ( type == COMPLETE_PLUS ) || ( type == INCOMPLETE_PLUS ) ) histContamination->Fill( pT );
          
-         if( nTrueTracks == 0 ) histGhost->Fill( pT );
          
          
       }
       
       
       
-      //--------- Combine the two histograms to make an efficiency like plot
+      //--------- Combine two histograms to make an efficiency like plot
       
-      TGraphAsymmErrors* histGhostrate = new TGraphAsymmErrors( histFound, histAll );
-      int j = i+2;
-      if( i==0 ) j=3;
-      if( i==1 ) j=2;
-      if( i==2 ) j=4;
-      histGhostrate->SetMarkerColor( j );
-      histGhostrate->SetMarkerStyle( i+20 );
-      histGhostrate->SetMarkerSize( markerSize );
-      histGhostrate->SetLineColor( j );
-      
-      mg->Add( histGhostrate );
-      
-      legend->AddEntry( histGhostrate, LOAD_FILE_MEANING.c_str() );
+      TGraphAsymmErrors* graphGhost = new TGraphAsymmErrors( histGhost, histAll );
+      graphGhost->SetMarkerColor( 46 );
+      graphGhost->SetMarkerStyle( 20 );
+      graphGhost->SetMarkerSize( markerSize );
+      graphGhost->SetLineColor( 46 );
+      legend->AddEntry( graphGhost, "Ghosts" );
       
       
+      TGraphAsymmErrors* graphContaminated = new TGraphAsymmErrors( histContamination, histAll );
+      graphContaminated->SetMarkerColor( 9 );
+      graphContaminated->SetMarkerStyle( 21 );
+      graphContaminated->SetMarkerSize( markerSize );
+      graphContaminated->SetLineColor( 9 );
+      legend->AddEntry( graphContaminated, "Real, Contaminated" );
+      
+      
+      TGraphAsymmErrors* graphNotContaminated = new TGraphAsymmErrors( histNoContamination, histAll );
+      graphNotContaminated->SetMarkerColor( 8 );
+      graphNotContaminated->SetMarkerStyle( 22 );
+      graphNotContaminated->SetMarkerSize( markerSize );
+      graphNotContaminated->SetLineColor( 8 );
+      legend->AddEntry( graphNotContaminated, "Real, Not Contaminated" );
+      
+      
+      
+      TMultiGraph *mg = new TMultiGraph();
+      std::string title = LOAD_FILE_MEANING + ", reconstructed tracks";
+      mg->SetTitle( title.c_str() );
+      mg->Add( graphGhost );
+      mg->Add( graphContaminated );
+      mg->Add( graphNotContaminated );
+      mg->Draw("AP");
+      mg->GetYaxis()->SetRangeUser(0.,1.);
+      mg->GetXaxis()->SetTitle( "p_{T}[GeV]" );
+      
+      
+      
+      legend->Draw("same");
+      
+      myCanvas->Update();
+      
+      string pictureSavePath = MYPATH + PICTURE_NAME + "_" + LOAD_FILE_MEANING.c_str() + PICTURE_ENDING;     // where the image will be saved
+      
+      myCanvas->SaveAs( pictureSavePath.c_str());    //Save the data to an image file
+      
+      
+      
+      
+      
+      delete myCanvas;
+
    }
-   mg->Draw("AP");
-   mg->GetYaxis()->SetRangeUser(0.,1.);
-   mg->GetXaxis()->SetTitle( "p_{T}[GeV]" );
+
    
-   legend->Draw("same");
+
    
-   myCanvas->SetLogx();
-   myCanvas->Update();
-   myCanvas->SaveAs( PICTURE_SAVE_PATH .c_str());    //Save the data to an image file
+   
    
    
    
