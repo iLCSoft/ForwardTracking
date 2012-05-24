@@ -26,7 +26,9 @@ Version History
  | changes since last version  |
   -----------------------------
 
-      - TrackingFeedbackProcessor: Added output of theta and nHits of true tracks to root output (so one can plot efficiency over theta or nHits)
+      - TrackingFeedbackProcessor: 
+         + Added output of theta and nHits of true tracks to root output (so one can plot efficiency over theta or nHits)
+         + Added output of mcp vertex position to root file
       - ForwardTracking: 
          + Added a HelixFit before the Kalman Fit to increase the speed
          + Nested the CA inside a while loop, repeating it with tightened cut until not too many connections are made.

@@ -731,7 +731,11 @@ void TrackingFeedbackProcessor::saveRootInformation(){
       _trueTrack_theta = ( 180./M_PI ) * atan( fabs( pt / p[2] ) ) ;
       _trueTrack_nHits = trueTrack->getTrueTrack()->getTrackerHits().size();
       
-
+      
+      _trueTrack_vertexX = trueTrack->getMCP()->getVertex()[0];
+      _trueTrack_vertexY = trueTrack->getMCP()->getVertex()[1];
+      _trueTrack_vertexZ = trueTrack->getMCP()->getVertex()[2];
+      
       
       _treeTrueTracks->Fill();
       
@@ -777,6 +781,9 @@ void TrackingFeedbackProcessor::makeRootBranches(){
    _treeTrueTracks->Branch( "pT" , &_trueTrack_pt );
    _treeTrueTracks->Branch( "theta" , &_trueTrack_theta );
    _treeTrueTracks->Branch( "nHits" , &_trueTrack_nHits );
+   _treeTrueTracks->Branch( "vertexX" , &_trueTrack_vertexX );
+   _treeTrueTracks->Branch( "vertexY" , &_trueTrack_vertexY );
+   _treeTrueTracks->Branch( "vertexZ" , &_trueTrack_vertexZ );
    
    
    
