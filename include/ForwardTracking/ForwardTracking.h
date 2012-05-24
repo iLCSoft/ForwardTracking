@@ -64,23 +64,29 @@ typedef std::vector< IHit* > RawTrack;
  * 
  * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN and SubsetSimple.
  * Any other value means, that no final search for the best subset is done and overlapping tracks are possible. (If you want that, don't
- * leave the string empty or the default value will be used!)<br>
+ * leave the string empty or the default value will be used! Just write something like "None")<br>
  * (default value TrackSubsetHopfieldNN )
  * 
- * @param Criteria A vector of the criteria that are going to be used. For every criterion a min and max needs to be set!!!<br>
+ * @param Criteria A vector of the criteria that are going to be used by the Cellular Automaton. <br>
+ * For every criterion a min and max needs to be set!!!<br>
  * (default value is defined in class Criteria )
  * 
- * @param NameOfACriterion_min/max For every used criterion a minimum and maximum value needs to be set. If a criterion is
- * named "Crit_Example", then the min parameter would be: Crit_Example_min and the max parameter Crit_Example_max.
+ * @param NameOfACriterion_min/max For every used criterion a minimum and maximum value needs to be set. <br>
+ * If a criterion is named "Crit_Example", then the min parameter would be: Crit_Example_min and the max parameter Crit_Example_max.<br>
+ * You can enter more than one value!!! So for example you could write something like \<parameter name="Crit_Example_min" type="float">30 0.8\</parameter>.<br>
+ * This means, that if the Cellular Automaton creates too many connections (how many is defined in "MaxConnectionsAutomaton" ) it reruns
+ * it with the next set of parameters. Thus allowing to tighten the cuts, if there are too many connections and so preventing 
+ * it from getting stuck in very bad combinatorial situations. So in this example the Automaton will first run with the Crit_Example_min of 30
+ * and if that generates too many connections, it will rerun it with the value 0.8.<br>
+ * If for a criterion no further parameters are specified, the first ones will be taken on reruns.
+ * 
+ * @param MaxConnectionsAutomaton If the automaton has more connections than this it will be redone with the next parameters for the criteria.<br>
+ * If there are no further new parameters for the criteria, it will skip the event.<br>
+ * (default value 100000 )
  * 
  * @author Robin Glattauer HEPHY, Wien
  *
  */
-
-
-
-
-
 
 class ForwardTracking : public Processor {
   
@@ -144,6 +150,7 @@ class ForwardTracking : public Processor {
    bool _SmoothOn ;
    
    
+      
    
    /** A map to store the hits according to their sectors */
    std::map< int , std::vector< IHit* > > _map_sector_hits;
@@ -174,9 +181,11 @@ class ForwardTracking : public Processor {
    void finaliseTrack( TrackImpl* trackImpl );
       
    
+   bool setCriteria( unsigned round );
+   
    std::vector< std::string > _criteriaNames;
-   std::map< std::string , float > _critMinima;
-   std::map< std::string , float > _critMaxima;
+   std::map< std::string , std::vector<float> > _critMinima;
+   std::map< std::string , std::vector<float> > _critMaxima;
    
    int _hitsPerTrackMin;
    
@@ -191,6 +200,8 @@ class ForwardTracking : public Processor {
    double _overlappingHitsDistMax;
    
    bool _takeBestVersionOfTrack;
+   
+   int _maxConnectionsAutomaton;
    
    std::string _bestSubsetFinder;
    

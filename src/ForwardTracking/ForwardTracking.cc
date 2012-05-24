@@ -103,6 +103,11 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _takeBestVersionOfTrack,
                                bool( true ) );
 
+   registerProcessorParameter( "MaxConnectionsAutomaton",
+                               "If the automaton has more connections than this it will be redone with the next parameters",
+                               _maxConnectionsAutomaton,
+                               int( 100000 ) );
+   
    
    
    //For fitting:
@@ -135,13 +140,15 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
    
    for( unsigned i=0; i < _criteriaNames.size(); i++ ){
     
+      std::vector< float > zeroVec;
+      zeroVec.push_back(0.);
       
       std::string critMinString = _criteriaNames[i] + "_min";
       
       registerProcessorParameter( critMinString,
                                   "The minimum of " + _criteriaNames[i],
                                   _critMinima[ _criteriaNames[i] ],
-                                  float( 0. ));
+                                  zeroVec);
       
       
       std::string critMaxString = _criteriaNames[i] + "_max";
@@ -149,8 +156,9 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
       registerProcessorParameter( critMaxString,
                                   "The maximum of " + _criteriaNames[i],
                                   _critMaxima[ _criteriaNames[i] ],
-                                  float( 0. ));
+                                  zeroVec);
       
+
    
    }
    
@@ -199,42 +207,6 @@ void ForwardTracking::init() {
    
 
 
-   // store the criteria 
-   for( unsigned i=0; i<_criteriaNames.size(); i++ ){
-      
-      std::string critName = _criteriaNames[i];
-      
-      ICriterion* crit = Criteria::createCriterion( critName, _critMinima[critName] , _critMaxima[critName] );
-      
-      std::string type = crit->getType();
-      
-      streamlog_out( DEBUG4 ) <<  "\nAdded: Criterion " << critName << " (type =  " << type 
-                              << " ). Min = " << _critMinima[critName]
-                              << ", Max = " << _critMaxima[critName];
-      
-      if( type == "2Hit" ){
-         
-         _crit2Vec.push_back( crit );
-         
-      }
-      else 
-      if( type == "3Hit" ){
-         
-         _crit3Vec.push_back( crit );
-         
-      }
-      else 
-      if( type == "4Hit" ){
-         
-         _crit4Vec.push_back( crit );
-         
-      }
-      else delete crit;
-
-
-   }
-
-
    /**********************************************************************************************/
    /*       Initialise the MarlinTrkSystem, needed by the tracks for fitting                     */
    /**********************************************************************************************/
@@ -259,7 +231,7 @@ void ForwardTracking::init() {
 
 void ForwardTracking::processRunHeader( LCRunHeader* run) { 
 
-    _nRun++ ;
+   _nRun++ ;
 } 
 
 
@@ -383,102 +355,152 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack = getOverlapConnectionMap( _map_sector_hits, _sectorSystemFTD, _overlappingHitsDistMax);
       
-      /**********************************************************************************************/
-      /*                Build the segments                                                          */
-      /**********************************************************************************************/
-      
-      
-      streamlog_out( DEBUG4 ) << "\t\t---SegementBuilder---\n" ;
-      
-      //Create a segmentbuilder
-      SegmentBuilder segBuilder( _map_sector_hits );
-      
-      segBuilder.addCriteria ( _crit2Vec );
-      
-      //Also load hit connectors
-      unsigned layerStepMax = 2; // how many layers to go at max
-      unsigned petalStepMax = 1; // how many petals to go at max
-      unsigned lastLayerToIP = 4;// layer 1,2...4 get connected directly to the IP
-      FTDSecCon01 secCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
-      
-      
-      segBuilder.addSectorConnector ( & secCon );
-      
-      
-      // And get out the 1-segments 
-      Automaton automaton = segBuilder.get1SegAutomaton();
-      
-      
-      /**********************************************************************************************/
-      /*                Automaton                                                                   */
-      /**********************************************************************************************/
       
       
       
-      streamlog_out( DEBUG4 ) << "\t\t---Automaton---\n" ;
       
-      if( _useCED ) KiTrackMarlin::drawAutomatonSegments( automaton ); // draws the 1-segments (i.e. hits)
+      unsigned round = 0;
+      std::vector < RawTrack > autRawTracks;
       
+      // The following while loop ideally only runs once.
+      // It will repeat as long as the Automaton creates too many connections and as long as there are new criteria
+      // parameters to use to cut down the problem.
+      // Ideally already on the first run, there is a reasonable number of connections, so the loop will be left.
+      while( setCriteria( round ) ){
+         
+         round++; // count up the round we are in
+         
+         
+         /**********************************************************************************************/
+         /*                Build the segments                                                          */
+         /**********************************************************************************************/
+         
+         streamlog_out( DEBUG4 ) << "\t\t---SegementBuilder---\n" ;
+         
+         //Create a segmentbuilder
+         SegmentBuilder segBuilder( _map_sector_hits );
+         
+         segBuilder.addCriteria ( _crit2Vec );
+         
+         //Also load hit connectors
+         unsigned layerStepMax = 1; // how many layers to go at max
+         unsigned petalStepMax = 1; // how many petals to go at max
+         unsigned lastLayerToIP = 4;// layer 1,2...4 get connected directly to the IP
+         FTDSecCon01 secCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
+         
+         
+         segBuilder.addSectorConnector ( & secCon );
+         
+         
+         // And get out the 1-segments 
+         Automaton automaton = segBuilder.get1SegAutomaton();
+         
+         if( automaton.getNumberOfConnections() > unsigned( _maxConnectionsAutomaton ) ){
+            
+            streamlog_out( DEBUG4 ) << "Redo the Automaton with different parameters, because there are too many connections:\n"
+            << "\tconnections( " << automaton.getNumberOfConnections() << " ) > MaxConnectionsAutomaton( " << _maxConnectionsAutomaton << " )\n";
+            continue;
+            
+         }
+         
+         
+         
+         /**********************************************************************************************/
+         /*                Automaton                                                                   */
+         /**********************************************************************************************/
+         
+         
+         
+         streamlog_out( DEBUG4 ) << "\t\t---Automaton---\n" ;
+         
+         if( _useCED ) KiTrackMarlin::drawAutomatonSegments( automaton ); // draws the 1-segments (i.e. hits)
+         
+         
+         /*******************************/
+         /*      2-hit segments         */
+         /*******************************/
+         streamlog_out( DEBUG4 ) << "\t\t--2-hit-Segments--\n" ;
+         
+         
+         automaton.clearCriteria();
+         
+         
+         automaton.addCriteria( _crit3Vec );  
+         
+         
+         // Let the automaton lengthen its 1-segments to 2-segments
+         automaton.lengthenSegments();
+        
+         
+         // So now we have 2-segments and are ready to perform the cellular automaton.
+         
+         // Perform the automaton
+         automaton.doAutomaton();
+         
+         
+         //Clean segments with bad states
+         automaton.cleanBadStates();
+         
+         
+         
+         //Clean connections of segments (this uses the same criteria again as before)
+         automaton.cleanBadConnections();
+         
+         
+         
+         //Reset the states of all segments
+         automaton.resetStates();
+         
+         if( automaton.getNumberOfConnections() > unsigned( _maxConnectionsAutomaton ) ){
+            
+            streamlog_out( DEBUG4 ) << "Redo the Automaton with different parameters, because there are too many connections:\n"
+            << "\tconnections( " << automaton.getNumberOfConnections() << " ) > MaxConnectionsAutomaton( " << _maxConnectionsAutomaton << " )\n";
+            continue;
+            
+         }
+         
+         /*******************************/
+         /*      3-hit segments         */
+         /*******************************/
+         streamlog_out( DEBUG4 ) << "\t\t--3-hit-Segments--\n" ;
+         
+         
+         automaton.clearCriteria();
+         automaton.addCriteria( _crit4Vec );      
+         
+         
+         
+         automaton.lengthenSegments();
+         // So now we have 3 hit segments 
+         
+         
+         
+         // Perform the automaton
+         automaton.doAutomaton();
+         
+         //Clean segments with bad states
+         automaton.cleanBadStates();
+         
+         //Clean connections of segments (this uses the same criteria again as before)
+         automaton.cleanBadConnections();
+         
+         //Reset the states of all segments
+         automaton.resetStates();
+         
+         if( automaton.getNumberOfConnections() > unsigned( _maxConnectionsAutomaton ) ){
+            
+            streamlog_out( DEBUG4 ) << "Redo the Automaton with different parameters, because there are too many connections:\n"
+            << "\tconnections( " << automaton.getNumberOfConnections() << " ) > MaxConnectionsAutomaton( " << _maxConnectionsAutomaton << " )\n";
+            continue;
+            
+         }
+         
+         autRawTracks = automaton.getTracks( 3 );
+         break; // if we reached this place all went well and we don't need another round --> exit the loop
+         
+      }
       
-      /*******************************/
-      /*      2-hit segments         */
-      /*******************************/
-      streamlog_out( DEBUG4 ) << "\t\t--2-hit-Segments--\n" ;
-      
-      automaton.clearCriteria();
-      automaton.addCriteria( _crit3Vec );  
-      
-      
-      // Let the automaton lengthen its 1-segments to 2-segments
-      automaton.lengthenSegments();
-      
-      
-      // So now we have 2-segments and are ready to perform the cellular automaton.
-      
-      // Perform the automaton
-      automaton.doAutomaton();
-      
-      
-      //Clean segments with bad states
-      automaton.cleanBadStates();
-      
-      
-      //Clean connections of segments (this uses the same criteria again as before)
-      automaton.cleanBadConnections();
-      
-      
-      //Reset the states of all segments
-      automaton.resetStates();
-      
-      
-      /*******************************/
-      /*      3-hit segments         */
-      /*******************************/
-      streamlog_out( DEBUG4 ) << "\t\t--3-hit-Segments--\n" ;
-      
-      
-      automaton.clearCriteria();
-      automaton.addCriteria( _crit4Vec );      
-      
-      automaton.lengthenSegments();
-      // So now we have 3 hit segments 
-      
-      // Perform the automaton
-      automaton.doAutomaton();
-
-      //Clean segments with bad states
-      automaton.cleanBadStates();
-       
-      //Clean connections of segments (this uses the same criteria again as before)
-      automaton.cleanBadConnections();
-      
-      //Reset the states of all segments
-      automaton.resetStates();
-      
-      std::vector < RawTrack > autRawTracks = automaton.getTracks( _hitsPerTrackMin );
-      streamlog_out( DEBUG3 ) << " Automaton returned " << autRawTracks.size() << " tracks \n";
-      
-      
+      streamlog_out( DEBUG4 ) << " Automaton returned " << autRawTracks.size() << " tracks \n";
       
       /**********************************************************************************************/
       /*                Add the overlapping hits                                                    */
@@ -494,9 +516,15 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // for all raw tracks
       for( unsigned i=0; i < autRawTracks.size(); i++){
          
+         RawTrack autRawTrack = autRawTracks[i];
+         
+         
+         // check the helix fit value
+         std::vector< TrackerHit* > trackerHits;
+         
          
          // get all versions of the track with hits from overlapping petals
-         std::vector < RawTrack > autRawTracksPlus = getRawTracksPlusOverlappingHits( autRawTracks[i], map_hitFront_hitsBack );
+         std::vector < RawTrack > autRawTracksPlus = getRawTracksPlusOverlappingHits( autRawTrack, map_hitFront_hitsBack );
          
          
          /**********************************************************************************************/
@@ -509,6 +537,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
             
             RawTrack rawTrack = autRawTracksPlus[j];
+            
+            if( rawTrack.size() < unsigned( _hitsPerTrackMin ) ) continue;
             
             FTDTrack* trackCand = new FTDTrack( _trkSystem );
             
@@ -523,13 +553,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
             streamlog_out( DEBUG2 ) << "Fitting track candidate with " << trackCand->getHits().size() << " hits\n";
             
-//             std::vector< IHit* > testHits = trackCand->getHits();
-//             for( unsigned k=0; k < testHits.size(); k++ ){
-//                
-//                std::string inf = _sectorSystemFTD->getInfoOnSector( testHits[k]->getSector() );
-//                streamlog_out( DEBUG2) << "(" << testHits[k]->getX() << "," << testHits[k]->getY() << "," << testHits[k]->getZ() << ")" << inf;
-//             }
-//             streamlog_out(DEBUG2) << "\n";
             
             /*-----------------------------------------------*/
             /*                Helix Fit                      */
@@ -996,6 +1019,80 @@ std::vector < RawTrack > ForwardTracking::getRawTracksPlusOverlappingHits( RawTr
    
    
    return rawTracksPlus;
+   
+}
+
+
+bool ForwardTracking::setCriteria( unsigned round ){
+ 
+   // delete the old ones
+   for ( unsigned i=0; i< _crit2Vec.size(); i++) delete _crit2Vec[i];
+   for ( unsigned i=0; i< _crit3Vec.size(); i++) delete _crit3Vec[i];
+   for ( unsigned i=0; i< _crit4Vec.size(); i++) delete _crit4Vec[i];
+   _crit2Vec.clear();
+   _crit3Vec.clear();
+   _crit4Vec.clear();
+   
+   
+   
+   bool newValuesGotUsed = false; // if new values are used
+   
+   for( unsigned i=0; i<_criteriaNames.size(); i++ ){
+      
+      std::string critName = _criteriaNames[i];
+      
+      
+      float min = _critMinima[critName].back();
+      float max = _critMaxima[critName].back();
+      
+      
+      
+      // use the value corresponding to the round, if doesn't work, use the last one
+      if( round + 1 <= _critMinima[critName].size() ){
+         
+         min =  _critMinima[critName][round];
+         newValuesGotUsed = true;
+         
+      }
+      
+      if( round + 1 <= _critMaxima[critName].size() ){
+         
+         max =  _critMaxima[critName][round];
+         newValuesGotUsed = true;
+         
+      }
+      
+      ICriterion* crit = Criteria::createCriterion( critName, min , max );
+      
+      std::string type = crit->getType();
+      
+      streamlog_out( DEBUG3 ) <<  "Added: Criterion " << critName << " (type =  " << type 
+      << " ). Min = " << min
+      << ", Max = " << max
+      << ", round " << round << "\n";
+      
+      if( type == "2Hit" ){
+         
+         _crit2Vec.push_back( crit );
+         
+      }
+      else if( type == "3Hit" ){
+         
+         _crit3Vec.push_back( crit );
+         
+      }
+      else if( type == "4Hit" ){
+         
+         _crit4Vec.push_back( crit );
+         
+      }
+      else delete crit;
+      
+      
+   }
+   
+   return newValuesGotUsed;
+   
    
 }
 

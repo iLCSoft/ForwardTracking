@@ -27,7 +27,10 @@ Version History
   -----------------------------
 
       - TrackingFeedbackProcessor: Added output of theta and nHits of true tracks to root output (so one can plot efficiency over theta or nHits)
-      - ForwardTracking: Added a HelixFit before the Kalman Fit to increase the speed
+      - ForwardTracking: 
+         + Added a HelixFit before the Kalman Fit to increase the speed
+         + Nested the CA inside a while loop, repeating it with tightened cut until not too many connections are made.
+            Also added the steering parameters for that
       - TrueTrackCritAnalyser: Added saving of chi2, Ndf and chi2/Ndf from helix fit to root file
 
   ---------
