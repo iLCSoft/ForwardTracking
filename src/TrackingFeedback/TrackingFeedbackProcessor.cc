@@ -373,33 +373,33 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       streamlog_out( DEBUG4 ).precision (4);
       
-      for( unsigned i=0; i < _trueTracks.size(); i++ ){
-         
-         TrueTrack* trueTrack = _trueTracks[i];
-         
-         const MCParticle* mcp = trueTrack->getMCP();
-         
-         double px = mcp->getMomentum()[0];
-         double py = mcp->getMomentum()[1];
-         
-         double pt = sqrt( px*px + py*py );    
-         
-         if( pt > 10 ){
-            
-            
-            
-            streamlog_out( MESSAGE4 ) << "\n\nTrue Track " << i << "\n";
-            std::string info = trueTrack->getMCPInfo();
-            streamlog_out( MESSAGE ) << info;
-            info = trueTrack->getTrueTrackInfo();
-            streamlog_out( MESSAGE4 ) << info;
-            info = trueTrack->getFoundInfo();
-            streamlog_out( MESSAGE4 ) << info;
-            info = trueTrack->getRelatedTracksInfo();
-            streamlog_out( MESSAGE4 ) << info;
-         }
-         
-      }
+//       for( unsigned i=0; i < _trueTracks.size(); i++ ){
+//          
+//          TrueTrack* trueTrack = _trueTracks[i];
+//          
+//          const MCParticle* mcp = trueTrack->getMCP();
+//          
+//          double px = mcp->getMomentum()[0];
+//          double py = mcp->getMomentum()[1];
+//          
+//          double pt = sqrt( px*px + py*py );    
+//          
+//          if( pt > 10 ){
+//             
+//             
+//             
+//             streamlog_out( MESSAGE4 ) << "\n\nTrue Track " << i << "\n";
+//             std::string info = trueTrack->getMCPInfo();
+//             streamlog_out( MESSAGE ) << info;
+//             info = trueTrack->getTrueTrackInfo();
+//             streamlog_out( MESSAGE4 ) << info;
+//             info = trueTrack->getFoundInfo();
+//             streamlog_out( MESSAGE4 ) << info;
+//             info = trueTrack->getRelatedTracksInfo();
+//             streamlog_out( MESSAGE4 ) << info;
+//          }
+//          
+//       }
       
       for( unsigned i=0; i < _trueTracks.size(); i++ ){
        
