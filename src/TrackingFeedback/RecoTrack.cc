@@ -19,12 +19,13 @@ std::string RecoTrack::cellIDInfo( TrackerHit* hit ){
    
    UTIL::BitField64  cellID( ILDCellID0::encoder_string );
    cellID.setValue( hit->getCellID0() );
+   int subdet = cellID[ UTIL::ILDCellID0::subdet ] ;
    int side   = cellID[ ILDCellID0::side ];
    int layer  = cellID[ ILDCellID0::layer ];
    int module = cellID[ ILDCellID0::module ];
    int sensor = cellID[ ILDCellID0::sensor ];
    
-   info << "side " << side << ", layer " << layer << ", module " << module << ", sensor " << sensor;
+   info << "subdet " << subdet << ", side " << side << ", layer " << layer << ", module " << module << ", sensor " << sensor;
    
    return info.str();
    
