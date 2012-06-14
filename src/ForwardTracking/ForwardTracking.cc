@@ -441,13 +441,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          //Clean segments with bad states
          automaton.cleanBadStates();
          
-         
-         
-         //Clean connections of segments (this uses the same criteria again as before)
-         automaton.cleanBadConnections();
-         
-         
-         
+        
          //Reset the states of all segments
          automaton.resetStates();
          
@@ -481,8 +475,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          //Clean segments with bad states
          automaton.cleanBadStates();
          
-         //Clean connections of segments (this uses the same criteria again as before)
-         automaton.cleanBadConnections();
          
          //Reset the states of all segments
          automaton.resetStates();

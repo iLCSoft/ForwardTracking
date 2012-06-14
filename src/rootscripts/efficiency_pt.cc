@@ -54,11 +54,11 @@ void efficiency_pt(){
 //    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForwardHighPt.root" );
 //    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForwardLowPt.root" );
 //    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForwardBoth.root" );
-//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForward.root" );
-//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSilicon.root" );
-//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSubset.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackForward.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSilicon.root" );
+   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackSubset.root" );
 //    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackClupatra.root" );
-   LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackFullLDC_FTD_TPC.root" );
+//    LOAD_FILE_NAMES.push_back( MYPATH + "FeedbackFullLDC_FTD_TPC.root" );
    
    
    
@@ -66,11 +66,11 @@ void efficiency_pt(){
 //    LOAD_FILE_MEANINGS.push_back( "ForwardTrackingHighPt" );
 //    LOAD_FILE_MEANINGS.push_back( "ForwardTrackingLowPt" );
 //    LOAD_FILE_MEANINGS.push_back( "ForwardTrackingBoth" );
-//    LOAD_FILE_MEANINGS.push_back( "ForwardTracking" );
-//    LOAD_FILE_MEANINGS.push_back( "SiliconTracking" );
-//    LOAD_FILE_MEANINGS.push_back( "TrackSubsetProcessor" );
+   LOAD_FILE_MEANINGS.push_back( "ForwardTracking" );
+   LOAD_FILE_MEANINGS.push_back( "SiliconTracking" );
+   LOAD_FILE_MEANINGS.push_back( "TrackSubsetProcessor" );
 //    LOAD_FILE_MEANINGS.push_back( "Clupatra" );
-   LOAD_FILE_MEANINGS.push_back( "FullLDC_FTD_And_TPC" );
+//    LOAD_FILE_MEANINGS.push_back( "FullLDC_FTD_And_TPC" );
    
    
    const string TREENAME = "trueTracks";                                // name of the tree
