@@ -723,6 +723,7 @@ void TrackingFeedbackProcessor::saveRootInformation(){
       _trueTrack_nCompletePlus =   trueTrack->getNumberOfTracksWithType( COMPLETE_PLUS );
       _trueTrack_nIncomplete =     trueTrack->getNumberOfTracksWithType( INCOMPLETE );
       _trueTrack_nIncompletePlus = trueTrack->getNumberOfTracksWithType( INCOMPLETE_PLUS );
+      _trueTrack_nSum = _trueTrack_nComplete + _trueTrack_nCompletePlus + _trueTrack_nIncomplete + _trueTrack_nIncompletePlus;
       
       const double* p = trueTrack->getMCP()->getMomentum();
       double pt = sqrt( p[0]*p[0] + p[1]*p[1] );
@@ -778,17 +779,21 @@ void TrackingFeedbackProcessor::makeRootBranches(){
    _treeTrueTracks->Branch( "nCompletePlus", &_trueTrack_nCompletePlus );
    _treeTrueTracks->Branch( "nIncomplete", &_trueTrack_nIncomplete );
    _treeTrueTracks->Branch( "nIncompletePlus", &_trueTrack_nIncompletePlus );
+   _treeTrueTracks->Branch( "nSum", &_trueTrack_nSum );
+   
+   
    _treeTrueTracks->Branch( "pT" , &_trueTrack_pt );
    _treeTrueTracks->Branch( "theta" , &_trueTrack_theta );
    _treeTrueTracks->Branch( "nHits" , &_trueTrack_nHits );
    _treeTrueTracks->Branch( "vertexX" , &_trueTrack_vertexX );
    _treeTrueTracks->Branch( "vertexY" , &_trueTrack_vertexY );
    _treeTrueTracks->Branch( "vertexZ" , &_trueTrack_vertexZ );
-   
+   _treeTrueTracks->Branch( "evtNr" , &_nEvt );
    
    
    _treeRecoTracks->Branch( "nTrueTracks", &_recoTrack_nTrueTracks );
    _treeRecoTracks->Branch( "pT" , &_recoTrack_pt );
+   _treeRecoTracks->Branch( "evtNr" , &_nEvt );
 //    _treeRecoTracks->Branch( "theta" , &_recoTrack_theta );   
    
 }

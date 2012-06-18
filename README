@@ -26,6 +26,8 @@ Version History
  | changes since last version  |
   -----------------------------
 
+      - TrackingFeedbackProcessor: Added the event number and the sum of tracks belonging to a true track to the root file.
+
   ---------
  | v01-05  |
   ---------
