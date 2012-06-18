@@ -26,7 +26,10 @@ Version History
  | changes since last version  |
   -----------------------------
 
+      - ForwardTracking: more debug output statements
+      - TrueTrackCritAnalyser: Adapted to changed hit order in Segments
       - TrackingFeedbackProcessor: Added the event number and the sum of tracks belonging to a true track to the root file.
+      
 
   ---------
  | v01-05  |

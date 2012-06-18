@@ -538,8 +538,9 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             std::vector <IHit*> segHits;
             
-            segHits.push_back( hits[j+1] );
             segHits.push_back( hits[j] );
+            segHits.push_back( hits[j+1] );
+            
             
             segments2.push_back( new Segment( segHits ) );
             
@@ -552,9 +553,9 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             std::vector <IHit*> segHits;
             
-            segHits.push_back( hits[j+2] );
-            segHits.push_back( hits[j+1] );
             segHits.push_back( hits[j] );
+            segHits.push_back( hits[j+1] );
+            segHits.push_back( hits[j+2] );
             
             segments3.push_back( new Segment( segHits ) );
             

@@ -313,7 +313,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
          }
          
-         streamlog_out(DEBUG1) << "hit" << i << " " << KiTrackMarlin::getCellID0Info( trackerHit->getCellID0() );
+         streamlog_out(DEBUG1) << "hit" << i << " " << KiTrackMarlin::getCellID0Info( trackerHit->getCellID0() ) 
+         << " " << KiTrackMarlin::getPositionInfo( trackerHit )<< "\n";
          
          //Make an FTDHit01 from the TrackerHit 
          
@@ -508,6 +509,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       // for all raw tracks
       for( unsigned i=0; i < autRawTracks.size(); i++){
          
+         
          RawTrack autRawTrack = autRawTracks[i];
          
          
@@ -517,6 +519,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          // get all versions of the track with hits from overlapping petals
          std::vector < RawTrack > autRawTracksPlus = getRawTracksPlusOverlappingHits( autRawTrack, map_hitFront_hitsBack );
+         
+         streamlog_out( DEBUG2 ) << "For raw track number " << i << " there are " << autRawTracksPlus.size() << " versions\n";
          
          
          /**********************************************************************************************/
@@ -530,7 +534,12 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
             RawTrack rawTrack = autRawTracksPlus[j];
             
-            if( rawTrack.size() < unsigned( _hitsPerTrackMin ) ) continue;
+            if( rawTrack.size() < unsigned( _hitsPerTrackMin ) ){
+               
+               streamlog_out( DEBUG1 ) << "Trackversion discarded, too few hits: only " << rawTrack.size() << " < " << _hitsPerTrackMin << "(hitsPerTrackMin)\n";
+               continue;
+               
+            }
             
             FTDTrack* trackCand = new FTDTrack( _trkSystem );
             
@@ -543,8 +552,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                
             }
             
-            streamlog_out( DEBUG2 ) << "Fitting track candidate with " << trackCand->getHits().size() << " hits\n";
-            
+            std::vector< IHit* > trackCandHits = trackCand->getHits();
+            streamlog_out( DEBUG2 ) << "Fitting track candidate with " << trackCandHits.size() << " hits\n";
+            for( unsigned k=0; k < trackCandHits.size(); k++ ) streamlog_out( DEBUG1 ) << trackCandHits[k]->getPositionInfo();
+            streamlog_out( DEBUG1 ) << "\n";
             
             /*-----------------------------------------------*/
             /*                Helix Fit                      */

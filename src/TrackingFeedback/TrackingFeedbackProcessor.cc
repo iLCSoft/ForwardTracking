@@ -596,7 +596,7 @@ double TrackingFeedbackProcessor::getDistToIP( MCParticle* mcp ){
    
    unsigned nHitsFromAssignedTrueTrack = 0;
    TrueTrack* assignedTrueTrack = getAssignedTrueTrack( relatedTrueTracks , nHitsFromAssignedTrueTrack );
-   streamlog_out(DEBUG5) << "Assigned true track = " << assignedTrueTrack << "\n";
+   streamlog_out( DEBUG3 ) << "Assigned true track = " << assignedTrueTrack << "\n";
 
 
    if ( assignedTrueTrack == NULL ){    // no true track could be assigned --> a ghost track
