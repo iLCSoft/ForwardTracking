@@ -26,15 +26,15 @@ Version History
  | changes since last version  |
   -----------------------------
 
-      - ForwardTracking: more debug output statements
-      - TrueTrackCritAnalyser: Adapted to changed hit order in Segments
-      - TrackingFeedbackProcessor: Added the event number and the sum of tracks belonging to a true track to the root file.
-      
+  
 
   ---------
  | v01-05  |
   ---------
 
+      - ForwardTracking: more debug output statements
+      - TrueTrackCritAnalyser: Adapted to changed hit order in Segments
+      - TrackingFeedbackProcessor: Added the event number and the sum of tracks belonging to a true track to the root file.
       - TrackingFeedbackProcessor: 
          + Added output of theta and nHits of true tracks to root output (so one can plot efficiency over theta or nHits)
          + Added output of mcp vertex position to root file

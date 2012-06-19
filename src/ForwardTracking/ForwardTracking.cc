@@ -10,6 +10,7 @@
 #include "UTIL/ILDConf.h"
 
 #include "marlin/VerbosityLevels.h"
+#include "marlin/Exceptions.h"
 
 #include "MarlinCED.h"
 
@@ -108,6 +109,10 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _maxConnectionsAutomaton,
                                int( 100000 ) );
    
+   registerProcessorParameter("MaxHitsPerSector",
+                              "Maximal number of hits allowed on a sector",
+                              _maxHitsPerSector,
+                              int(1000));
    
    
    //For fitting:
@@ -331,6 +336,31 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
    
    if( !_map_sector_hits.empty() ){
+      
+      
+      /**********************************************************************************************/
+      /*                Check if no sector is overflowing with hits                                 */
+      /**********************************************************************************************/
+      
+      
+      std::map< int , std::vector< IHit* > >::iterator it;
+      
+      for( it=_map_sector_hits.begin(); it != _map_sector_hits.end(); it++ ){
+       
+         
+         int nHits = it->second.size();
+         streamlog_out( DEBUG2 ) << "Number of hits in sector " << it->first << " = " << nHits << "\n";
+         
+         if( nHits > _maxHitsPerSector ){
+            
+            it->second.clear(); //delete the hits in this sector, it will be dropped
+            streamlog_out(ERROR) << "Too many hits in sector << " << it->first << ": " << nHits << " > " << _maxHitsPerSector << " (MaxHitsPerSector)\n";
+            throw marlin::SkipEventException(this);
+            
+         }
+         
+      }
+      
       
      
       /**********************************************************************************************/

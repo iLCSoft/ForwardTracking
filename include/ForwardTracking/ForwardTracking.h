@@ -84,6 +84,9 @@ typedef std::vector< IHit* > RawTrack;
  * If there are no further new parameters for the criteria, it will skip the event.<br>
  * (default value 100000 )
  * 
+ * @param MaxHitsPerSector If on any single sector there are more hits than this, a marlin::SkipEventException will be thrown<br>
+ * (default value 100)
+ * 
  * @author Robin Glattauer HEPHY, Wien
  *
  */
@@ -149,7 +152,7 @@ class ForwardTracking : public Processor {
    bool _ElossOn ;
    bool _SmoothOn ;
    
-   
+   int _maxHitsPerSector;
       
    
    /** A map to store the hits according to their sectors */
