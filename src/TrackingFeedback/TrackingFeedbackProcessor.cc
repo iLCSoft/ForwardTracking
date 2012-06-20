@@ -106,12 +106,12 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               std::string("Feedback.root") );
    
    registerProcessorParameter("RateOfFoundHitsMin",
-                              "More than this number of hits of the real track must be in a reco track to be assigned",
+                              "More than this rate of hits of the real track must be in a reco track to be assigned",
                               _rateOfFoundHitsMin,
                               float(0.5) );
    
    registerProcessorParameter("RateOfAssignedHitsMin",
-                              "More than this number of hits of the reco track must belong to the true track to be assigned",
+                              "More than this rate of hits of the reco track must belong to the true track to be assigned",
                               _rateOfAssignedHitsMin,
                               float(0.5) );
   
