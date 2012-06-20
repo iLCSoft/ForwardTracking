@@ -70,7 +70,13 @@ using namespace marlin ;
  * 
  * @param DrawMCPTracks Draw the helices of the MCP (values at IP) in CED <br>
  * (default value false )
- *
+ * 
+ * @param RateOfFoundHitsMin More than this rate of hits of the real track must be in a reco track to be assigned <br>
+ * (default value 0.5 )
+ * 
+ * @param RateOfAssignedHitsMin More than this rate of hits of the reco track must belong to the true track to be assigned <br>
+ * (default value 0.5 )
+ * 
  * @author Robin Glattauer HEPHY, Wien
  *
  */
