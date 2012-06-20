@@ -188,6 +188,10 @@ class TrackingFeedbackProcessor : public Processor {
    void saveRootInformation();   
    void makeRootBranches();
    
+   float _rateOfFoundHitsMin;  //more than this number of hits of the real track must be in the reco track
+   float _rateOfAssignedHitsMin;  //more than this number of hits of the reco track must belong to the assigned true track
+   
+   
    
    int _trueTrack_nComplete;
    int _trueTrack_nCompletePlus;

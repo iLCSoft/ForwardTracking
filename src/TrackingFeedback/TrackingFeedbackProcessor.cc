@@ -105,6 +105,17 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               _rootFileName,
                               std::string("Feedback.root") );
    
+   registerProcessorParameter("RateOfFoundHitsMin",
+                              "More than this number of hits of the real track must be in a reco track to be assigned",
+                              _rateOfFoundHitsMin,
+                              float(0.5) );
+   
+   registerProcessorParameter("RateOfAssignedHitsMin",
+                              "More than this number of hits of the reco track must belong to the true track to be assigned",
+                              _rateOfAssignedHitsMin,
+                              float(0.5) );
+  
+   
 }
 
 
@@ -693,11 +704,9 @@ TrueTrack* TrackingFeedbackProcessor::getAssignedTrueTrack( std::vector<TrueTrac
    bool assign = true;
    
    
-   float rateOfAssignedHitsMin = 0.5;  //more than this number of hits of the reco track must belong to the assigned true track
-   if( float( nMax ) / float( relatedTrueTracks.size() )  < rateOfAssignedHitsMin ) assign = false;
-   
-   float rateOfFoundHitsMin = 0.5;  //more than this number of hits of the real track must be in the reco track
-   if( float( nMax ) / float( nHitsAssignedTT )  < rateOfFoundHitsMin ) assign = false;
+   if( float( nMax ) / float( relatedTrueTracks.size() )  < _rateOfAssignedHitsMin ) assign = false;
+
+   if( float( nMax ) / float( nHitsAssignedTT )  < _rateOfFoundHitsMin ) assign = false;
    
    
    if ( assign ){

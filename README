@@ -26,7 +26,7 @@ Version History
  | changes since last version  |
   -----------------------------
 
-  
+      - TrackingFeedbackProcessor: made the minimum rate of true hits in reco track steerable
 
   ---------
  | v01-05  |
