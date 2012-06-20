@@ -802,7 +802,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
-      streamlog_out (DEBUG5) << "Forward Tracking found and saved " << tracks.size() << " tracks.\n\n"; 
+      streamlog_out (DEBUG5) << "Forward Tracking found and saved " << tracks.size() << " tracks in event " << _nEvt << "\n\n"; 
       
       
       /**********************************************************************************************/
