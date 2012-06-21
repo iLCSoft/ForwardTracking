@@ -214,6 +214,12 @@ class ForwardTracking : public Processor {
    
    MarlinTrk::IMarlinTrkSystem* _trkSystem;
 
+   int _output_track_col_quality ; 
+  
+   static const int _output_track_col_quality_GOOD;
+   static const int _output_track_col_quality_FAIR;
+   static const int _output_track_col_quality_POOR;
+  
    
 } ;
 

@@ -41,7 +41,9 @@ using namespace marlin ;
 using namespace MarlinTrk ;
 
 
-
+const int ForwardTracking::_output_track_col_quality_GOOD = 1;
+const int ForwardTracking::_output_track_col_quality_FAIR = 2;
+const int ForwardTracking::_output_track_col_quality_POOR = 3;
 
 
 ForwardTracking aForwardTracking ;
@@ -270,7 +272,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 //-----------------------------------------------------------------------
   
-
+   // Reset the quality flag of the output track collection
+   _output_track_col_quality = _output_track_col_quality_GOOD;
 
    std::vector< IHit* > hitsTBD; //Hits to be deleted at the end
    _map_sector_hits.clear();
@@ -354,8 +357,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          if( nHits > _maxHitsPerSector ){
             
             it->second.clear(); //delete the hits in this sector, it will be dropped
-            streamlog_out(ERROR) << "Too many hits in sector << " << it->first << ": " << nHits << " > " << _maxHitsPerSector << " (MaxHitsPerSector)\n";
-            throw marlin::SkipEventException(this);
+
+            streamlog_out(ERROR)  << " ### EVENT " << evt->getEventNumber() << " :: RUN " << evt->getRunNumber() << " \n ### Number of Hits in FTD Sector " << it->first << ": " << nHits << " > " << _maxHitsPerSector << " (MaxHitsPerSector)\n : This sector will be dropped from track search, and QualityCode set to \"Poor\" " << std::endl;
+           
+            _output_track_col_quality = _output_track_col_quality_POOR;
             
          }
          
@@ -798,6 +803,23 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          
       }
+     
+      // set the quality of the output collection
+      switch (_output_track_col_quality) {
+         
+         case _output_track_col_quality_FAIR:
+            trkCol->parameters().setValue( "QualityCode" , "Fair"  ) ;
+            break;
+            
+         case _output_track_col_quality_POOR:
+            trkCol->parameters().setValue( "QualityCode" , "Poor"  ) ;
+            break;
+            
+         default:
+            trkCol->parameters().setValue( "QualityCode" , "Good"  ) ;
+            break;
+      }
+
       evt->addCollection(trkCol,_ForwardTrackCollection.c_str());
       
       
