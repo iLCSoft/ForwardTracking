@@ -1102,7 +1102,7 @@ bool ForwardTracking::setCriteria( unsigned round ){
       
       
       
-      // use the value corresponding to the round, if doesn't work, use the last one
+      // use the value corresponding to the round, if there are no new ones for this criterion, just do nothing (the previous value stays in place)
       if( round + 1 <= _critMinima[critName].size() ){
          
          min =  _critMinima[critName][round];
@@ -1119,6 +1119,7 @@ bool ForwardTracking::setCriteria( unsigned round ){
       
       ICriterion* crit = Criteria::createCriterion( critName, min , max );
       
+      // Some debug output about the created criterion
       std::string type = crit->getType();
       
       streamlog_out( DEBUG3 ) <<  "Added: Criterion " << critName << " (type =  " << type 
@@ -1126,6 +1127,8 @@ bool ForwardTracking::setCriteria( unsigned round ){
       << ", Max = " << max
       << ", round " << round << "\n";
       
+      
+      // Add the new criterion to the corresponding vector
       if( type == "2Hit" ){
          
          _crit2Vec.push_back( crit );
