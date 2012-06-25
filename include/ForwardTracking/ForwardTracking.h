@@ -30,6 +30,8 @@ typedef std::vector< IHit* > RawTrack;
  * 
  * Reconstructs the tracks through the FTD <br>
  * 
+ * For a summary of what happens during each event see the method processEvent
+ * 
  *  <h4>Input - Prerequisites</h4>
  *  The hits in the Forward Tracking Detector FTD
  *
@@ -63,9 +65,8 @@ typedef std::vector< IHit* > RawTrack;
  * @param HitsPerTrackMin The minimum number of hits to create a track<br>
  * (default value 3 )
  * 
- * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN and SubsetSimple.
- * Any other value means, that no final search for the best subset is done and overlapping tracks are possible. (If you want that, don't
- * leave the string empty or the default value will be used! Just write something like "None")<br>
+ * @param BestSubsetFinder The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN, SubsetSimple and None.
+ * None means, that no final search for the best subset is done and overlapping tracks are possible. <br>
  * (default value TrackSubsetHopfieldNN )
  * 
  * @param Criteria A vector of the criteria that are going to be used by the Cellular Automaton. <br>
@@ -114,6 +115,57 @@ class ForwardTracking : public Processor {
   virtual void processRunHeader( LCRunHeader* run ) ;
   
   /** Called for every event - the working horse.
+   * 
+   *  The basic procedure for reconstruction of tracks in the FTD is as follows:
+   *      
+   *    -# Read in all collections of hits on the FTD that are passed as steering parameters
+   *    -# From every hit in these collections an FTDHit01 is created. This is, because the SegmentBuilder and the Automaton
+   * need their own hit classes.
+   *    -# The hits are stored in the map _map_sector_hits. The keys in this map are the sectors and the values of the map are vectors
+   * of the hits within those sectors. Sector here means an integer somehow representing a place in the detector.
+   * (For using this numbers and getting things like layer or side the class SectorSystemFTD is used.)
+   *    -# Make a safety check to ensure no single sector is overflowing with hits. This could give a combinatorial
+   * disaster leading to endless calculation times.
+   *    -# Add a virtual hit in the place of the IP. It is used by the Cellular Automaton as additional information
+   * (almost all reconstructable tracks come from a vertex roughly around the IP)
+   *    -# Look for hits on overlapping petals. If two petals from the FTD overlap, a track may pass through both and thus
+   * create two hits in close range. For pattern recognition as it is now, they are not useful. (Imagine you try to
+   * guess the radius of the helix formed by a track and you have 3 hits. If these 3 hits are sensibly spaced, this is
+   * no problem. But now imagine, that two of them are very close. Just a small deviation in the relative position
+   * of those two would give entirely different results.) Such short connections are therefore looked for and stored, but
+   * are not dealt with until later the track candidates are found.
+   *    -# The SegmentBuilder takes the hits and a vector of criteria.These criteria tell the SegmentBuilder when two
+   * hits might be part of a possible track. (For example, when we look for stiff tracks, we can form a line from one hit
+   * to the other and demand that this line will come close to the IP. )  
+   * The SegmentBuilder as the name suggests builds segments from the hits. A Segment is essentially a part of a track.
+   * For now a segment consists of a single hit. BUT: in contrast to a hit it knows all other segments it is 
+   * connected to. Lets take an easy example: A track crosses layer 2,3,4 and 5 creating hits A,B,C and D. 
+   * Then, if the track is not very ugly (huge multiple sacttering or energy loss ) the SegmentBuilder will create 
+   * corresponding segments A,B,C and D. D is connected with C. C with B, B with A and A with the IP. 
+   * So in these connections the true track is already contained. 
+   * For real situations we have of course many more hits and many more tracks and background and so on. So the connections
+   * are plenty and if we took every possible track we could create from them, we would kill the system.
+   * Therefore we use the Cellular Automaton to get rid of as much as possible.
+   *    -# The Cellular Automaton: As a result from the SegmentBuilder we get an Automaton object. It has all the segments
+   * the SegmentBuilder created and from us it gets some criteria to work with. (These Criteria again tell us when a
+   * connection makes sense and when it doesn't. Only the connections now get longer and involve first 3 hits and then 4).
+   * It first builds longer segments (now containing 2 hits instead of 1). These longer segments are again connected with
+   * each other (connections are made if the criteria allow it). The Automaton then looks for connections that go all 
+   * the way through to the innermost layer (the IP). Segments not connected all the way through to the IP get deleted.
+   * It might be a good idea to look into <a href="../CellularAutomaton.pdf">Introduction to the Cellular Automaton</a>
+   * for more details on the Cellular Automaton. The summary is, that with every step and every criterion the CA is able
+   * to sort out combinatorial background until at the end we extract track candidates from it.
+   *    -# Next we iterate over every trackcandidate we got.
+   *    -# The hits from overlapping petals are added and every possible combination of the trackcandidate and the hits
+   * we could add is created. The best version is then taken (if this is switched on in the steering parameters).
+   *    -# Cuts: First we do a helix fit. If the result (chi2 / Ndf ) is too bad the track is dropped. Then we do a 
+   * Kalman Fit. Also if the results here (chi squared probability) are bad the track is not saved.
+   *    -# Find the best subset: the tracks we now gathered may not be all compatible with each other (i.e. share hits).
+   * This situation is resolved with a best subset finder like the Hopfield Neural Network.
+   *    -# Now the tracks are all compatible and suited our different criteria. It is time to save them. At the end they
+   * get finalised and stored in the output collection.
+   *    
+   * 
    */
   virtual void processEvent( LCEvent * evt ) ; 
   

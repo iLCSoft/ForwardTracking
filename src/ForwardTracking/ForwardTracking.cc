@@ -51,11 +51,9 @@ ForwardTracking aForwardTracking ;
 
 ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
 
-   // modify processor description
    _description = "ForwardTracking reconstructs tracks through the FTD" ;
 
 
-   // register steering parameters: name, description, class-variable, default value
    std::vector< std::string > collections;
    collections.push_back( "FTDTrackerHits" );
    collections.push_back( "FTDSpacePoints" );
@@ -77,6 +75,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               "Tracks with a chi2 probability below this will get sorted out",
                               _chi2ProbCut,
                               double(0.005));
+   
    
    registerProcessorParameter("HelixFitMax",
                               "the maximum chi2/Ndf that is allowed as result of a helix fit",
@@ -101,15 +100,21 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _bestSubsetFinder,
                                std::string( "SubsetHopfieldNN" ) );
    
+   
    registerProcessorParameter( "TakeBestVersionOfTrack",
                                "Whether when adding hits to a track only the track with highest quality should be further processed",
                                _takeBestVersionOfTrack,
                                bool( true ) );
 
+   
+   
+   // Security checks to prevent combinatorial disasters
+   
    registerProcessorParameter( "MaxConnectionsAutomaton",
                                "If the automaton has more connections than this it will be redone with the next parameters",
                                _maxConnectionsAutomaton,
                                int( 100000 ) );
+   
    
    registerProcessorParameter("MaxHitsPerSector",
                               "Maximal number of hits allowed on a sector",
@@ -124,18 +129,20 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               _MSOn,
                               bool(true));
    
+   
    registerProcessorParameter("EnergyLossOn",
                               "Use Energy Loss in Fit",
                               _ElossOn,
                               bool(true));
+   
    
    registerProcessorParameter("SmoothOn",
                               "Smooth All Measurement Sites in Fit",
                               _SmoothOn,
                               bool(false));
    
-   /////////////////////////////////////////////////////////////////////////////////
-   // The Criteria for the Cellular Automaton
+  
+   // The Criteria for the Cellular Automaton:
    
    std::vector< std::string > allCriteria = Criteria::getAllCriteriaNamesVec();
    
@@ -145,17 +152,17 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _criteriaNames,
                                allCriteria);
    
+   // Now set min and max values for all the criteria
    for( unsigned i=0; i < _criteriaNames.size(); i++ ){
     
-      std::vector< float > zeroVec;
-      zeroVec.push_back(0.);
-      
+      std::vector< float > emptyVec;
+     
       std::string critMinString = _criteriaNames[i] + "_min";
       
       registerProcessorParameter( critMinString,
                                   "The minimum of " + _criteriaNames[i],
                                   _critMinima[ _criteriaNames[i] ],
-                                  zeroVec);
+                                  emptyVec);
       
       
       std::string critMaxString = _criteriaNames[i] + "_max";
@@ -163,13 +170,12 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
       registerProcessorParameter( critMaxString,
                                   "The maximum of " + _criteriaNames[i],
                                   _critMaxima[ _criteriaNames[i] ],
-                                  zeroVec);
+                                  emptyVec);
       
-
-   
+      
    }
    
-   /////////////////////////////////////////////////////////////////////////////////
+
    
 }
 
@@ -189,8 +195,11 @@ void ForwardTracking::init() {
    _useCED = false;
    if( _useCED )MarlinCED::init(this) ;    //CED
    
-    
-    
+   
+   /**********************************************************************************************/
+   /*       Make a SectorSystemFTD                                                               */
+   /**********************************************************************************************/
+
    const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
    const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
    int nLayers = ftdLayers.getNLayers() + 1;
@@ -209,8 +218,8 @@ void ForwardTracking::init() {
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
    
    
+   // Get the B Field in z direction
    _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
-   
    
 
 
@@ -231,7 +240,37 @@ void ForwardTracking::init() {
 
    // initialise the tracking system
    _trkSystem->init() ;
+   
+   
+   
+   /**********************************************************************************************/
+   /*       Do a few checks, if the set parameters are right                                     */
+   /**********************************************************************************************/
 
+   
+   // Only use allowed methods to find subsets. 
+   assert( ( _bestSubsetFinder == "None" ) || ( _bestSubsetFinder == "SubsetHopfieldNN" ) || ( _bestSubsetFinder == "SubsetSimple" ) );
+   
+   // Use a sensible chi2prob cut. (chi squared probability, like any probability must range from 0 to 1)
+   assert( _chi2ProbCut >= 0. );
+   assert( _chi2ProbCut <= 1. );
+   
+   
+   // Make sure, every used criterion exists and has at least one min and max set
+   for( unsigned i=0; i<_criteriaNames.size(); i++ ){
+      
+      std::string critName = _criteriaNames[i];
+      
+      ICriterion* crit = Criteria::createCriterion( critName ); //throws an exception if the criterion is non existent
+      delete crit;
+      
+      assert( !_critMinima[ critName ].empty() );
+      assert( !_critMaxima[ critName ].empty() );
+      
+   }
+   
+   
+   
 
 }
 
@@ -249,6 +288,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
    
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    //                                                                                                              //
+   //                                 ForwardTracking                                                              //
    //                                                                                                              //
    //                            Track Reconstruction in the FTD                                                   //
    //                                                                                                              //
@@ -272,7 +312,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 //-----------------------------------------------------------------------
   
-   // Reset the quality flag of the output track collection
+  
+   // Reset the quality flag of the output track collection (we start with the assumption that our results are good.
+   // If anything happens along the way, we modify this value
    _output_track_col_quality = _output_track_col_quality_GOOD;
 
    std::vector< IHit* > hitsTBD; //Hits to be deleted at the end
@@ -286,7 +328,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
    streamlog_out( DEBUG4 ) << "\t\t---Reading in Collections---\n" ;
    
    
-   for( unsigned iCol=0; iCol < _FTDHitCollections.size(); iCol++ ){
+   for( unsigned iCol=0; iCol < _FTDHitCollections.size(); iCol++ ){ //read in all input collections
       
       
       LCCollection* col;
@@ -316,7 +358,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          if( trackerHit == NULL ){
             
-            streamlog_out( ERROR ) << "cast to TrackerHit* was not possible, skipping hit\n";
+            streamlog_out( ERROR ) << "cast to TrackerHit* was not possible, skipping element " << col->getElementAt(i) << "\n";
             continue;
             
          }
@@ -383,6 +425,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       std::string inf = getInfo_map_sector_hits(); 
       streamlog_out( DEBUG2 ) << inf;
       
+      
       /**********************************************************************************************/
       /*                Check the possible connections of hits on overlapping petals                */
       /**********************************************************************************************/
@@ -393,7 +436,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       
       
-      
+      /**********************************************************************************************/
+      /*                SegmentBuilder and Cellular Automaton                                       */
+      /**********************************************************************************************/
       
       unsigned round = 0;
       std::vector < RawTrack > autRawTracks;
