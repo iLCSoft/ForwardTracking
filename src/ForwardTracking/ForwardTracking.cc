@@ -722,7 +722,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                
                for( unsigned j=1; j < overlappingTrackCands.size(); j++ ){
                   
-                  if( overlappingTrackCands[j]->getQI() > bestTrack->getQI() ){
+                  if( overlappingTrackCands[j]->getChi2Prob() > bestTrack->getChi2Prob() ){
                      
                      delete bestTrack; //delete the old one, not needed anymore
                      bestTrack = overlappingTrackCands[j];
