@@ -21,26 +21,28 @@
 #include "gear/FTDLayerLayout.h"
 
 
-//--------------------------------------------------------------
+//----From KiTrack-----------------------------
 #include "KiTrack/SubsetHopfieldNN.h"
 #include "KiTrack/SubsetSimple.h"
 #include "KiTrack/SegmentBuilder.h"
 #include "KiTrack/Automaton.h"
+
+//----From KiTrackMarlin-----------------------
 #include "ILDImpl/FTDTrack.h"
 #include "ILDImpl/FTDHit01.h"
 #include "ILDImpl/FTDNeighborPetalSecCon.h"
-#include "ILDImpl/FTDSecCon01.h"
+#include "ILDImpl/FTDSectorConnector.h"
 #include "Tools/KiTrackMarlinTools.h"
 #include "Tools/KiTrackMarlinCEDTools.h"
 #include "Tools/FTDHelixFitter.h"
-//--------------------------------------------------------------
+
 
 
 using namespace lcio ;
 using namespace marlin ;
 using namespace MarlinTrk ;
 
-
+// Used to fedine the quality of the track output collection
 const int ForwardTracking::_output_track_col_quality_GOOD = 1;
 const int ForwardTracking::_output_track_col_quality_FAIR = 2;
 const int ForwardTracking::_output_track_col_quality_POOR = 3;
@@ -78,7 +80,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
    
    
    registerProcessorParameter("HelixFitMax",
-                              "the maximum chi2/Ndf that is allowed as result of a helix fit",
+                              "The maximum chi2/Ndf that is allowed as result of a helix fit",
                               _helixFitMax,
                               double( 500 ) );
    
@@ -96,7 +98,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
    
    
    registerProcessorParameter( "BestSubsetFinder",
-                               "The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN and SubsetSimple",
+                               "The method used to find the best non overlapping subset of tracks. Available are: SubsetHopfieldNN, SubsetSimple and None",
                                _bestSubsetFinder,
                                std::string( "SubsetHopfieldNN" ) );
    
@@ -111,13 +113,13 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
    // Security checks to prevent combinatorial disasters
    
    registerProcessorParameter( "MaxConnectionsAutomaton",
-                               "If the automaton has more connections than this it will be redone with the next parameters",
+                               "If the automaton has more connections than this it will be redone with the next set of cut off parameters",
                                _maxConnectionsAutomaton,
                                int( 100000 ) );
    
    
    registerProcessorParameter("MaxHitsPerSector",
-                              "Maximal number of hits allowed on a sector",
+                              "Maximal number of hits allowed on a sector. More will cause drop of hits in sector",
                               _maxHitsPerSector,
                               int(1000));
    
@@ -152,6 +154,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                _criteriaNames,
                                allCriteria);
    
+   
    // Now set min and max values for all the criteria
    for( unsigned i=0; i < _criteriaNames.size(); i++ ){
     
@@ -184,7 +187,7 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
 
 void ForwardTracking::init() { 
 
-   streamlog_out(DEBUG) << "   init called  " << std::endl ;
+   streamlog_out( DEBUG3 ) << "   init called  " << std::endl ;
 
    // usually a good idea to
    printParameters() ;
@@ -192,7 +195,8 @@ void ForwardTracking::init() {
    _nRun = 0 ;
    _nEvt = 0 ;
 
-   _useCED = false;
+   _useCED = false; // Setting this to on will initialise CED in the processor and tracks or segments (from the CA)
+                    // can be printed. As this is mainly used for debugging it is not a steerable parameter.
    if( _useCED )MarlinCED::init(this) ;    //CED
    
    
@@ -200,20 +204,22 @@ void ForwardTracking::init() {
    /*       Make a SectorSystemFTD                                                               */
    /**********************************************************************************************/
 
+   // The SectorSystemFTD is the object translating the sectors of the hits into layers, modules etc. and vice versa
    const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
    const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
-   int nLayers = ftdLayers.getNLayers() + 1;
+   int nLayers = ftdLayers.getNLayers() + 1; // we add one layer for the IP
    int nModules = ftdLayers.getNPetals(0);
    int nSensors = ftdLayers.getNSensors(0);
    
-   for( int i=1; i<nLayers; i++){
+   // make sure we take the highest number of modules / sensors available
+   for( int i=1; i < nLayers - 1; i++){
      
       if( ftdLayers.getNPetals(i) > nModules ) nModules = ftdLayers.getNPetals(i); 
       if( ftdLayers.getNSensors(i) > nSensors ) nSensors = ftdLayers.getNSensors(i);
      
    }
    
-   streamlog_out( DEBUG4 ) << "using " << nLayers - 1 << " layers, " << nModules << " petals and " << nSensors << " sensors.\n";
+   streamlog_out( DEBUG4 ) << "SectorSystemFTD is using " << nLayers << " layers (including one for the IP), " << nModules << " petals and " << nSensors << " sensors.\n";
    
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
    
@@ -297,7 +303,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
    
    
 
-//--CED---------------------------------------------------------------------
+//--CED (only used for debugging )---------------------------------------
 // Reset drawing buffer and START drawing collection
 
    if( _useCED ){
@@ -314,7 +320,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
   
   
    // Reset the quality flag of the output track collection (we start with the assumption that our results are good.
-   // If anything happens along the way, we modify this value
+   // If anything happens along the way, we modify this value )
    _output_track_col_quality = _output_track_col_quality_GOOD;
 
    std::vector< IHit* > hitsTBD; //Hits to be deleted at the end
@@ -358,7 +364,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          if( trackerHit == NULL ){
             
-            streamlog_out( ERROR ) << "cast to TrackerHit* was not possible, skipping element " << col->getElementAt(i) << "\n";
+            streamlog_out( ERROR ) << "Cast to TrackerHit* was not possible, skipping element " << col->getElementAt(i) << "\n";
             continue;
             
          }
@@ -367,7 +373,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          << " " << KiTrackMarlin::getPositionInfo( trackerHit )<< "\n";
          
          //Make an FTDHit01 from the TrackerHit 
-         
          FTDHit01* ftdHit = new FTDHit01 ( trackerHit , _sectorSystemFTD );
          hitsTBD.push_back(ftdHit); //so we can easily delete every created hit afterwards
          
@@ -399,10 +404,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          if( nHits > _maxHitsPerSector ){
             
             it->second.clear(); //delete the hits in this sector, it will be dropped
-
+            
             streamlog_out(ERROR)  << " ### EVENT " << evt->getEventNumber() << " :: RUN " << evt->getRunNumber() << " \n ### Number of Hits in FTD Sector " << it->first << ": " << nHits << " > " << _maxHitsPerSector << " (MaxHitsPerSector)\n : This sector will be dropped from track search, and QualityCode set to \"Poor\" " << std::endl;
            
-            _output_track_col_quality = _output_track_col_quality_POOR;
+            _output_track_col_quality = _output_track_col_quality_POOR; // We had to drop hits, so the quality of the result is decreased
             
          }
          
@@ -422,10 +427,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       hitsTBD.push_back( virtualIPHitBackward );
       _map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
       
-      std::string inf = getInfo_map_sector_hits(); 
-      streamlog_out( DEBUG2 ) << inf;
-      
-      
+    
       /**********************************************************************************************/
       /*                Check the possible connections of hits on overlapping petals                */
       /**********************************************************************************************/
@@ -440,14 +442,18 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*                SegmentBuilder and Cellular Automaton                                       */
       /**********************************************************************************************/
       
-      unsigned round = 0;
-      std::vector < RawTrack > autRawTracks;
+      unsigned round = 0; // the round we are in
+      std::vector < RawTrack > rawTracks;
       
-      // The following while loop ideally only runs once.
+      // The following while loop ideally only runs once. (So we do round 0 and everything works)
       // It will repeat as long as the Automaton creates too many connections and as long as there are new criteria
       // parameters to use to cut down the problem.
-      // Ideally already on the first run, there is a reasonable number of connections, so the loop will be left.
+      // Ideally already in round 0, there is a reasonable number of connections (not more than _maxConnectionsAutomaton), 
+      // so the loop will be left. If however there are too many connections we stay in the loop and use 
+      // (hopefully) tighter cut offs (if provided in the steering). This should prevent combinatorial breakdown
+      // for very evil events.
       while( setCriteria( round ) ){
+         
          
          round++; // count up the round we are in
          
@@ -461,21 +467,22 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          //Create a segmentbuilder
          SegmentBuilder segBuilder( _map_sector_hits );
          
-         segBuilder.addCriteria ( _crit2Vec );
+         segBuilder.addCriteria ( _crit2Vec ); // Add the criteria on when to connect two hits. The vector has been filled by the method setCriteria
          
          //Also load hit connectors
          unsigned layerStepMax = 1; // how many layers to go at max
          unsigned petalStepMax = 1; // how many petals to go at max
-         unsigned lastLayerToIP = 4;// layer 1,2...4 get connected directly to the IP
-         FTDSecCon01 secCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
+         unsigned lastLayerToIP = 4;// layer 1,2,3 and 4 get connected directly to the IP
+         FTDSectorConnector secCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
          
          
-         segBuilder.addSectorConnector ( & secCon );
+         segBuilder.addSectorConnector ( & secCon ); // Add the sector connector (so the SegmentBuilder knows what hits from different sectors it is allowed to look for connections)
          
          
-         // And get out the 1-segments 
+         // And get out the Cellular Automaton with the 1-segments 
          Automaton automaton = segBuilder.get1SegAutomaton();
          
+         // Check if there are not too many connections
          if( automaton.getNumberOfConnections() > unsigned( _maxConnectionsAutomaton ) ){
             
             streamlog_out( DEBUG4 ) << "Redo the Automaton with different parameters, because there are too many connections:\n"
@@ -500,32 +507,32 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          /*******************************/
          /*      2-hit segments         */
          /*******************************/
+         
          streamlog_out( DEBUG4 ) << "\t\t--2-hit-Segments--\n" ;
          
          
          automaton.clearCriteria();
+         automaton.addCriteria( _crit3Vec );  // Add the criteria for 3 hits (i.e. 2 2-hit segments )
          
          
-         automaton.addCriteria( _crit3Vec );  
-         
-         
-         // Let the automaton lengthen its 1-segments to 2-segments
+         // Let the automaton lengthen its 1-hit-segments to 2-hit-segments
          automaton.lengthenSegments();
         
          
-         // So now we have 2-segments and are ready to perform the cellular automaton.
+         // So now we have 2-hit-segments and are ready to perform the Cellular Automaton.
          
          // Perform the automaton
          automaton.doAutomaton();
          
          
-         //Clean segments with bad states
+         // Clean segments with bad states
          automaton.cleanBadStates();
          
         
-         //Reset the states of all segments
+         // Reset the states of all segments
          automaton.resetStates();
          
+         // Check if there are not too many connections
          if( automaton.getNumberOfConnections() > unsigned( _maxConnectionsAutomaton ) ){
             
             streamlog_out( DEBUG4 ) << "Redo the Automaton with different parameters, because there are too many connections:\n"
@@ -544,13 +551,11 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          automaton.addCriteria( _crit4Vec );      
          
          
-         
+         // Lengthen the 2-hit-segments to 3-hits-segments
          automaton.lengthenSegments();
-         // So now we have 3 hit segments 
          
          
-         
-         // Perform the automaton
+         // Perform the Cellular Automaton
          automaton.doAutomaton();
          
          //Clean segments with bad states
@@ -560,6 +565,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          //Reset the states of all segments
          automaton.resetStates();
          
+         
+         // Check if there are not too many connections
          if( automaton.getNumberOfConnections() > unsigned( _maxConnectionsAutomaton ) ){
             
             streamlog_out( DEBUG4 ) << "Redo the Automaton with different parameters, because there are too many connections:\n"
@@ -568,39 +575,38 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
          }
          
-         autRawTracks = automaton.getTracks( 3 );
+         // get the raw tracks (raw track = just a vector of hits, the most rudimentary form of a track)
+         rawTracks = automaton.getTracks( 3 );
+         
          break; // if we reached this place all went well and we don't need another round --> exit the loop
          
       }
       
-      streamlog_out( DEBUG4 ) << " Automaton returned " << autRawTracks.size() << " tracks \n";
+      streamlog_out( DEBUG4 ) << "Automaton returned " << rawTracks.size() << " raw tracks \n";
+      
       
       /**********************************************************************************************/
       /*                Add the overlapping hits                                                    */
       /**********************************************************************************************/
       
       
-      streamlog_out( DEBUG4 ) << "\t\t---Add hits from overlapping petals + fit + chi2prob Cuts---\n" ;
+      streamlog_out( DEBUG4 ) << "\t\t---Add hits from overlapping petals + fit + helix and Kalman cuts---\n" ;
       
       
       std::vector <ITrack*> trackCandidates;
       
       
-      // for all raw tracks
-      for( unsigned i=0; i < autRawTracks.size(); i++){
+      // for all raw tracks we got from the automaton
+      for( unsigned i=0; i < rawTracks.size(); i++){
          
          
-         RawTrack autRawTrack = autRawTracks[i];
+         RawTrack rawTrack = rawTracks[i];
          
          
-         // check the helix fit value
-         std::vector< TrackerHit* > trackerHits;
+         // get all versions of the track plus hits from overlapping petals
+         std::vector < RawTrack > rawTracksPlus = getRawTracksPlusOverlappingHits( rawTrack, map_hitFront_hitsBack );
          
-         
-         // get all versions of the track with hits from overlapping petals
-         std::vector < RawTrack > autRawTracksPlus = getRawTracksPlusOverlappingHits( autRawTrack, map_hitFront_hitsBack );
-         
-         streamlog_out( DEBUG2 ) << "For raw track number " << i << " there are " << autRawTracksPlus.size() << " versions\n";
+         streamlog_out( DEBUG2 ) << "For raw track number " << i << " there are " << rawTracksPlus.size() << " versions\n";
          
          
          /**********************************************************************************************/
@@ -609,14 +615,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          std::vector< ITrack* > overlappingTrackCands;
          
-         for( unsigned j=0; j < autRawTracksPlus.size(); j++ ){
+         for( unsigned j=0; j < rawTracksPlus.size(); j++ ){
             
             
-            RawTrack rawTrack = autRawTracksPlus[j];
+            RawTrack rawTrackPlus = rawTracksPlus[j];
             
-            if( rawTrack.size() < unsigned( _hitsPerTrackMin ) ){
+            if( rawTrackPlus.size() < unsigned( _hitsPerTrackMin ) ){
                
-               streamlog_out( DEBUG1 ) << "Trackversion discarded, too few hits: only " << rawTrack.size() << " < " << _hitsPerTrackMin << "(hitsPerTrackMin)\n";
+               streamlog_out( DEBUG1 ) << "Trackversion discarded, too few hits: only " << rawTrackPlus.size() << " < " << _hitsPerTrackMin << "(hitsPerTrackMin)\n";
                continue;
                
             }
@@ -624,16 +630,17 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             FTDTrack* trackCand = new FTDTrack( _trkSystem );
             
             // add the hits to the track
-            for( unsigned k=0; k<rawTrack.size(); k++ ){
+            for( unsigned k=0; k<rawTrackPlus.size(); k++ ){
                
-               IFTDHit* ftdHit = dynamic_cast< IFTDHit* >( rawTrack[k] ); // cast to IFTDHits, as needed for an FTDTrack
+               IFTDHit* ftdHit = dynamic_cast< IFTDHit* >( rawTrackPlus[k] ); // cast to IFTDHits, as needed for an FTDTrack
                if( ftdHit != NULL ) trackCand->addHit( ftdHit );
-               else streamlog_out( DEBUG4 ) << "Hit " << rawTrack[k] << " could not be casted to IFTDHit\n";
+               else streamlog_out( DEBUG4 ) << "Hit " << rawTrackPlus[k] << " could not be casted to IFTDHit\n";
                
             }
             
             std::vector< IHit* > trackCandHits = trackCand->getHits();
             streamlog_out( DEBUG2 ) << "Fitting track candidate with " << trackCandHits.size() << " hits\n";
+            
             for( unsigned k=0; k < trackCandHits.size(); k++ ) streamlog_out( DEBUG1 ) << trackCandHits[k]->getPositionInfo();
             streamlog_out( DEBUG1 ) << "\n";
             
@@ -757,6 +764,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
+      
       streamlog_out( DEBUG4 ) << "\t\t---Get best subset of tracks---\n" ;
       
       std::vector< ITrack* > tracks;
@@ -788,9 +796,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          rejected = subset.getRejected();
          
       }
-      else{ // in any other case take all tracks
+      else { // in any other case take all tracks
          
-         streamlog_out( DEBUG3 ) << "Input for subset = \"" << _bestSubsetFinder << "\". As this is unknown all tracks are kept\n" ;
+         streamlog_out( DEBUG3 ) << "Input for subset = \"" << _bestSubsetFinder << "\". All tracks are kept\n" ;
          
          tracks = trackCandidates;
          
@@ -814,13 +822,16 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /**********************************************************************************************/
       /*               Finally: Finalise and save the tracks                                        */
       /**********************************************************************************************/
+      
       streamlog_out( DEBUG4 ) << "\t\t---Save Tracks---\n" ;
       
       LCCollectionVec * trkCol = new LCCollectionVec(LCIO::TRACK);
       
+      // Set the flags
       LCFlagImpl hitFlag(0) ;
       hitFlag.setBit( LCIO::TRBIT_HITS ) ;
       trkCol->setFlag( hitFlag.getFlag()  ) ;
+      
       
       for (unsigned int i=0; i < tracks.size(); i++){
          
@@ -906,6 +917,7 @@ void ForwardTracking::check( LCEvent * evt ) {}
 
 void ForwardTracking::end(){
    
+ 
    for ( unsigned i=0; i< _crit2Vec.size(); i++) delete _crit2Vec[i];
    for ( unsigned i=0; i< _crit3Vec.size(); i++) delete _crit3Vec[i];
    for ( unsigned i=0; i< _crit4Vec.size(); i++) delete _crit4Vec[i];
@@ -939,6 +951,7 @@ std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMa
      
       std::vector< IHit* > hitVecA = it->second;
       int sector = it->first;
+      
       // get the neighbouring petals
       FTDNeighborPetalSecCon secCon( secSysFTD );
       std::set< int > targetSectors = secCon.getTargetSectors( sector );
@@ -1207,6 +1220,7 @@ void ForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
    
    trackImpl->trackStates().clear();
    
+
    TrackStateImpl* trkStateIP = new TrackStateImpl( fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
    trkStateIP->setLocation( TrackState::AtIP );
    trackImpl->addTrackState( trkStateIP );
