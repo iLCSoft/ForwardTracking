@@ -698,11 +698,10 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                   
                   streamlog_out( DEBUG2 ) << "Track rejected (chi2prob " << trackCand->getChi2Prob() << " <= " << _chi2ProbCut << "\n";
                   delete trackCand;
+                  continue;
                   
                }
                
-               // If we reach this point than the track got accepted by all cuts
-               overlappingTrackCands.push_back( trackCand );
                
             }
             catch( FitterException e ){
@@ -713,6 +712,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                continue;
                
             }
+            
+            // If we reach this point than the track got accepted by all cuts
+            overlappingTrackCands.push_back( trackCand );
             
          }
          
