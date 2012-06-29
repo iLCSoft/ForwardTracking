@@ -658,6 +658,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                if( chi2OverNdf > _helixFitMax ){
                   
                   streamlog_out( DEBUG2 ) << "Discarding track because of bad helix fit: chi2/ndf = " << chi2OverNdf << "\n";
+                  delete trackCand;
                   continue;
                   
                }
@@ -690,7 +691,6 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                   
                if ( trackCand->getChi2Prob() > _chi2ProbCut ){
                   
-                  overlappingTrackCands.push_back( trackCand );
                   streamlog_out( DEBUG2 ) << "Track accepted (chi2prob " << trackCand->getChi2Prob() << " > " << _chi2ProbCut << "\n";
                   
                }
@@ -700,6 +700,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                   delete trackCand;
                   
                }
+               
+               // If we reach this point than the track got accepted by all cuts
+               overlappingTrackCands.push_back( trackCand );
                
             }
             catch( FitterException e ){

@@ -27,6 +27,7 @@ Version History
   -----------------------------
 
       - TrackingFeedbackProcessor: made the minimum rate of true hits in reco track steerable
+      - ForwardTracking: Got rid of memory leak
 
   ---------
  | v01-05  |
