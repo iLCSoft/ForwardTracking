@@ -311,8 +311,10 @@ class ForwardTracking : public Processor {
    /** The method used to find the best subset of tracks */
    std::string _bestSubsetFinder;
    
-   
+   unsigned _nTrackCandidates;
+   unsigned _nTrackCandidatesPlus;
 
+   
    
    MarlinTrk::IMarlinTrkSystem* _trkSystem;
 

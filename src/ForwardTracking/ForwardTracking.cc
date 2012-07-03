@@ -413,6 +413,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
       }
       
+      /**********************************************************************************************/
+      /*                Check the possible connections of hits on overlapping petals                */
+      /**********************************************************************************************/
+      
+      streamlog_out( DEBUG4 ) << "\t\t---Overlapping Hits---\n" ;
+      
+      std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack = getOverlapConnectionMap( _map_sector_hits, _sectorSystemFTD, _overlappingHitsDistMax);
+      
       
      
       /**********************************************************************************************/
@@ -426,17 +434,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       IHit* virtualIPHitBackward = createVirtualIPHit(-1 , _sectorSystemFTD );
       hitsTBD.push_back( virtualIPHitBackward );
       _map_sector_hits[ virtualIPHitBackward->getSector() ].push_back( virtualIPHitBackward );
-      
-    
-      /**********************************************************************************************/
-      /*                Check the possible connections of hits on overlapping petals                */
-      /**********************************************************************************************/
-      
-      streamlog_out( DEBUG4 ) << "\t\t---Overlapping Hits---\n" ;
-      
-      std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack = getOverlapConnectionMap( _map_sector_hits, _sectorSystemFTD, _overlappingHitsDistMax);
-      
-      
+     
       
       /**********************************************************************************************/
       /*                SegmentBuilder and Cellular Automaton                                       */
@@ -602,6 +600,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          RawTrack rawTrack = rawTracks[i];
          
+         _nTrackCandidates++;
+         
          
          // get all versions of the track plus hits from overlapping petals
          std::vector < RawTrack > rawTracksPlus = getRawTracksPlusOverlappingHits( rawTrack, map_hitFront_hitsBack );
@@ -617,6 +617,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          for( unsigned j=0; j < rawTracksPlus.size(); j++ ){
             
+            _nTrackCandidatesPlus++;
             
             RawTrack rawTrackPlus = rawTracksPlus[j];
             
@@ -698,6 +699,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                   
                   streamlog_out( DEBUG2 ) << "Track rejected (chi2prob " << trackCand->getChi2Prob() << " <= " << _chi2ProbCut << "\n";
                   delete trackCand;
+                  
                   continue;
                   
                }
@@ -932,6 +934,11 @@ void ForwardTracking::end(){
    
    delete _sectorSystemFTD;
    _sectorSystemFTD = NULL;
+   
+   streamlog_out( DEBUG3 ) << "There are " << _nTrackCandidates << "track candidates from CA and "<<  _nTrackCandidatesPlus
+      << " track Candidates with hits from overlapping hits\n"
+      << "The ratio is " << float( _nTrackCandidatesPlus )/_nTrackCandidates;
+
    
 }
 
