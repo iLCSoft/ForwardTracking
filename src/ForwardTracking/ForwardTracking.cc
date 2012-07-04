@@ -508,6 +508,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          streamlog_out( DEBUG4 ) << "\t\t--2-hit-Segments--\n" ;
          
+//          streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
          
          automaton.clearCriteria();
          automaton.addCriteria( _crit3Vec );  // Add the criteria for 3 hits (i.e. 2 2-hit segments )
@@ -529,6 +530,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
         
          // Reset the states of all segments
          automaton.resetStates();
+        
+//          streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
+         
          
          // Check if there are not too many connections
          if( automaton.getNumberOfConnections() > unsigned( _maxConnectionsAutomaton ) ){
@@ -562,6 +566,9 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          //Reset the states of all segments
          automaton.resetStates();
+         
+         
+//          streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
          
          
          // Check if there are not too many connections
