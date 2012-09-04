@@ -1240,19 +1240,19 @@ void ForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
    trackImpl->trackStates().clear();
    
 
-   TrackStateImpl* trkStateIP = new TrackStateImpl( fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
+   TrackStateImpl* trkStateIP = new TrackStateImpl( *fitter.getTrackState( lcio::TrackState::AtIP ) ) ;
    trkStateIP->setLocation( TrackState::AtIP );
    trackImpl->addTrackState( trkStateIP );
    
-   TrackStateImpl* trkStateFirstHit = new TrackStateImpl( fitter.getTrackState( TrackState::AtFirstHit ) ) ;
+   TrackStateImpl* trkStateFirstHit = new TrackStateImpl( *fitter.getTrackState( TrackState::AtFirstHit ) ) ;
    trkStateFirstHit->setLocation( TrackState::AtFirstHit );
    trackImpl->addTrackState( trkStateFirstHit );
    
-   TrackStateImpl* trkStateLastHit = new TrackStateImpl( fitter.getTrackState( TrackState::AtLastHit ) ) ;
+   TrackStateImpl* trkStateLastHit = new TrackStateImpl( *fitter.getTrackState( TrackState::AtLastHit ) ) ;
    trkStateLastHit->setLocation( TrackState::AtLastHit );
    trackImpl->addTrackState( trkStateLastHit );
    
-   TrackStateImpl* trkStateAtCalo = new TrackStateImpl( fitter.getTrackState( TrackState::AtCalorimeter ) ) ;
+   TrackStateImpl* trkStateAtCalo = new TrackStateImpl( *fitter.getTrackState( TrackState::AtCalorimeter ) ) ;
    trkStateAtCalo->setLocation( TrackState::AtCalorimeter );
    trackImpl->addTrackState( trkStateAtCalo );
    
