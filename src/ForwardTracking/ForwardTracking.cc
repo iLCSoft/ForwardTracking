@@ -37,7 +37,6 @@
 #include "Tools/FTDHelixFitter.h"
 
 
-
 using namespace lcio ;
 using namespace marlin ;
 using namespace MarlinTrk ;
