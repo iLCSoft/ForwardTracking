@@ -1,12 +1,20 @@
-#include "TROOT.h"
-#include "TFile.h"
-
 #include <iostream>
 #include <string>
-#include <vector>
 #include <map>
+#include <vector>
 #include <fstream>
 #include <sstream>
+
+
+#include "TROOT.h"
+#include "TFile.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+#include "TMultiGraph.h"
+#include "TGraph.h"
+#include "TAxis.h"
+
+using namespace std;
 
 /* This small rootscript is there to make a diagram from a csv file in a certain format
  */
@@ -18,27 +26,38 @@ void make_diagram_from_csv(){
    
    gROOT->SetStyle("Plain");    // a style using white instead of this horrible grey
    TCanvas* myCanvas = new TCanvas("myCanvas", "myCanvas", 0, 0, 600, 400);     //"new"-Command ist notwendig, damit die Canvas erhalten bleibt.
-   TLegend* legend = new TLegend( 0.15, 0.65, 0.4, 0.85 );
+//    TLegend* legend = new TLegend( 0.15, 0.65, 0.4, 0.85 );
+//    TLegend* legend = new TLegend( 0.65, 0.45, 0.9, 0.65 );
+   TLegend* legend = new TLegend( 0.65, 0.2, 0.9, 0.4 );
+   
    legend->SetFillColor( kWhite );
    
    
    const string MYPATH = "./"; 
    const std::string CSV_FILE = MYPATH + "time_background.csv";
-   const string PICTURE_NAME = "time";
+//    const string PICTURE_NAME = "time";
+//    const string PICTURE_NAME = "ghostrate";
+   const string PICTURE_NAME = "efficiency";
+   
    const string PICTURE_ENDING = ".svg";
    const string PICTURE_SAVE_PATH = MYPATH + PICTURE_NAME + PICTURE_ENDING;     // where the image will be saved
-   const string TITLE = "Time per event [s]";
-//    const string TITLE = "Ghostrate";
+//    const string TITLE = "Time per event [s]";
+//    const string TITLE = "Ghost Rate";
+   const string TITLE = "Efficiency";
    
    
    const std::string xName = "Background";
    
    
-   std::map< std::string, std::vector<double> > map_names_values;
+   map<string, vector<double> > map_names_values;
    
    std::vector< std::string > yNames;
-   yNames.push_back( "Time SiliconTracking" );
-   yNames.push_back( "Time ForwardTracking" );
+//    yNames.push_back( "Time SiliconTracking" );
+//    yNames.push_back( "Time ForwardTracking" );
+//    yNames.push_back( "Ghost Rate SiliconTracking" );
+//    yNames.push_back( "Ghost Rate ForwardTracking" );
+   yNames.push_back( "Efficiency SiliconTracking" );
+   yNames.push_back( "Efficiency ForwardTracking" );
    
    
    ifstream csvFile;
@@ -104,7 +123,7 @@ void make_diagram_from_csv(){
    std::vector< double > y;
 
    // The following is needed because TGraph want arrays
-   const int n= 50;
+   const int n= 31;
    double xArray[ n ];
    double yArray[ n ];
    
@@ -118,8 +137,8 @@ void make_diagram_from_csv(){
       
       y = map_names_values[ yNames[i] ];
       
-      if (x.size() != n ) std::cout << "ERROR, size of " << xName << "is not equal to n=" << n << "but is " << x.size() << "\n";
-      if (y.size() != n ) std::cout << "ERROR, size of " << yNames[i] << "is not equal to n=" << n << "but is " << y.size() << "\n";
+      if (x.size() != n ) std::cout << "ERROR, size of " << xName << " is not equal to n=" << n << "but is " << x.size() << "\n";
+      if (y.size() != n ) std::cout << "ERROR, size of " << yNames[i] << " is not equal to n=" << n << "but is " << y.size() << "\n";
       
       for( int j=0; j<n; j++ ){
          
@@ -145,7 +164,7 @@ void make_diagram_from_csv(){
    }
    
    mg->Draw("APL");
-//    mg->GetYaxis()->SetRangeUser(0.,1.);
+   mg->GetYaxis()->SetRangeUser(0.,1.);
    mg->GetXaxis()->SetTitle( xName.c_str() );
    
    legend->Draw("same");

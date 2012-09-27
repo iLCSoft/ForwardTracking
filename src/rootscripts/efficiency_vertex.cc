@@ -41,7 +41,7 @@ void efficiency_vertex(){
    
    
    const string TREENAME = "trueTracks";                                // name of the tree
-   const string PICTURE_NAME = "Efficiency_pt";
+   const string PICTURE_NAME = "Efficiency_vertex";
    const string PICTURE_ENDING = ".svg";
    const string PICTURE_SAVE_PATH = MYPATH + PICTURE_NAME + PICTURE_ENDING;     // where the image will be saved
    
@@ -51,7 +51,7 @@ void efficiency_vertex(){
     
    gROOT->SetStyle("Plain");    // a style using white instead of this horrible grey
    TCanvas* myCanvas = new TCanvas("myCanvas", "myCanvas", 0, 0, 600, 400);     //"new"-Command ist notwendig, damit die Canvas erhalten bleibt.
-   TLegend* legend = new TLegend( 0.4, 0.15, 0.7, 0.35 );
+   TLegend* legend = new TLegend( 0.55, 0.65, 0.85, 0.85 );
    legend->SetFillColor( kWhite );
    
    //---------- Values for the histograms:
@@ -151,7 +151,7 @@ void efficiency_vertex(){
 
    mg->Draw("AP");
    mg->GetYaxis()->SetRangeUser(0.,1.);
-   mg->GetXaxis()->SetTitle( "vertex dist to IP [mm]" );
+   mg->GetXaxis()->SetTitle( "distance of vertex to IP [mm]" );
 
    legend->Draw("same");
 

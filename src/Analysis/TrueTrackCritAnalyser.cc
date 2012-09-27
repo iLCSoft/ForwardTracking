@@ -198,6 +198,8 @@ void TrueTrackCritAnalyser::init() {
    
    
    // Also insert branches for additional information
+   branchNames2.insert("PDG"); //PDG
+   branchNames2.insert( "MCP_p" ); //momentum
    branchNames2.insert( "MCP_pt" ); //transversal momentum
    branchNames2.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    branchNames2.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
@@ -241,6 +243,8 @@ void TrueTrackCritAnalyser::init() {
    
    
    // Also insert branches for additional information
+   branchNames3.insert("PDG"); //PDG
+   branchNames3.insert( "MCP_p" ); //momentum
    branchNames3.insert( "MCP_pt" ); //transversal momentum
    branchNames3.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    branchNames3.insert( "chi2Prob" ); //the chi2 probability
@@ -283,6 +287,8 @@ void TrueTrackCritAnalyser::init() {
    
    
    // Also insert branches for additional information
+   branchNames4.insert( "PDG" ); //PDG
+   branchNames4.insert( "MCP_p" ); //momentum
    branchNames4.insert( "MCP_pt" ); //transversal momentum
    branchNames4.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    branchNames4.insert( "chi2Prob" ); //the chi2 probability
@@ -309,6 +315,8 @@ void TrueTrackCritAnalyser::init() {
    branchNamesKalman.insert( "chi2" );
    branchNamesKalman.insert( "Ndf" );
    branchNamesKalman.insert( "nHits" );
+   branchNamesKalman.insert( "PDG" ); //PDG
+   branchNamesKalman.insert( "MCP_p" ); //momentum
    branchNamesKalman.insert( "MCP_pt" ); //transversal momentum
    branchNamesKalman.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    
@@ -324,6 +332,8 @@ void TrueTrackCritAnalyser::init() {
    
    branchNamesHitDist.insert( "distToPrevHit" );
    branchNamesHitDist.insert( "MCP_pt" );
+   branchNamesHitDist.insert( "PDG" ); //PDG
+   branchNamesHitDist.insert( "MCP_p" ); //momentum
    
    _treeNameHitDist = "HitDist"; 
    KiTrackMarlin::setUpRootFile( _rootFileName, _treeNameHitDist, branchNamesHitDist , false );      //prepare the root file.
@@ -343,6 +353,8 @@ void TrueTrackCritAnalyser::processRunHeader( LCRunHeader* run) {
 void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) { 
    
    
+   streamlog_out(DEBUG5) << "   processing event: " << evt->getEventNumber() 
+   << "   in run:  " << evt->getRunNumber() << std::endl ;
    
    std::vector < std::map < std::string , float > > rootDataVec2;
    std::vector < std::map < std::string , float > > rootDataVec3;
@@ -371,7 +383,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );
          Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
          
-         
+         double pdg = mcp->getPDG();
          
          /**********************************************************************************************/
          /*               First: check if the track is of interest                                     */
@@ -400,9 +412,10 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          //////////////////////////////////////////////////////////////////////////////////
          //If pt is not too low
          
-         const double* p = mcp->getMomentum();
+         const double* p_vec = mcp->getMomentum();
          
-         double pt=  sqrt( p[0]*p[0]+p[1]*p[1] );
+         double p = sqrt( p_vec[0]*p_vec[0]+p_vec[1]*p_vec[1]+p_vec[2]*p_vec[2] );
+         double pt=  sqrt( p_vec[0]*p_vec[0]+p_vec[1]*p_vec[1] );
          
          
          if ( pt < _ptMin ){
@@ -476,6 +489,8 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             
             rootData[ "distToPrevHit" ] = hits[j]->distTo(hits[j+1]);
             rootData["MCP_pt"] = pt;
+            rootData["MCP_p"] = p;
+            rootData["PDG"] = pdg;
             
             rootDataVecHitDist.push_back( rootData );
             
@@ -590,10 +605,13 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
             }
             
+            rootData["MCP_p"] = p;
             rootData["MCP_pt"] = pt;
             rootData["MCP_distToIP"] = distToIP;
             rootData["chi2Prob"] = chi2Prob;
             rootData["layers"] = child->getHits()[0]->getLayer() *10 + parent->getHits()[0]->getLayer();
+            rootData["PDG"] = pdg;
+            
             
             IHit* childHit = child->getHits()[0];
             IHit* parentHit = parent->getHits()[0];
@@ -629,12 +647,15 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
             }
             
+            rootData["MCP_p"] = p;
             rootData["MCP_pt"] = pt;
             rootData["MCP_distToIP"] = distToIP;
             rootData["chi2Prob"] = chi2Prob;
             rootData["layers"] = child->getHits()[1]->getLayer() *100 +
                                  child->getHits()[0]->getLayer() *10 + 
                                  parent->getHits()[0]->getLayer();
+            rootData["PDG"] = pdg;
+            
             
             rootDataVec3.push_back( rootData );
             
@@ -663,6 +684,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                
             }
             
+            rootData["MCP_p"] = p;
             rootData["MCP_pt"] = pt;
             rootData["MCP_distToIP"] = distToIP;
             rootData["chi2Prob"] = chi2Prob;
@@ -670,6 +692,8 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                                  child->getHits()[1]->getLayer() *100 +
                                  child->getHits()[0]->getLayer() *10 + 
                                  parent->getHits()[0]->getLayer();
+            rootData["PDG"] = pdg;
+            
             
             rootDataVec4.push_back( rootData );
             
@@ -690,8 +714,11 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          rootDataFit[ "nHits" ]         = nHits;
          rootDataFit[ "chi2Prob" ]      = chi2Prob;
          
+         rootDataFit["MCP_p"] = p;
          rootDataFit["MCP_pt"] = pt;
          rootDataFit["MCP_distToIP"] = distToIP;
+         rootDataFit["PDG"] = pdg;
+         
          
          FTDHelixFitter helixFitter( track );
          float helixChi2 = helixFitter.getChi2();
@@ -743,12 +770,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
    }
  
 
- 
 
-   //-- note: this will not be printed if compiled w/o MARLINDEBUG4=1 !
-
-   streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
-   << "   in run:  " << evt->getRunNumber() << std::endl ;
 
 
    _nEvt ++ ;
