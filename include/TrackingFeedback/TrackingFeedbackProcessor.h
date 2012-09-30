@@ -68,6 +68,19 @@ using namespace marlin ;
  * @param CutNumberOfHitsMin The minimum number of hits a track must have <br>
  * (default value 4 )
  * 
+ * @param CutNumberOfHitsMin_HitsCountOncePerLayer Whether the hits used for the cut CutNumberOfHitsMin only count 
+ * once for each layer, i.e double hits on a layer count as one <br>
+ * (default value false, i.e. every hit counts )
+ * 
+ * @param CutThetaMin The minimum theta of the track in deg
+ * (default value 0 )
+ * 
+ * @param CutThetaMax The maximum theta of the track in deg
+ * (default value 91 )
+ * 
+ * @param CutFitFails Whether to cut all tracks that fail at fitting
+ * (default value false )
+ * 
  * @param DrawMCPTracks Draw the helices of the MCP (values at IP) in CED <br>
  * (default value false )
  * 
@@ -133,7 +146,10 @@ class TrackingFeedbackProcessor : public Processor {
    double _cutDistToIPMax;
    double _cutChi2Prob;
    int    _cutNHitsMin;
-   
+   bool _cutNHitsMin_HitsCountOncePerLayer;
+   double _cutThetaMin;
+   double _cutThetaMax;
+   bool _cutFitFails;
 
    
    bool _MSOn ;
@@ -178,7 +194,7 @@ class TrackingFeedbackProcessor : public Processor {
    void checkTheTrack( RecoTrack* recoTrack );
    TrueTrack* getAssignedTrueTrack( std::vector<TrueTrack*> relatedTrueTracks , unsigned& nHitsFromAssignedTrueTrack );
    
-   
+   unsigned getNumberOfHitsFromDifferentLayers( std::vector< TrackerHit* > hits );
    double getDistToIP( MCParticle* mcp );
    
    MarlinTrk::IMarlinTrkSystem* _trkSystem;
@@ -210,10 +226,15 @@ class TrackingFeedbackProcessor : public Processor {
    double _trueTrack_vertexX;
    double _trueTrack_vertexY;
    double _trueTrack_vertexZ;
-   
+   double _trueTrack_chi2prob;
+   double _trueTrack_chi2;
+   int _trueTrack_Ndf;
    
    int _recoTrack_nTrueTracks;
    double _recoTrack_pt;
+   double _recoTrack_chi2prob;
+   double _recoTrack_chi2;
+   int _recoTrack_Ndf;
    
    
 } ;

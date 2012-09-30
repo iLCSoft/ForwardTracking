@@ -21,6 +21,22 @@
 Version History
 =============================================================================================================
  
+ 
+ ---------
+ | v01-07  |
+ ---------
+ 
+ - TrueTrackCritAnalyser: added pdg and theta angle to root output
+ - TrackingFeedbackProcessor: 
+      + added possibility to use only hits from different layer for the nHit cut
+      + added cut for theta
+      + added chi2, Ndf and chi2prob to the reco tracks in the root output
+      + added a cut for failed tracks
+ - ForwardTracking: 
+      + added a new quality indicator, especially for the simple subset and 3-hit tracks
+      + changed lastLayerToIP to 5
+      + changed the > in the chi2prob cut to >=
+ 
   ------------
  | v01-06-01  |
   ------------

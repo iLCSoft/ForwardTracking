@@ -469,7 +469,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          //Also load hit connectors
          unsigned layerStepMax = 1; // how many layers to go at max
          unsigned petalStepMax = 1; // how many petals to go at max
-         unsigned lastLayerToIP = 4;// layer 1,2,3 and 4 get connected directly to the IP
+         unsigned lastLayerToIP = 5;// layer 1,2,3 and 4 get connected directly to the IP
          FTDSectorConnector secCon( _sectorSystemFTD , layerStepMax , petalStepMax , lastLayerToIP );
          
          
@@ -657,7 +657,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
             
             streamlog_out( DEBUG2 ) << "Fitting with Helix Fit\n";
             try{
-            
+               
                FTDHelixFitter helixFitter( trackCand->getLcioTrack() );
                float chi2OverNdf = helixFitter.getChi2() / float( helixFitter.getNdf() );
                streamlog_out( DEBUG2 ) << "chi2OverNdf = " << chi2OverNdf << "\n";
@@ -696,14 +696,14 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                                        <<", Ndf=" << trackCand->getNdf() << " )\n";
                   
                   
-               if ( trackCand->getChi2Prob() > _chi2ProbCut ){
+               if ( trackCand->getChi2Prob() >= _chi2ProbCut ){
                   
-                  streamlog_out( DEBUG2 ) << "Track accepted (chi2prob " << trackCand->getChi2Prob() << " > " << _chi2ProbCut << "\n";
+                  streamlog_out( DEBUG2 ) << "Track accepted (chi2prob " << trackCand->getChi2Prob() << " >= " << _chi2ProbCut << "\n";
                   
                }
                else{
                   
-                  streamlog_out( DEBUG2 ) << "Track rejected (chi2prob " << trackCand->getChi2Prob() << " <= " << _chi2ProbCut << "\n";
+                  streamlog_out( DEBUG2 ) << "Track rejected (chi2prob " << trackCand->getChi2Prob() << " < " << _chi2ProbCut << "\n";
                   delete trackCand;
                   
                   continue;
@@ -778,6 +778,13 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       /*               Get the best subset of tracks                                                */
       /**********************************************************************************************/
       
+      streamlog_out(DEBUG3) << "The track candidates so far: \n";
+      for( unsigned iTrack=0; iTrack < trackCandidates.size(); iTrack++ ){
+         
+         streamlog_out(DEBUG3) << "track " << iTrack << ": " << trackCandidates[iTrack] << "\t" << KiTrackMarlin::getTrackHitInfo( trackCandidates[iTrack] ) << "\n";
+         
+      }
+      
       streamlog_out( DEBUG4 ) << "\t\t---Get best subset of tracks---\n" ;
       
       std::vector< ITrack* > tracks;
@@ -785,6 +792,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       
       TrackCompatibilityShare1SP comp;
       TrackQIChi2Prob trackQI;
+      TrackQISpecial trackQISpecial;
+      
       
       
       if( _bestSubsetFinder == "SubsetHopfieldNN" ){
@@ -804,7 +813,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          SubsetSimple< ITrack* > subset;
          subset.add( trackCandidates );
-         subset.calculateBestSet( comp, trackQI );
+         subset.calculateBestSet( comp, trackQISpecial );
          tracks = subset.getAccepted();
          rejected = subset.getRejected();
          

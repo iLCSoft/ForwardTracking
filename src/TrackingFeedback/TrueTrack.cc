@@ -110,7 +110,7 @@ std::string TrueTrack::getTrueTrackInfo() const{
       
       TrackerHit* hit = hits[i];
       
-      trackInfo << "\t" << RecoTrack::positionInfo(hit) <<  "\t" << RecoTrack::cellIDInfo(hit) << "\n";
+      trackInfo << "\t" << hit << "\t"<< RecoTrack::positionInfo(hit) <<  "\t" << RecoTrack::cellIDInfo(hit) << "\n";
       
    }
   

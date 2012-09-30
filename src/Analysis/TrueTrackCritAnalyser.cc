@@ -205,6 +205,7 @@ void TrueTrackCritAnalyser::init() {
    branchNames2.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
    branchNames2.insert( "distance" ); // the distance between two hits
    branchNames2.insert( "chi2Prob" ); //the chi2 probability
+   branchNames2.insert( "theta" ); // the theta angle of the mcp
    // Set up the root file with the tree and the branches
    _treeName2 = "2Hit";
    KiTrackMarlin::setUpRootFile( _rootFileName, _treeName2, branchNames2, _writeNewRootFile );      //prepare the root file.
@@ -249,6 +250,8 @@ void TrueTrackCritAnalyser::init() {
    branchNames3.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    branchNames3.insert( "chi2Prob" ); //the chi2 probability
    branchNames3.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
+   branchNames3.insert( "theta" ); // the theta angle of the mcp
+   
    
    // Set up the root file with the tree and the branches
    _treeName3 = "3Hit"; 
@@ -293,6 +296,8 @@ void TrueTrackCritAnalyser::init() {
    branchNames4.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
    branchNames4.insert( "chi2Prob" ); //the chi2 probability
    branchNames4.insert( "layers" ); // a code for the layers the used hits had: 743 = layer 7, 4 and 3
+   branchNames4.insert( "theta" ); // the theta angle of the mcp
+   
    
    // Set up the root file with the tree and the branches
    _treeName4 = "4Hit"; 
@@ -319,6 +324,8 @@ void TrueTrackCritAnalyser::init() {
    branchNamesKalman.insert( "MCP_p" ); //momentum
    branchNamesKalman.insert( "MCP_pt" ); //transversal momentum
    branchNamesKalman.insert( "MCP_distToIP" ); //the distance of the origin of the partivle to the IP
+   branchNamesKalman.insert( "theta" ); // the theta angle of the mcp
+   
    
    // Set up the root file with the tree and the branches
    _treeNameKalman = "KalmanFit"; 
@@ -334,6 +341,8 @@ void TrueTrackCritAnalyser::init() {
    branchNamesHitDist.insert( "MCP_pt" );
    branchNamesHitDist.insert( "PDG" ); //PDG
    branchNamesHitDist.insert( "MCP_p" ); //momentum
+   branchNamesHitDist.insert( "theta" ); // the theta angle of the mcp
+   
    
    _treeNameHitDist = "HitDist"; 
    KiTrackMarlin::setUpRootFile( _rootFileName, _treeNameHitDist, branchNamesHitDist , false );      //prepare the root file.
@@ -462,6 +471,8 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          //
          //////////////////////////////////////////////////////////////////////////////////
          
+         double theta = ( 180./M_PI ) * atan( fabs( pt / p_vec[2] ) ) ;
+         
          
          /**********************************************************************************************/
          /*      If we reached this point the track is of interest  -> create FTDHits                  */
@@ -491,6 +502,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             rootData["MCP_pt"] = pt;
             rootData["MCP_p"] = p;
             rootData["PDG"] = pdg;
+            rootData["theta"] = theta;
             
             rootDataVecHitDist.push_back( rootData );
             
@@ -611,6 +623,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
             rootData["chi2Prob"] = chi2Prob;
             rootData["layers"] = child->getHits()[0]->getLayer() *10 + parent->getHits()[0]->getLayer();
             rootData["PDG"] = pdg;
+            rootData["theta"] = theta;
             
             
             IHit* childHit = child->getHits()[0];
@@ -655,6 +668,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                                  child->getHits()[0]->getLayer() *10 + 
                                  parent->getHits()[0]->getLayer();
             rootData["PDG"] = pdg;
+            rootData["theta"] = theta;
             
             
             rootDataVec3.push_back( rootData );
@@ -693,6 +707,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
                                  child->getHits()[0]->getLayer() *10 + 
                                  parent->getHits()[0]->getLayer();
             rootData["PDG"] = pdg;
+            rootData["theta"] = theta;
             
             
             rootDataVec4.push_back( rootData );
@@ -718,6 +733,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          rootDataFit["MCP_pt"] = pt;
          rootDataFit["MCP_distToIP"] = distToIP;
          rootDataFit["PDG"] = pdg;
+         rootDataFit["theta"] = theta;
          
          
          FTDHelixFitter helixFitter( track );

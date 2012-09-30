@@ -368,6 +368,35 @@ public:
    
 };
 
+/** A functor to return the quality of a track.
+ For tracks with 4 hits or more the chi2prob is mapped to* 0.5-1, with x = prob/2 + 0.5.
+ Tracks with 3 hits get the chi2 mapped to 0-0.5 by 1/(ln( e^2 + chi2 );
+ That gives 0 for an infinite chi2 and 0.5 for a chi2 of 0.
+ 
+ Reason: now 3-hit-tracks can be compared as well
+ */
+class TrackQISpecial{
+   
+public:
+   
+   inline double operator()( ITrack* track ){ 
+      
+      if( track->getHits().size() > 3 ){
+         
+         return track->getChi2Prob()/2. +0.5; 
+         
+      }
+      else{
+         
+         return 1/( log( 7.3890561 + track->getChi2() ) ); //e^2 = 7.3890561
+         
+      }
+      
+   }
+   
+   
+};
+
 
 #endif
 

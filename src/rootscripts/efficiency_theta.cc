@@ -63,7 +63,7 @@ void efficiency_theta(){
    //---------- Values for the histograms:
    int nBins = 20;
    double xMin = 0;
-   double xMax = 20;
+   double xMax = 30;
    double markerSize = 1.;
    
    

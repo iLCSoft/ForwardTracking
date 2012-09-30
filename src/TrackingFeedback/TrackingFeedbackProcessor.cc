@@ -5,12 +5,14 @@
 #include <fstream>
 #include <algorithm>
 #include <sstream>
+#include <set>
 
 #include "marlin/VerbosityLevels.h"
 #include "MarlinCED.h"
 #include "gear/BField.h"
 
 #include "Tools/Fitter.h"
+#include "Tools/KiTrackMarlinTools.h"
 
 
 
@@ -68,6 +70,26 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               "The minimum number of hits a track must have",
                               _cutNHitsMin,
                               int (4)  );   
+   
+   registerProcessorParameter("CutNumberOfHitsMin_HitsCountOncePerLayer",
+                              "Whether the hits used for the cut CutNumberOfHitsMin only count once for each layer, i.e double hits on a layer count as one",
+                              _cutNHitsMin_HitsCountOncePerLayer,
+                              bool (false) );
+   
+   registerProcessorParameter("CutThetaMin",
+                              "The minimum theta of the track in deg",
+                              _cutThetaMin,
+                              double (0)  );
+   
+   registerProcessorParameter("CutThetaMax",
+                              "The maximum theta of the track in deg",
+                              _cutThetaMax,
+                              double (91)  );
+   
+   registerProcessorParameter("CutFitFails",
+                              "Whether to cut all tracks that fail at fitting",
+                              _cutFitFails,
+                              bool( false ) );
    
    
    registerProcessorParameter("MultipleScatteringOn",
@@ -274,9 +296,14 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       }
       catch( FitterException e ){
          
-         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because fit failed: " <<  e.what() << "\n";
-         _nDismissedTrueTracks++;
-         continue;
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " fit failed: " <<  e.what() << "\n";
+         
+         if( _cutFitFails ){
+            
+            streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because fit failed: " <<  e.what() << "\n";
+            _nDismissedTrueTracks++;
+            continue;
+         }
          
       }
       
@@ -305,12 +332,34 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
       }
       
+      //Theta
+      double theta = ( 180./M_PI ) * atan( fabs( pt / mcp->getMomentum()[2] ) ) ;
+      if( theta > _cutThetaMax ){
+         
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because theta is too high. " 
+         <<  "theta = " << theta << ", thetaMax = " << _cutThetaMax << "\n";
+         _nDismissedTrueTracks++;
+         continue;
+         
+      }
+      if( theta < _cutThetaMin ){
+         
+         streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because theta is too low. " 
+         <<  "theta = " << theta << ", thetaMin = " << _cutThetaMin << "\n";
+         _nDismissedTrueTracks++;
+         continue;
+         
+      }
+      
       //number of hits in track
-      unsigned hitsInTrack = track->getTrackerHits().size();
-      if( int( hitsInTrack ) < _cutNHitsMin ){
+      std::vector< TrackerHit* > hitsInTrack = track->getTrackerHits();
+      unsigned nHitsInTrack = getNumberOfHitsFromDifferentLayers( hitsInTrack );
+//       unsigned nHitsInTrack = hitsInTrack.size();
+      
+      if( int( nHitsInTrack ) < _cutNHitsMin ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because it has too few hits. " 
-         <<  "hits in track = " << hitsInTrack << ", hits in Track min = " << _cutNHitsMin << "\n";
+         <<  "hits in track = " << nHitsInTrack << ", hits in Track min = " << _cutNHitsMin << "\n";
          _nDismissedTrueTracks++;
          continue;
          
@@ -325,6 +374,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          continue;
          
       }
+      
       
       
       
@@ -747,6 +797,23 @@ void TrackingFeedbackProcessor::saveRootInformation(){
       _trueTrack_vertexZ = trueTrack->getMCP()->getVertex()[2];
       
       
+      try{
+         
+         Fitter fitter( trueTrack->getTrueTrack(), _trkSystem );
+         _trueTrack_chi2prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
+         _trueTrack_chi2 = fitter.getChi2( lcio::TrackState::AtIP );
+         _trueTrack_Ndf = fitter.getNdf( lcio::TrackState::AtIP );
+         
+      }
+      catch( FitterException e ){
+         
+         _trueTrack_chi2prob = -1;
+         _trueTrack_chi2 = -1;
+         _trueTrack_Ndf = -1;
+         
+      }
+      
+      
       _treeTrueTracks->Fill();
       
    }
@@ -775,6 +842,22 @@ void TrackingFeedbackProcessor::saveRootInformation(){
       _treeRecoTracks->Fill();
       
       
+      try{
+         
+         Fitter fitter( recoTrack->getTrack(), _trkSystem );
+         _recoTrack_chi2prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
+         _recoTrack_chi2 = fitter.getChi2( lcio::TrackState::AtIP );
+         _recoTrack_Ndf = fitter.getNdf( lcio::TrackState::AtIP );
+         
+      }
+      catch( FitterException e ){
+         
+         _recoTrack_chi2prob = -1;
+         _recoTrack_chi2 = -1;
+         _recoTrack_Ndf = -1;
+         
+      }
+      
    }  
    
    
@@ -798,15 +881,50 @@ void TrackingFeedbackProcessor::makeRootBranches(){
    _treeTrueTracks->Branch( "vertexY" , &_trueTrack_vertexY );
    _treeTrueTracks->Branch( "vertexZ" , &_trueTrack_vertexZ );
    _treeTrueTracks->Branch( "evtNr" , &_nEvt );
+   _treeTrueTracks->Branch( "chi2prob" , &_trueTrack_chi2prob );
+   _treeTrueTracks->Branch( "chi2" , &_trueTrack_chi2 );
+   _treeTrueTracks->Branch( "Ndf" , &_trueTrack_Ndf );
    
    
    _treeRecoTracks->Branch( "nTrueTracks", &_recoTrack_nTrueTracks );
    _treeRecoTracks->Branch( "pT" , &_recoTrack_pt );
    _treeRecoTracks->Branch( "evtNr" , &_nEvt );
+   _treeRecoTracks->Branch( "chi2prob" , &_recoTrack_chi2prob );
+   _treeRecoTracks->Branch( "chi2" , &_recoTrack_chi2 );
+   _treeRecoTracks->Branch( "Ndf" , &_recoTrack_Ndf );
 //    _treeRecoTracks->Branch( "theta" , &_recoTrack_theta );   
    
 }
 
+unsigned TrackingFeedbackProcessor::getNumberOfHitsFromDifferentLayers( std::vector< TrackerHit* > hits ){
+ 
+   
+   std::set< int > layers;
+   unsigned nHitsFromDifferentLayers = 0;
+   
+   for( unsigned i=0; i<hits.size(); i++ ){
+      
+      
+      int layer = KiTrackMarlin::getCellID0Layer( hits[i]->getCellID0() );
+      
+      std::set< int >::iterator it = layers.find( layer );
+      
+      
+      if( it == layers.end() ){ // This layer is not already used
+         
+         
+         layers.insert( layer );
+         nHitsFromDifferentLayers++;
+         
+      }
+      
+   }
+   
+   
+   return nHitsFromDifferentLayers;  
+   
+   
+}
 
 
 

@@ -43,7 +43,7 @@ public:
    RecoTrack( Track* track, MarlinTrk::IMarlinTrkSystem* trkSystem ): _track( track ), _trkSystem( trkSystem )
       { _type = GHOST; } 
    
-   const Track* getTrack(){ return _track; }
+   Track* getTrack(){ return _track; }
    
    
    TrackType getType() const { return _type; }

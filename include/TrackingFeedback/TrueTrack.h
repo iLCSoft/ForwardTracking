@@ -27,7 +27,7 @@ public:
    _trueTrack(trueTrack), _mcp(mcp), _trkSystem(trkSystem) {}
    
    /** @return the true track */
-   const Track* getTrueTrack() const { return _trueTrack; }
+   Track* getTrueTrack() const { return _trueTrack; }
    
    /** @return the monte carlo particle of the true track */
    const MCParticle* getMCP() const { return _mcp; }
