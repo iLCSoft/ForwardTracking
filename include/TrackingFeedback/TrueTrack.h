@@ -64,16 +64,26 @@ public:
    /** @return Info about the status of the track concerning if it was found or lost */
    std::string getFoundInfo() const;
    
+   /** @return Info whether the true track was cutted and if yes, by what */
+   std::string getCutInfo() const;
+   
    /** @return number of linked reco tracks that have a certain type */
    unsigned getNumberOfTracksWithType( TrackType type ) const;   
    
+   /** @return the cuts it didn't survive. If the vector is empty, the true track survived all cuts. */
+   std::vector< std::string > getCuts() const {return _cuts; }
    
+   /** Stores the cut, that the true track didn't survive  
+    * @param cut A string describing the cut
+    */
+   void addCut( std::string cut ){ _cuts.push_back( cut ); }
    
 private:
    
    Track* _trueTrack;
    MCParticle* _mcp;
    std::vector< const RecoTrack* > _recoTracks;
+   std::vector< std::string > _cuts;
    
    MarlinTrk::IMarlinTrkSystem* _trkSystem; // for fitting
    

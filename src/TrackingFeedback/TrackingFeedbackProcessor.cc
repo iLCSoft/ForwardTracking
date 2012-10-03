@@ -168,7 +168,7 @@ void TrackingFeedbackProcessor::init() {
    _nIncompletePlus_Sum      = 0;
    _nGhost_Sum               = 0;
    _nFoundCompletely_Sum     = 0;
-   _nTrueTracks_Sum          = 0;
+   _nValidTrueTracks_Sum     = 0;
    _nRecoTracks_Sum          = 0;
    _nDismissedTrueTracks_Sum = 0; 
    
@@ -243,7 +243,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    _nIncompletePlus = 0;   
    _nGhost = 0;            
    _nFoundCompletely = 0;
-   _nTrueTracks = 0;          
+   _nValidTrueTracks = 0;          
    _nRecoTracks = 0;          
    _nDismissedTrueTracks = 0; 
    
@@ -281,12 +281,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       MCParticle* mcp = dynamic_cast <MCParticle*> (rel->getTo() );
       Track*    track = dynamic_cast <Track*>      (rel->getFrom() );
       
+      TrueTrack* trueTrack = new TrueTrack( track, mcp , _trkSystem );
       
       if ( _drawMCPTracks ) MarlinCED::drawMCParticle( mcp, true, evt, 2, 1, 0xff000, 10, 3.5 );
       
       
       
-      double chi2Prob;
+      double chi2Prob = 0.;
       
       try{
       
@@ -301,8 +302,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          if( _cutFitFails ){
             
             streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because fit failed: " <<  e.what() << "\n";
-            _nDismissedTrueTracks++;
-            continue;
+            trueTrack->addCut( "FitFail" );
+            
          }
          
       }
@@ -316,8 +317,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because it is too far from the IP. " 
             <<  "distance to IP = " << dist << ", distToIPMax = " << _cutDistToIPMax << "\n";
-         _nDismissedTrueTracks++;
-         continue;
+         
+         std::stringstream ss;
+         ss << "distance to IP: " << dist << ", distToIPMax = " << _cutDistToIPMax;
+         trueTrack->addCut( ss.str() );
+         
          
       }
       
@@ -327,8 +331,10 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because pt is too low. " 
          <<  "pt = " << pt << ", ptMin = " << _cutPtMin << "\n";
-         _nDismissedTrueTracks++;
-         continue;
+         
+         std::stringstream ss;
+         ss << "pt: " << pt << ", ptMin = " << _cutPtMin;
+         trueTrack->addCut( ss.str() );
          
       }
       
@@ -338,30 +344,37 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because theta is too high. " 
          <<  "theta = " << theta << ", thetaMax = " << _cutThetaMax << "\n";
-         _nDismissedTrueTracks++;
-         continue;
+         
+         std::stringstream ss;
+         ss << "theta: " << theta << ", thetaMax = " << _cutThetaMax;
+         trueTrack->addCut( ss.str() );
          
       }
       if( theta < _cutThetaMin ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because theta is too low. " 
          <<  "theta = " << theta << ", thetaMin = " << _cutThetaMin << "\n";
-         _nDismissedTrueTracks++;
-         continue;
+         
+         std::stringstream ss;
+         ss << "theta: " << theta << ", thetaMin = " << _cutThetaMin;
+         trueTrack->addCut( ss.str() );
          
       }
       
       //number of hits in track
       std::vector< TrackerHit* > hitsInTrack = track->getTrackerHits();
-      unsigned nHitsInTrack = getNumberOfHitsFromDifferentLayers( hitsInTrack );
-//       unsigned nHitsInTrack = hitsInTrack.size();
+      unsigned nHitsInTrack = hitsInTrack.size();
+      if( _cutNHitsMin_HitsCountOncePerLayer ) nHitsInTrack = getNumberOfHitsFromDifferentLayers( hitsInTrack );
+      
       
       if( int( nHitsInTrack ) < _cutNHitsMin ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because it has too few hits. " 
          <<  "hits in track = " << nHitsInTrack << ", hits in Track min = " << _cutNHitsMin << "\n";
-         _nDismissedTrueTracks++;
-         continue;
+         
+         std::stringstream ss;
+         ss << "hits in track: " << nHitsInTrack << ", hits in Track min = " << _cutNHitsMin;
+         trueTrack->addCut( ss.str() );
          
       }
       
@@ -370,22 +383,26 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " rejected, because chi2prob is too low. " 
          <<  "chi2prob = " << chi2Prob << ", chi2ProbMin = " << _cutChi2Prob << "\n";
-         _nDismissedTrueTracks++;
-         continue;
+         
+         std::stringstream ss;
+         ss << "chi2prob: " << chi2Prob << ", chi2ProbMin = " << _cutChi2Prob;
+         trueTrack->addCut( ss.str() );
          
       }
       
       
       
+      if( trueTrack->getCuts().empty() ) _nValidTrueTracks++;
+      else _nDismissedTrueTracks++;
       
-      _trueTracks.push_back( new TrueTrack( track, mcp , _trkSystem ) );
+      _trueTracks.push_back( trueTrack );
       
       
       
    }
    
-   _nTrueTracks = _trueTracks.size();
    
+  
    //The restored tracks, that we want to check for how good they are
    try {
       
@@ -422,8 +439,13 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       //check the relations for lost ones and completes
       for( unsigned int i=0; i < _trueTracks.size(); i++){
-         if ( _trueTracks[i]->isLost() == true ) _nLost++;
-         if ( _trueTracks[i]->isFoundCompletely() ==true ) _nFoundCompletely++;
+         
+         if ( _trueTracks[i]->getCuts().empty() ){ // Only count the true tracks, that are not cut away
+            
+            if ( _trueTracks[i]->isLost() == true ) _nLost++;
+            if ( _trueTracks[i]->isFoundCompletely() ==true ) _nFoundCompletely++;
+            
+         }
       }
       
       
@@ -434,33 +456,6 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       
       streamlog_out( DEBUG4 ).precision (4);
       
-//       for( unsigned i=0; i < _trueTracks.size(); i++ ){
-//          
-//          TrueTrack* trueTrack = _trueTracks[i];
-//          
-//          const MCParticle* mcp = trueTrack->getMCP();
-//          
-//          double px = mcp->getMomentum()[0];
-//          double py = mcp->getMomentum()[1];
-//          
-//          double pt = sqrt( px*px + py*py );    
-//          
-//          if( pt > 10 ){
-//             
-//             
-//             
-//             streamlog_out( MESSAGE4 ) << "\n\nTrue Track " << i << "\n";
-//             std::string info = trueTrack->getMCPInfo();
-//             streamlog_out( MESSAGE ) << info;
-//             info = trueTrack->getTrueTrackInfo();
-//             streamlog_out( MESSAGE4 ) << info;
-//             info = trueTrack->getFoundInfo();
-//             streamlog_out( MESSAGE4 ) << info;
-//             info = trueTrack->getRelatedTracksInfo();
-//             streamlog_out( MESSAGE4 ) << info;
-//          }
-//          
-//       }
       
       for( unsigned i=0; i < _trueTracks.size(); i++ ){
        
@@ -473,6 +468,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
          info = trueTrack->getTrueTrackInfo();
          streamlog_out( DEBUG4 ) << info;
          info = trueTrack->getFoundInfo();
+         streamlog_out( DEBUG4 ) << info;
+         info = trueTrack->getCutInfo();
          streamlog_out( DEBUG4 ) << info;
          info = trueTrack->getRelatedTracksInfo();
          streamlog_out( DEBUG4 ) << info;
@@ -491,8 +488,8 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       _nIncompletePlus_Sum      += _nIncompletePlus;   
       _nGhost_Sum               += _nGhost;            
       _nFoundCompletely_Sum     += _nFoundCompletely;     
-      _nTrueTracks_Sum          += _nTrueTracks;          
-      _nRecoTracks_Sum          += _nRecoTracks;          
+      _nRecoTracks_Sum          += _nRecoTracks; 
+      _nValidTrueTracks_Sum     += _nValidTrueTracks;
       _nDismissedTrueTracks_Sum += _nDismissedTrueTracks;
       
       //The statistics:
@@ -503,11 +500,11 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       float pComplete=-1.;
       float pFoundCompletely=-1.;
       
-      if (_nTrueTracks > 0) pLost = float(_nLost)/float(_nTrueTracks);           
-      if (_nTrueTracks > 0) efficiency = 1. - pLost;
+      if (_nValidTrueTracks > 0) pLost = float(_nLost)/float(_nValidTrueTracks);           
+      if (_nValidTrueTracks > 0) efficiency = 1. - pLost;
       if (_nRecoTracks > 0) ghostrate = float(_nGhost)/float(_nRecoTracks);             
-      if (_nTrueTracks > 0) pComplete = float(_nComplete)/float(_nTrueTracks);    
-      if (_nTrueTracks > 0) pFoundCompletely = float(_nFoundCompletely)/float(_nTrueTracks);
+      if (_nValidTrueTracks > 0) pComplete = float(_nComplete)/float(_nValidTrueTracks);    
+      if (_nValidTrueTracks > 0) pFoundCompletely = float(_nFoundCompletely)/float(_nValidTrueTracks);
       
       // the data that will get stored
       std::vector< std::pair < std::string , float > > data;
@@ -523,11 +520,12 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       data.push_back( std::make_pair( "nIncomplete" , _nIncomplete ) );  
       data.push_back( std::make_pair( "nIncompletePlus" , _nIncompletePlus ) );  
       data.push_back( std::make_pair( "nGhost" , _nGhost ) );  
-      data.push_back( std::make_pair( "nFoundCompletely" , _nFoundCompletely ) );  
-      data.push_back( std::make_pair( "nTrueTracks" , _nTrueTracks ) );  
+      data.push_back( std::make_pair( "nFoundCompletely" , _nFoundCompletely ) ); 
+      data.push_back( std::make_pair( "nValidTrueTracks" , _nValidTrueTracks ) );
+      data.push_back( std::make_pair( "nDismissedTrueTracks" , _nDismissedTrueTracks ) );
       data.push_back( std::make_pair( "nRecoTracks" , _nRecoTracks ) );  
-      data.push_back( std::make_pair( "nDismissedTrueTracks" , _nDismissedTrueTracks ) );  
-
+      
+      
       streamlog_out( MESSAGE0 ) << "\n\n";
       for( unsigned i=0; i<data.size(); i++ ) streamlog_out( MESSAGE0 ) << data[i].first << "= " << data[i].second << "\n";      
       streamlog_out( MESSAGE0 ) << "\n";
@@ -584,7 +582,7 @@ void TrackingFeedbackProcessor::end(){
       myfile.open ( _summaryFileName.c_str() , std::ios::app);
       
       
-      double efficiency = double( _nTrueTracks_Sum - _nLost_Sum ) / double( _nTrueTracks_Sum );
+      double efficiency = double( _nValidTrueTracks_Sum - _nLost_Sum ) / double( _nValidTrueTracks_Sum );
       double ghostrate = double( _nGhost_Sum ) / double( _nRecoTracks_Sum );
       
       
@@ -776,7 +774,12 @@ void TrackingFeedbackProcessor::saveRootInformation(){
    
    for( unsigned i=0; i < _trueTracks.size(); i++ ){
       
+      
+      
       TrueTrack* trueTrack = _trueTracks[i];
+      
+      if( !trueTrack->getCuts().empty() ) continue; // Only store the valid true tracks
+      
       
       _trueTrack_nComplete =       trueTrack->getNumberOfTracksWithType( COMPLETE );
       _trueTrack_nCompletePlus =   trueTrack->getNumberOfTracksWithType( COMPLETE_PLUS );

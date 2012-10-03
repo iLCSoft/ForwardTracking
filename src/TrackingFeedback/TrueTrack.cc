@@ -162,3 +162,32 @@ std::string TrueTrack::getFoundInfo() const{
    
 }
 
+std::string TrueTrack::getCutInfo() const{
+   
+   
+   std::stringstream info;
+   
+   if( _cuts.empty() ){
+      
+      info <<  "Valid True Track, no cuts\n";
+      
+   }
+   else{
+      
+      info << "NON VALID True Track , got cut by:\n"; 
+      
+      for( unsigned i=0; i<_cuts.size(); i++ ){
+         
+         info << "\t" << _cuts[i] << "\n";
+         
+      }
+      
+   }
+   
+   return info.str();
+   
+}
+
+
+
+

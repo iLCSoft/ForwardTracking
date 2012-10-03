@@ -166,9 +166,9 @@ class TrackingFeedbackProcessor : public Processor {
    unsigned _nGhost;               // ghost tracks = tracks that are reconstructed, but don't actually exist. Pure fiction. a ghost track 
                                    // is a track, where no real track owns more than half of the tracks hits.
    unsigned _nFoundCompletely;     // tracks have been found that contain all the hits of this track
-   unsigned _nTrueTracks;          // the number of true tracks from the track cheater, that where used
    unsigned _nRecoTracks;          // the number of reconstructed tracks, that were compared to the true tracks
    unsigned _nDismissedTrueTracks; // number of the true tracks, that haven't been used
+   unsigned _nValidTrueTracks;     // number of valid true tracks, i.e. true tracks not failing the cuts
    
    unsigned _nComplete_Sum;            
    unsigned _nCompletePlus_Sum;       
@@ -177,9 +177,9 @@ class TrackingFeedbackProcessor : public Processor {
    unsigned _nIncompletePlus_Sum;   
    unsigned _nGhost_Sum;            
    unsigned _nFoundCompletely_Sum;     
-   unsigned _nTrueTracks_Sum;          
    unsigned _nRecoTracks_Sum;          
    unsigned _nDismissedTrueTracks_Sum; 
+   unsigned _nValidTrueTracks_Sum;
    
    
    std::vector< TrueTrack* > _trueTracks;
