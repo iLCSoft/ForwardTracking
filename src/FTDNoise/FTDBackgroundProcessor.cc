@@ -463,11 +463,11 @@ CLHEP::Hep3Vector FTDBackgroundProcessor::getRandPosition( double rMin, double l
    double R = sqrt( x*x + y*y );
    double phiStart = atan2( y, x );
    
-   phiStart += phi;
+   double phiFinal = phiStart + phi;
    
    
-   x = R* cos(phi);
-   y = R* sin(phi);
+   x = R* cos(phiFinal);
+   y = R* sin(phiFinal);
    
    pos.setX(x);
    pos.setY(y);
