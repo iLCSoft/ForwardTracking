@@ -77,7 +77,7 @@ void ghostrate(){
    //---------- Values for the histograms:
    int nBins = 20;
    double xMin = 0.1;
-   double xMax = 100;
+   double xMax = 50;
    double xMinLog10 = log10( xMin ); // as we want a logartihmic scale with evenly binning we have to set the min and max accordingly( see http://root.cern.ch/root/roottalk/roottalk06/1213.html )
    double xMaxLog10 = log10( xMax );
    double markerSize = 1.;

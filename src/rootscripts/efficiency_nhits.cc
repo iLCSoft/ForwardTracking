@@ -60,9 +60,9 @@ void efficiency_nhits(){
    legend->SetFillColor( kWhite );
    
    //---------- Values for the histograms:
-   int nBins = 20;
-   double xMin = 0;
-   double xMax = 10;
+   int nBins = 5;
+   double xMin = 3;
+   double xMax = 8;
    double markerSize = 1.;
    
    

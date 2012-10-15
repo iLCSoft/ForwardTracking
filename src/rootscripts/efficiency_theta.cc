@@ -57,7 +57,7 @@ void efficiency_theta(){
    gROOT->SetStyle("Plain");    // a style using white instead of this horrible grey
    TCanvas* myCanvas = new TCanvas("myCanvas", "myCanvas", 0, 0, 600, 400);     //"new"-Command ist notwendig, damit die Canvas erhalten bleibt.
 
-   TLegend* legend = new TLegend( 0.4, 0.15, 0.7, 0.35 );
+   TLegend* legend = new TLegend( 0.3, 0.15, 0.6, 0.35 );
    legend->SetFillColor( kWhite );
    
    //---------- Values for the histograms:

@@ -108,6 +108,19 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                                bool( true ) );
 
    
+   // Parameters for the Hopfield Neural Network
+   
+   registerProcessorParameter("HNN_Omega",
+                              "Omega for the Hopfield Neural Network; the higher omega the higher the influence of the quality indicator",
+                              _HNN_Omega,
+                              double( 0.75 ) );
+   
+   registerProcessorParameter("HNN_Activation_Threshold",
+                              "The activation threshold for the Hopfield Neural Network",
+                              _HNN_ActivationThreshold,
+                              double( 0.5 ) );
+   
+   
    
    // Security checks to prevent combinatorial disasters
    
@@ -507,7 +520,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          streamlog_out( DEBUG4 ) << "\t\t--2-hit-Segments--\n" ;
          
-//          streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
+         streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
          
          automaton.clearCriteria();
          automaton.addCriteria( _crit3Vec );  // Add the criteria for 3 hits (i.e. 2 2-hit segments )
@@ -530,7 +543,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          // Reset the states of all segments
          automaton.resetStates();
         
-//          streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
+         streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
          
          
          // Check if there are not too many connections
@@ -567,7 +580,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          automaton.resetStates();
          
          
-//          streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
+         streamlog_out(DEBUG4) << "Automaton has " << automaton.getTracks( 3 ).size() << " track candidates\n"; //should be commented out, because it takes time
          
          
          // Check if there are not too many connections
@@ -801,8 +814,11 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          streamlog_out( DEBUG3 ) << "Use SubsetHopfieldNN for getting the best subset\n" ;
          
          SubsetHopfieldNN< ITrack* > subset;
+         subset.setOmega( _HNN_Omega );
+         subset.setActivationThreshold( _HNN_ActivationThreshold );
          subset.add( trackCandidates );
          subset.calculateBestSet( comp, trackQI );
+         
          tracks = subset.getAccepted();
          rejected = subset.getRejected();
          

@@ -82,6 +82,12 @@ typedef std::vector< IHit* > RawTrack;
  * and if that generates too many connections, it will rerun it with the value 0.8.<br>
  * If for a criterion no further parameters are specified, the first ones will be taken on reruns.
  * 
+ * @param HNN_Omega Omega for the Hopfield Neural Network; the higher omega the higher the influence of the quality indicator<br>
+ * (default value 0.75)
+ * 
+ * @param HNN_Activation_Threshold The activation threshold for the Hopfield Neural Network<br>
+ * (default value 0.5)
+ * 
  * @param MaxConnectionsAutomaton If the automaton has more connections than this it will be redone with the next cut off values for the criteria.<br>
  * If there are no further new values for the criteria, the event will be skipped.<br>
  * (default value 100000 )
@@ -95,7 +101,6 @@ typedef std::vector< IHit* > RawTrack;
  * @author Robin Glattauer HEPHY, Wien
  *
  */
-
 class ForwardTracking : public Processor {
   
  public:
@@ -265,6 +270,10 @@ class ForwardTracking : public Processor {
     * and the quality of the output track collection will be set to poor */
    int _maxHitsPerSector;
    
+   
+   // Properties for the Hopfield Neural Network
+   double _HNN_Omega;
+   double _HNN_ActivationThreshold;
    
    /** A map to store the hits according to their sectors */
    std::map< int , std::vector< IHit* > > _map_sector_hits;
