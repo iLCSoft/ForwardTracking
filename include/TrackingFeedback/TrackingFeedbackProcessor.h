@@ -90,6 +90,12 @@ using namespace marlin ;
  * @param RateOfAssignedHitsMin More than this rate of hits of the reco track must belong to the true track to be assigned <br>
  * (default value 0.5 )
  * 
+ * @param RootFileName Name for the root file where the tracks are saved<br>
+ * (default value "Feedback.root")
+ * 
+ * @param RootFileAppend Whether the root output file should be appended to an existing one<br>
+ * (default value false)
+ * 
  * @author Robin Glattauer HEPHY, Wien
  *
  */
@@ -190,6 +196,7 @@ class TrackingFeedbackProcessor : public Processor {
    std::string _summaryFileName;
   
    
+  
    
    void checkTheTrack( RecoTrack* recoTrack );
    TrueTrack* getAssignedTrueTrack( std::vector<TrueTrack*> relatedTrueTracks , unsigned& nHitsFromAssignedTrueTrack );
@@ -203,13 +210,16 @@ class TrackingFeedbackProcessor : public Processor {
    TTree * _treeRecoTracks;
    TFile * _rootFile;
    std::string _rootFileName;
+   bool _rootFileAppend;
    std::string _treeNameTrueTracks;
    std::string _treeNameRecoTracks;
    
    
    void saveRootInformation();   
    void makeRootBranches();
+   void setRootBranches();
    
+
    float _rateOfFoundHitsMin;  //more than this number of hits of the real track must be in the reco track
    float _rateOfAssignedHitsMin;  //more than this number of hits of the reco track must belong to the assigned true track
    

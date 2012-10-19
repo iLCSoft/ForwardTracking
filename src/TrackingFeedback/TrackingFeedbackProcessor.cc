@@ -122,10 +122,6 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               _summaryFileName,
                               std::string("TrackingFeedbackSum.csv") );   
    
-   registerProcessorParameter("RootFileName",
-                              "Name for the root file where the tracks are saved",
-                              _rootFileName,
-                              std::string("Feedback.root") );
    
    registerProcessorParameter("RateOfFoundHitsMin",
                               "More than this rate of hits of the real track must be in a reco track to be assigned",
@@ -137,6 +133,15 @@ TrackingFeedbackProcessor::TrackingFeedbackProcessor() : Processor("TrackingFeed
                               _rateOfAssignedHitsMin,
                               float(0.5) );
   
+   registerProcessorParameter("RootFileName",
+                              "Name for the root file where the tracks are saved",
+                              _rootFileName,
+                              std::string("Feedback.root") );
+   
+   registerProcessorParameter("RootFileAppend",
+                              "Whether the root output file should be appended to an existing one",
+                              _rootFileAppend,
+                              bool( false ) );
    
 }
 
@@ -196,15 +201,42 @@ void TrackingFeedbackProcessor::init() {
    /*       Prepare the root output                                                              */
    /**********************************************************************************************/
    
-   _rootFile = new TFile( _rootFileName.c_str(),  "RECREATE" );
+   
+   //Check if file already exists
+   ifstream rf ( _rootFileName.c_str() );
+   bool rootFileAlreadyExists  = rf.good();
+   
+   std::string mode = "RECREATE";
+   if( _rootFileAppend ) mode = "UPDATE";
+   _rootFile = new TFile( _rootFileName.c_str(),  mode.c_str() );
+   
    
    _treeNameTrueTracks = "trueTracks";
-   _treeTrueTracks = new TTree( _treeNameTrueTracks.c_str(), _treeNameTrueTracks.c_str() );
-   
    _treeNameRecoTracks = "recoTracks";
-   _treeRecoTracks = new TTree( _treeNameRecoTracks.c_str(), _treeNameRecoTracks.c_str() );
+
+
    
-   makeRootBranches();
+
+   
+   if ( ( rootFileAlreadyExists ) && (_rootFileAppend ) ){ // if the file already exists and we want to append
+      
+      _treeTrueTracks = dynamic_cast <TTree*>( _rootFile->Get( _treeNameTrueTracks.c_str() ) );
+      _treeRecoTracks = dynamic_cast <TTree*>( _rootFile->Get( _treeNameRecoTracks.c_str() ) );
+      
+      streamlog_out(MESSAGE) << _treeTrueTracks << "\t" << _treeRecoTracks ;
+      
+      setRootBranches();
+      
+   }
+   else{ // we don't want to append, or there is no existing file
+      
+      _treeTrueTracks = new TTree( _treeNameTrueTracks.c_str(), _treeNameTrueTracks.c_str() );
+      _treeRecoTracks = new TTree( _treeNameRecoTracks.c_str(), _treeNameRecoTracks.c_str() );
+      makeRootBranches();
+      
+   }
+   
+  
    
    
 
@@ -596,7 +628,7 @@ void TrackingFeedbackProcessor::end(){
       
    }   
    
-   _rootFile->Write();
+   _rootFile->Write("",TObject::kOverwrite);   
    _rootFile->Close();
    delete _rootFile;
    
@@ -896,6 +928,37 @@ void TrackingFeedbackProcessor::makeRootBranches(){
    _treeRecoTracks->Branch( "chi2" , &_recoTrack_chi2 );
    _treeRecoTracks->Branch( "Ndf" , &_recoTrack_Ndf );
 //    _treeRecoTracks->Branch( "theta" , &_recoTrack_theta );   
+   
+}
+
+void TrackingFeedbackProcessor::setRootBranches(){
+   
+   _treeTrueTracks->SetBranchAddress( "nComplete", &_trueTrack_nComplete );
+   _treeTrueTracks->SetBranchAddress( "nCompletePlus", &_trueTrack_nCompletePlus );
+   _treeTrueTracks->SetBranchAddress( "nIncomplete", &_trueTrack_nIncomplete );
+   _treeTrueTracks->SetBranchAddress( "nIncompletePlus", &_trueTrack_nIncompletePlus );
+   _treeTrueTracks->SetBranchAddress( "nSum", &_trueTrack_nSum );
+   
+   
+   _treeTrueTracks->SetBranchAddress( "pT" , &_trueTrack_pt );
+   _treeTrueTracks->SetBranchAddress( "theta" , &_trueTrack_theta );
+   _treeTrueTracks->SetBranchAddress( "nHits" , &_trueTrack_nHits );
+   _treeTrueTracks->SetBranchAddress( "vertexX" , &_trueTrack_vertexX );
+   _treeTrueTracks->SetBranchAddress( "vertexY" , &_trueTrack_vertexY );
+   _treeTrueTracks->SetBranchAddress( "vertexZ" , &_trueTrack_vertexZ );
+   _treeTrueTracks->SetBranchAddress( "evtNr" , &_nEvt );
+   _treeTrueTracks->SetBranchAddress( "chi2prob" , &_trueTrack_chi2prob );
+   _treeTrueTracks->SetBranchAddress( "chi2" , &_trueTrack_chi2 );
+   _treeTrueTracks->SetBranchAddress( "Ndf" , &_trueTrack_Ndf );
+   
+   
+   _treeRecoTracks->SetBranchAddress( "nTrueTracks", &_recoTrack_nTrueTracks );
+   _treeRecoTracks->SetBranchAddress( "pT" , &_recoTrack_pt );
+   _treeRecoTracks->SetBranchAddress( "evtNr" , &_nEvt );
+   _treeRecoTracks->SetBranchAddress( "chi2prob" , &_recoTrack_chi2prob );
+   _treeRecoTracks->SetBranchAddress( "chi2" , &_recoTrack_chi2 );
+   _treeRecoTracks->SetBranchAddress( "Ndf" , &_recoTrack_Ndf );
+   //    _treeRecoTracks->SetBranchAddress( "theta" , &_recoTrack_theta );   
    
 }
 
