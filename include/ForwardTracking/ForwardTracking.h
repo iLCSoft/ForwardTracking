@@ -88,6 +88,9 @@ typedef std::vector< IHit* > RawTrack;
  * @param HNN_Activation_Threshold The activation threshold for the Hopfield Neural Network<br>
  * (default value 0.5)
  * 
+ * @param HNN_TInf The temperature limit of the Hopfield Neural Network<br>
+ * (default value 0.1)
+ * 
  * @param MaxConnectionsAutomaton If the automaton has more connections than this it will be redone with the next cut off values for the criteria.<br>
  * If there are no further new values for the criteria, the event will be skipped.<br>
  * (default value 100000 )
@@ -274,6 +277,7 @@ class ForwardTracking : public Processor {
    // Properties for the Hopfield Neural Network
    double _HNN_Omega;
    double _HNN_ActivationThreshold;
+   double _HNN_TInf;
    
    /** A map to store the hits according to their sectors */
    std::map< int , std::vector< IHit* > > _map_sector_hits;
@@ -378,13 +382,12 @@ public:
 };
 
 /** A functor to return the quality of a track.
- For tracks with 4 hits or more the chi2prob is mapped to* 0.5-1, with x = prob/2 + 0.5.
- Tracks with 3 hits get the chi2 mapped to 0-0.5 by 1/(ln( e^2 + chi2 );
- That gives 0 for an infinite chi2 and 0.5 for a chi2 of 0.
- 
- Reason: now 3-hit-tracks can be compared as well
- */
-class TrackQISpecial{
+ * 
+ * For tracks with 4 hits or more the chi2prob is mapped to* 0.5-1, with p' = p/2 + 0.5.
+ * Tracks with 3 hits get the chi2prob mapped to 0-0.5 by p' = p/2.
+ * This way short 3-hit-tracks rank lower than 4-hit tracks.
+*/
+class TrackQIChi2ProbSpecial{
    
 public:
    
@@ -397,7 +400,7 @@ public:
       }
       else{
          
-         return 1/( log( 7.3890561 + track->getChi2() ) ); //e^2 = 7.3890561
+         return track->getChi2Prob()/2.;
          
       }
       

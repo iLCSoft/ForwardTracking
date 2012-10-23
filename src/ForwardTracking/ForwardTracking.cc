@@ -120,6 +120,11 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               _HNN_ActivationThreshold,
                               double( 0.5 ) );
    
+   registerProcessorParameter("HNN_TInf",
+                              "The temperature limit of the Hopfield Neural Network",
+                              _HNN_TInf,
+                              double( 0.1 ) );
+   
    
    
    // Security checks to prevent combinatorial disasters
@@ -804,8 +809,8 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       std::vector< ITrack* > rejected;
       
       TrackCompatibilityShare1SP comp;
-      TrackQIChi2Prob trackQI;
-      TrackQISpecial trackQISpecial;
+//       TrackQIChi2Prob trackQI;
+      TrackQIChi2ProbSpecial trackQIChi2ProbSpecial;
       
       
       
@@ -816,8 +821,11 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          SubsetHopfieldNN< ITrack* > subset;
          subset.setOmega( _HNN_Omega );
          subset.setActivationThreshold( _HNN_ActivationThreshold );
+         subset.setTInf( _HNN_TInf );
          subset.add( trackCandidates );
-         subset.calculateBestSet( comp, trackQI );
+         
+         
+         subset.calculateBestSet( comp, trackQIChi2ProbSpecial );
          
          tracks = subset.getAccepted();
          rejected = subset.getRejected();
@@ -829,7 +837,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          SubsetSimple< ITrack* > subset;
          subset.add( trackCandidates );
-         subset.calculateBestSet( comp, trackQISpecial );
+         subset.calculateBestSet( comp, trackQIChi2ProbSpecial );
          tracks = subset.getAccepted();
          rejected = subset.getRejected();
          
