@@ -176,6 +176,7 @@ void TrackingFeedbackProcessor::init() {
    _nValidTrueTracks_Sum     = 0;
    _nRecoTracks_Sum          = 0;
    _nDismissedTrueTracks_Sum = 0; 
+   _nClones_Sum               = 0;
    
    
    /**********************************************************************************************/
@@ -278,6 +279,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
    _nValidTrueTracks = 0;          
    _nRecoTracks = 0;          
    _nDismissedTrueTracks = 0; 
+   _nClones = 0;
    
    LCCollection* col = NULL;
    
@@ -472,7 +474,9 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       //check the relations for lost ones and completes
       for( unsigned int i=0; i < _trueTracks.size(); i++){
          
-         if ( _trueTracks[i]->getCuts().empty() ){ // Only count the true tracks, that are not cut away
+         if( _trueTracks[i]->getRecoTracks().size() > 1 ) _nClones += _trueTracks[i]->getRecoTracks().size() -1; //The clones
+         
+         if ( _trueTracks[i]->getCuts().empty() ){ // Only count the true tracks, that are not cut away for losts and completely found ones
             
             if ( _trueTracks[i]->isLost() == true ) _nLost++;
             if ( _trueTracks[i]->isFoundCompletely() ==true ) _nFoundCompletely++;
@@ -523,6 +527,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       _nRecoTracks_Sum          += _nRecoTracks; 
       _nValidTrueTracks_Sum     += _nValidTrueTracks;
       _nDismissedTrueTracks_Sum += _nDismissedTrueTracks;
+      _nClones_Sum              += _nClones;
       
       //The statistics:
       
@@ -531,12 +536,14 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       float efficiency = -1.;
       float pComplete=-1.;
       float pFoundCompletely=-1.;
+      float clonerate=-1;
       
       if (_nValidTrueTracks > 0) pLost = float(_nLost)/float(_nValidTrueTracks);           
       if (_nValidTrueTracks > 0) efficiency = 1. - pLost;
       if (_nRecoTracks > 0) ghostrate = float(_nGhost)/float(_nRecoTracks);             
       if (_nValidTrueTracks > 0) pComplete = float(_nComplete)/float(_nValidTrueTracks);    
       if (_nValidTrueTracks > 0) pFoundCompletely = float(_nFoundCompletely)/float(_nValidTrueTracks);
+      if (_nRecoTracks > 0) clonerate = float(_nClones)/float(_nRecoTracks);
       
       // the data that will get stored
       std::vector< std::pair < std::string , float > > data;
@@ -545,13 +552,15 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       data.push_back( std::make_pair( "ghostrate" , ghostrate ) );  
       data.push_back( std::make_pair( "pLost" , pLost ) );  
       data.push_back( std::make_pair( "pComplete" , pComplete ) );  
-      data.push_back( std::make_pair( "pFoundCompletely" , pFoundCompletely ) );  
+      data.push_back( std::make_pair( "pFoundCompletely" , pFoundCompletely ) ); 
+      data.push_back( std::make_pair( "clonerate" , clonerate ) );
       data.push_back( std::make_pair( "nComplete" , _nComplete ) );  
       data.push_back( std::make_pair( "nCompletePlus" , _nCompletePlus ) );  
       data.push_back( std::make_pair( "nLost" , _nLost ) );  
       data.push_back( std::make_pair( "nIncomplete" , _nIncomplete ) );  
       data.push_back( std::make_pair( "nIncompletePlus" , _nIncompletePlus ) );  
-      data.push_back( std::make_pair( "nGhost" , _nGhost ) );  
+      data.push_back( std::make_pair( "nGhost" , _nGhost ) ); 
+      data.push_back( std::make_pair( "nClones" , _nClones ) );
       data.push_back( std::make_pair( "nFoundCompletely" , _nFoundCompletely ) ); 
       data.push_back( std::make_pair( "nValidTrueTracks" , _nValidTrueTracks ) );
       data.push_back( std::make_pair( "nDismissedTrueTracks" , _nDismissedTrueTracks ) );
@@ -616,11 +625,14 @@ void TrackingFeedbackProcessor::end(){
       
       double efficiency = double( _nValidTrueTracks_Sum - _nLost_Sum ) / double( _nValidTrueTracks_Sum );
       double ghostrate = double( _nGhost_Sum ) / double( _nRecoTracks_Sum );
+      double clonerate = double( _nClones_Sum ) / double( _nRecoTracks_Sum );
+      
       
       
       myfile << "\n";
       myfile << "Efficiency\t" << efficiency << "\t\t";
       myfile << "ghostrate\t"  << ghostrate  << "\t\t";
+      myfile << "clonerate\t"  << clonerate  << "\t\t";
       
       
       

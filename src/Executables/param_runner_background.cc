@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
+#include <cmath>
 
 /**
  * This small executable is there to automically run Marlin with some parameter altered in steps
@@ -14,19 +14,44 @@
 int main(int argc,char *argv[]){
 
    
-   const std::string STEERING_FILE = "/scratch/ilcsoft/MyMarlinSteers/background.xml";
+   const std::string STEERING_FILE = "/scratch/ilcsoft/MyMarlinSteers/daily_reco_background.xml";
    
    std::vector< std::string > filesToWriteParam; //in those files the changed parameter is written
-   filesToWriteParam.push_back( "/scratch/ilcsoft/MyMarlinSteers/Feedback/TrackingFeedbackForwardSum.csv" );
-   filesToWriteParam.push_back( "/scratch/ilcsoft/MyMarlinSteers/Feedback/TrackingFeedbackSiliconSum.csv" );
+   filesToWriteParam.push_back( "/scratch/ilcsoft/MyMarlinSteers/Daily/TrackingFeedbackForwardSum.csv" );
+//    filesToWriteParam.push_back( "/scratch/ilcsoft/MyMarlinSteers/Daily/TrackingFeedbackSiliconSum.csv" );
    
-   const std::string processorName = "MyFTDBackgroundProcessor";
-   const std::string paramName = "DensityRegulator";
-   const double paramMin = 0.;
-   const double paramMax = 1.;
-   const double paramStep = 0.2;
+//    const std::string processorName = "MyFTDBackgroundProcessor";
+//    const std::string paramName = "DensityRegulator";
+//    const double paramMin = 0.;
+//    const double paramMax = 1.52;
+//    const double paramStep = 0.05;
    
-   for( double param = paramMin; param <= paramMax; param+= paramStep ){
+//    for( double param = paramMin; param <= paramMax; param+= paramStep ){
+      
+//    const std::string processorName = "MyForwardTracking";
+//    const std::string paramName = "Chi2ProbCut";
+//    const double paramMin = 0.;
+//    const double paramMax = 1.;
+//    const double paramStep = pow(10.0,-0.1);  
+//    
+//    for( double param = paramMax; param > paramMin; param*= paramStep ){
+      
+      
+   const std::string processorName = "MyForwardTracking";
+   const std::string paramName = "HNN_TInf";
+   const double paramMin = 0.05;
+   const double paramMax = 0.15001;
+   const double paramStep = 0.01;  
+
+   for( double param = paramMin; param <= paramMax; param += paramStep ){
+   
+//    const std::string processorName = "MyTrackSubsetProcessor";
+//    const std::string paramName = "Omega";
+//    const double paramMin = 0.5;
+//    const double paramMax = 1.01;
+//    const double paramStep = 0.05;  
+// 
+//    for( double param = paramMin; param <= paramMax; param += paramStep ){
       
       
       

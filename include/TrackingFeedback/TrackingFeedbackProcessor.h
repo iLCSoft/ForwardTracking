@@ -175,6 +175,8 @@ class TrackingFeedbackProcessor : public Processor {
    unsigned _nRecoTracks;          // the number of reconstructed tracks, that were compared to the true tracks
    unsigned _nDismissedTrueTracks; // number of the true tracks, that haven't been used
    unsigned _nValidTrueTracks;     // number of valid true tracks, i.e. true tracks not failing the cuts
+   unsigned _nClones;              // the number of tracks that are reconstructed although there already is a reconstruction
+                                   // --> The number of clones for a true track is nReco - 1, or 0 if there are no reco tracks
    
    unsigned _nComplete_Sum;            
    unsigned _nCompletePlus_Sum;       
@@ -186,6 +188,7 @@ class TrackingFeedbackProcessor : public Processor {
    unsigned _nRecoTracks_Sum;          
    unsigned _nDismissedTrueTracks_Sum; 
    unsigned _nValidTrueTracks_Sum;
+   unsigned _nClones_Sum;
    
    
    std::vector< TrueTrack* > _trueTracks;
