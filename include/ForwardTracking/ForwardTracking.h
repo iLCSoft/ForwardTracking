@@ -200,7 +200,7 @@ class ForwardTracking : public Processor {
    * @param distMax the maximum distance of two hits. If two hits are on the right petals and their distance is smaller
    * than this, the connection will be saved in the returned map.
    */
-   std::map< IHit* , std::vector< IHit* > > getOverlapConnectionMap( std::map< int , std::vector< IHit* > > & map_sector_hits, 
+   std::map< IHit* , std::vector< IHit* > > getOverlapConnectionMap( const std::map< int , std::vector< IHit* > > & map_sector_hits, 
                                                                      const SectorSystemFTD* secSysFTD,
                                                                      float distMax);
    
@@ -330,6 +330,10 @@ class ForwardTracking : public Processor {
    
    
    MarlinTrk::IMarlinTrkSystem* _trkSystem;
+
+   std::string _trkSystemName ;
+
+  bool _getTrackStateAtCaloFace ;
 
    /** The quality of the output track collection */
    int _output_track_col_quality ; 

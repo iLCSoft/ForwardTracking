@@ -160,7 +160,17 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               _SmoothOn,
                               bool(false));
    
+   registerProcessorParameter( "TrackSystemName",
+			       "Name of the track fitting system to be used (KalTest, DDKalTest, aidaTT, ... )",
+			       _trkSystemName,
+			       std::string("KalTest") );
+
+   registerProcessorParameter("GetTrackStateAtCaloFace",
+                              "Set to false if no track state at the calorimeter is needed",
+                              _getTrackStateAtCaloFace,
+                              bool(true));
   
+
    // The Criteria for the Cellular Automaton:
    
    std::vector< std::string > allCriteria = Criteria::getAllCriteriaNamesVec();
@@ -250,11 +260,14 @@ void ForwardTracking::init() {
    /*       Initialise the MarlinTrkSystem, needed by the tracks for fitting                     */
    /**********************************************************************************************/
 
-   // set upt the geometry
-   _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( "KalTest" , marlin::Global::GEAR , "" ) ;
-
-   if( _trkSystem == 0 ) throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + std::string("KalTest" )  ) ;
-
+  // set up the geometry needed by TrkSystem
+  _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( _trkSystemName , marlin::Global::GEAR , "" ) ;
+  
+  if( _trkSystem == 0 ){
+    
+    throw EVENT::Exception( std::string("  Cannot initialize MarlinTrkSystem of Type: ") + _trkSystemName  ) ;
+    
+  }
    
    // set the options   
    _trkSystem->setOption( MarlinTrk::IMarlinTrkSystem::CFG::useQMS,        _MSOn ) ;       //multiple scattering
@@ -985,7 +998,7 @@ void ForwardTracking::end(){
 
 
 std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMap( 
-            std::map< int , std::vector< IHit* > > & map_sector_hits, 
+            const std::map< int , std::vector< IHit* > > & map_sector_hits, 
             const SectorSystemFTD* secSysFTD,
             float distMax){
    
@@ -994,7 +1007,7 @@ std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMa
 
    
    std::map< IHit* , std::vector< IHit* > > map_hitFront_hitsBack;
-   std::map< int , std::vector< IHit* > >::iterator it;
+   std::map< int , std::vector< IHit* > >::const_iterator it;
    
    //for every sector
    for ( it= map_sector_hits.begin() ; it != map_sector_hits.end(); it++ ){
@@ -1012,8 +1025,17 @@ std::map< IHit* , std::vector< IHit* > > ForwardTracking::getOverlapConnectionMa
       for ( std::set<int>::iterator itTarg = targetSectors.begin(); itTarg!=targetSectors.end(); itTarg++ ){
          
          
-         std::vector< IHit* > hitVecB = map_sector_hits[ *itTarg ];
+        //fg: this blows up the map with empty vectors ! 
+	//	std::vector< IHit* > hitVecB = map_sector_hits[ *itTarg ];
          
+	 std::map< int , std::vector< IHit* > >::const_iterator itB = map_sector_hits.find( *itTarg ) ; 
+
+	 if( itB == map_sector_hits.end() ){
+	   continue ;
+	 }
+	 std::vector< IHit* > hitVecB = itB->second ;
+	 
+
          for ( unsigned j=0; j < hitVecA.size(); j++ ){
             
             
@@ -1284,10 +1306,12 @@ void ForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
    trkStateLastHit->setLocation( TrackState::AtLastHit );
    trackImpl->addTrackState( trkStateLastHit );
    
-   TrackStateImpl* trkStateAtCalo = new TrackStateImpl( *fitter.getTrackState( TrackState::AtCalorimeter ) ) ;
-   trkStateAtCalo->setLocation( TrackState::AtCalorimeter );
-   trackImpl->addTrackState( trkStateAtCalo );
-   
+   if( _getTrackStateAtCaloFace ) {
+     TrackStateImpl* trkStateAtCalo = new TrackStateImpl( *fitter.getTrackState( TrackState::AtCalorimeter ) ) ;
+     trkStateAtCalo->setLocation( TrackState::AtCalorimeter );
+     trackImpl->addTrackState( trkStateAtCalo );
+   }
+
    trackImpl->setChi2( fitter.getChi2( TrackState::AtIP ) );
    trackImpl->setNdf(  fitter.getNdf ( TrackState::AtIP ) );
    
