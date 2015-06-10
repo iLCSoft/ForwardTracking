@@ -377,7 +377,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
       }
       catch(DataNotAvailableException &e) {
          
-         streamlog_out( ERROR ) << "Collection " <<  _FTDHitCollections[iCol] <<  " is not available!\n";     
+         streamlog_out( DEBUG5 ) << "Collection " <<  _FTDHitCollections[iCol] <<  " is not available!\n";     
          continue;
          
       }
@@ -394,7 +394,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
          
          if( trackerHit == NULL ){
             
-            streamlog_out( ERROR ) << "Cast to TrackerHit* was not possible, skipping element " << col->getElementAt(i) << "\n";
+            streamlog_out( DEBUG5 ) << "Cast to TrackerHit* was not possible, skipping element " << col->getElementAt(i) << "\n";
             continue;
             
          }

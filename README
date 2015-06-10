@@ -12,15 +12,22 @@
 
 
 
-
-
-
-
-
-
 Version History
 =============================================================================================================
  
+  ---------
+ | v01-08  |
+  ---------
+   - modified ForwardTracking (F.Gaede): 
+
+     - use a constant map in getOverlapConnectionMap
+       (was filled with uneeded empty hit vectors)
+
+     - added processor parameters:
+       TrackSystemName: KalTest, DDKalTest, ...
+       GetTrackStateAtCaloFace: allow to run w/o Ecal surfaces
+
+     - no change in algorithm
  
   ---------
  | v01-07  |
