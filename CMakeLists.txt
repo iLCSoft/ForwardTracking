@@ -84,6 +84,23 @@ ELSE()
 ENDIF()
 
 
+
+find_package( DD4hep REQUIRED COMPONENTS DDRec)
+set(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH}  ${DD4hep_ROOT}/cmake )
+include( DD4hep )
+
+find_package( ROOT REQUIRED )
+set( ROOT_COMPONENT_LIBRARIES Geom Reflex)
+
+if(DD4HEP_USE_XERCESC)
+  find_package(XercesC)
+endif()
+include(DD4hep_XML_setup)
+INCLUDE_DIRECTORIES( ${DD4hep_INCLUDE_DIRS} )
+LINK_LIBRARIES( ${DD4hep_LIBRARIES} ${DD4hep_COMPONENT_LIBRARIES}  )
+
+
+
 ### DOCUMENTATION ###########################################################
 
 OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF )
