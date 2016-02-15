@@ -16,6 +16,16 @@ Version History
 =============================================================================================================
  
   ---------
+ | v01-09  |
+  ---------
+  Rosa Simoniello
+   - added DDForwardTracking
+   - ATT: Endcap* and Sector* files for CLIC temporary added in this package instead of KiTrack till the pattern
+          recognition for CLIC is stable. DDForwardTracking added. It contains the patter recognition for CLIC in 
+          the endcap vertex+tracker region. It is interfaced with DD4hep.
+
+
+  ---------
  | v01-08  |
   ---------
    - modified ForwardTracking (F.Gaede): 
