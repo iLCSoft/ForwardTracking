@@ -81,7 +81,7 @@ int main(int argc,char *argv[]){
    if( argc >= 4 ) OUTPUT_PATH = argv[3];
    
    
-   ofstream myfile;
+   std::ofstream myfile;
    myfile.open (OUTPUT_PATH.c_str() );
    
    
@@ -200,10 +200,10 @@ int main(int argc,char *argv[]){
    }
    
    steerInfo << "<parameter name=\"Criteria\" type=\"StringVec\">";
-   steerInfo << steerInfob;
+   steerInfo << steerInfob.str() ;
    steerInfo << "</parameter>\n\n";
    
-   std::cout << steerInfo;
+   std::cout << steerInfo.str() ;
    
    delete rootFile;
    

@@ -204,7 +204,7 @@ void TrackingFeedbackProcessor::init() {
    
    
    //Check if file already exists
-   ifstream rf ( _rootFileName.c_str() );
+   std::ifstream rf ( _rootFileName.c_str() );
    bool rootFileAlreadyExists  = rf.good();
    
    std::string mode = "RECREATE";
