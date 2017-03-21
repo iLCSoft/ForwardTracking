@@ -9,7 +9,8 @@
 #include "EVENT/LCCollection.h"
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/TrackerHitPlaneImpl.h"
-#include "UTIL/ILDConf.h"
+#include "UTIL/LCTrackerConf.h"
+#include <UTIL/ILDConf.h>
 #include "marlin/Global.h"
 #include "marlin/ProcessorEventSeeder.h"
 #include "marlin/VerbosityLevels.h"
@@ -199,7 +200,7 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
 
    
    
-   CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( ILDCellID0::encoder_string , colPixel ) ;
+   CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( LCTrackerCellID::encoding_string() , colPixel ) ;
   
    
    /**********************************************************************************************/
@@ -264,11 +265,11 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
             for( unsigned sensor = 1; sensor <= nSensors; sensor++ ){ // over all sensors
                
                
-               cellid_encoder[ ILDCellID0::subdet ] = ILDDetID::FTD  ;
-               cellid_encoder[ ILDCellID0::side   ] = side ;
-               cellid_encoder[ ILDCellID0::layer  ] = layer ;
-               cellid_encoder[ ILDCellID0::module ] = petal ;
-               cellid_encoder[ ILDCellID0::sensor ] = sensor ;
+               cellid_encoder[ LCTrackerCellID::subdet() ] = ILDDetID::FTD  ;
+               cellid_encoder[ LCTrackerCellID::side()   ] = side ;
+               cellid_encoder[ LCTrackerCellID::layer()  ] = layer ;
+               cellid_encoder[ LCTrackerCellID::module() ] = petal ;
+               cellid_encoder[ LCTrackerCellID::sensor() ] = sensor ;
                
                gear::MeasurementSurface const* ms = Global::GEAR->getMeasurementSurfaceStore().GetMeasurementSurface( cellid_encoder.lowWord() );
                

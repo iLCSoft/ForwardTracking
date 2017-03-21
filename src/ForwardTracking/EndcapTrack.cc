@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-#include "UTIL/ILDConf.h"
+#include "UTIL/LCTrackerConf.h"
 
 // Root, for calculating the chi2 probability. 
 #include "Math/ProbFunc.h"
