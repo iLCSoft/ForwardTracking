@@ -1,7 +1,8 @@
 #include "EndcapHit01.h"
 #include "SectorSystemEndcap.h"
 
-#include "UTIL/ILDConf.h"
+#include "UTIL/LCTrackerConf.h"
+#include <UTIL/ILDConf.h>
 
 #include <iostream>
 #include <algorithm>
@@ -29,13 +30,13 @@ EndcapHit01::EndcapHit01( TrackerHit* trackerHit , const SectorSystemEndcap* con
 
    // //find out layer, module, sensor
 
-   // UTIL::BitField64  cellID( ILDCellID0::encoder_string );
+   // UTIL::BitField64  cellID( LCTrackerCellID::encoding_string() );
 
    // //cellID.setValue( trackerHit->getCellID0() );
-   // _layer = cellID[ ILDCellID0::layer ] + 1 ;   // + 1 to take into account the IP (considered as layer 0 ) 
-   // //_layer = cellID[ ILDCellID0::layer ];
+   // _layer = cellID[ LCTrackerCellID::layer() ] + 1 ;   // + 1 to take into account the IP (considered as layer 0 ) 
+   // //_layer = cellID[ LCTrackerCellID::layer() ];
    // int det_id = 0 ;
-   // det_id  = cellID[lcio::ILDCellID0::subdet] ;
+   // det_id  = cellID[lcio::LCTrackerCellID::subdet()] ;
    // if ( det_id == lcio::ILDDetID::SIT) { _layer = _layer + 6; }   // need to find a more elegant way...
 
 
@@ -43,7 +44,7 @@ EndcapHit01::EndcapHit01( TrackerHit* trackerHit , const SectorSystemEndcap* con
    // UTIL::BitField64 cellid_decoder( TRICK ) ;
 
 
-   UTIL::BitField64  cellid_decoder( ILDCellID0::encoder_string );
+   UTIL::BitField64  cellid_decoder( LCTrackerCellID::encoding_string() );
    cellid_decoder.setValue( trackerHit->getCellID0() );
 
    long64 id = trackerHit->getCellID0() ;

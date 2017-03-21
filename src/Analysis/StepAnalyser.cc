@@ -10,7 +10,7 @@
 #include "EVENT/LCRelation.h"
 #include "EVENT/Track.h"
 #include "IMPL/TrackerHitPlaneImpl.h"
-#include "UTIL/ILDConf.h"
+#include "UTIL/LCTrackerConf.h"
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -154,15 +154,15 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
       for( unsigned j = 0; j < trackerHits.size() ; j++ ){ // over all hits (start with the outer ones)
       
          
-         BitField64  cellID( ILDCellID0::encoder_string );
+         BitField64  cellID( LCTrackerCellID::encoding_string() );
          
          cellID.setValue( trackerHits[j]->getCellID0() );
          
-//          int detector = cellID[ ILDCellID0::subdet ];
-//          int side         = cellID[ ILDCellID0::side   ];
-         int layer        = cellID[ ILDCellID0::layer  ];
-         int module   = cellID[ ILDCellID0::module ];
-         int sensor   = cellID[ ILDCellID0::sensor ];
+//          int detector = cellID[ LCTrackerCellID::subdet() ];
+//          int side         = cellID[ LCTrackerCellID::side()   ];
+         int layer        = cellID[ LCTrackerCellID::layer()  ];
+         int module   = cellID[ LCTrackerCellID::module() ];
+         int sensor   = cellID[ LCTrackerCellID::sensor() ];
          
          if (j == 0) lastLayerBeforeIP = layer;
          

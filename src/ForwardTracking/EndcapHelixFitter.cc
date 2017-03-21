@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "EVENT/TrackerHitPlane.h"
+#include "UTIL/LCTrackerConf.h"
 #include "UTIL/ILDConf.h"
 #include "marlin/VerbosityLevels.h"
 #include "MarlinTrk/HelixFit.h"

@@ -7,7 +7,8 @@
 #include "EVENT/LCCollection.h"
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCFlagImpl.h"
-#include "UTIL/ILDConf.h"
+#include "UTIL/LCTrackerConf.h"
+#include <UTIL/ILDConf.h>
 
 #include "marlin/VerbosityLevels.h"
 #include "marlin/Exceptions.h"
@@ -1130,7 +1131,7 @@ std::map< IHit* , std::vector< IHit* > > DDForwardTracking::getOverlapConnection
 
 	 // bool closeBySensors = false;
 	 
-	 // UTIL::BitField64  cellid_decoder( ILDCellID0::encoder_string );
+	 // UTIL::BitField64  cellid_decoder( LCTrackerCellID::encoding_string() );
 	 // cellid_decoder.setValue( hitA->getCellID0() );
 
 	 // int moduleA = cellid_decoder["module"].value(); //ring
@@ -1484,9 +1485,9 @@ void DDForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
    std::vector< TrackerHit* > trackerHits = trackImpl->getTrackerHits();
    for( unsigned j=0; j < trackerHits.size(); j++ ){
       
-      UTIL::BitField64 encoder( ILDCellID0::encoder_string );
+      UTIL::BitField64 encoder( LCTrackerCellID::encoding_string() );
       encoder.setValue( trackerHits[j]->getCellID0() );
-      int subdet =  encoder[lcio::ILDCellID0::subdet];
+      int subdet =  encoder[lcio::LCTrackerCellID::subdet()];
      
       
       ++hitNumbers[ subdet ];

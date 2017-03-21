@@ -5,7 +5,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include "UTIL/ILDConf.h"
+#include "UTIL/LCTrackerConf.h"
 
 #include "Tools/Fitter.h"
 #include "Tools/KiTrackMarlinTools.h"
@@ -17,13 +17,13 @@ std::string RecoTrack::cellIDInfo( TrackerHit* hit ){
    
    std::stringstream info;
    
-   UTIL::BitField64  cellID( ILDCellID0::encoder_string );
+   UTIL::BitField64  cellID( LCTrackerCellID::encoding_string() );
    cellID.setValue( hit->getCellID0() );
-   int subdet = cellID[ UTIL::ILDCellID0::subdet ] ;
-   int side   = cellID[ ILDCellID0::side ];
-   int layer  = cellID[ ILDCellID0::layer ];
-   int module = cellID[ ILDCellID0::module ];
-   int sensor = cellID[ ILDCellID0::sensor ];
+   int subdet = cellID[ UTIL::LCTrackerCellID::subdet() ] ;
+   int side   = cellID[ LCTrackerCellID::side() ];
+   int layer  = cellID[ LCTrackerCellID::layer() ];
+   int module = cellID[ LCTrackerCellID::module() ];
+   int sensor = cellID[ LCTrackerCellID::sensor() ];
    
    info << "subdet " << subdet << ", side " << side << ", layer " << layer << ", module " << module << ", sensor " << sensor;
    
