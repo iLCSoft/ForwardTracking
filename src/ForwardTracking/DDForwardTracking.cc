@@ -15,14 +15,6 @@
 
 #include "MarlinCED.h"
 
-//----From gear------------
-#include "gear/GEAR.h"
-#include "gear/GearParameters.h"
-#include "gear/BField.h"
-#include "gear/FTDParameters.h"
-#include "gear/FTDLayerLayout.h"
-
-
 //----From DD4Hep-----------------------------
 #include "DD4hep/LCDD.h"
 #include "DD4hep/DD4hepUnits.h"

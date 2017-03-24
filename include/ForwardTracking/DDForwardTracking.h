@@ -9,7 +9,6 @@
 #include "EVENT/Track.h"
 #include "IMPL/TrackImpl.h"
 #include "MarlinTrk/IMarlinTrkSystem.h"
-#include "gear/BField.h"
 
 #include "KiTrack/Segment.h"
 #include "KiTrack/ITrack.h"

@@ -9,7 +9,11 @@
 
 #include "marlin/VerbosityLevels.h"
 #include "MarlinCED.h"
-#include "gear/BField.h"
+
+//----From DD4Hep-----------------------------
+#include "DD4hep/LCDD.h"
+#include "DD4hep/DD4hepUnits.h"
+
 
 #include "Tools/Fitter.h"
 #include "Tools/KiTrackMarlinTools.h"
@@ -161,9 +165,11 @@ void TrackingFeedbackProcessor::init() {
    _nEvt = 0 ;
 
 
-   _Bz = Global::GEAR->getBField().at( gear::Vector3D(0., 0., 0.) ).z();    //The B field in z direction
-   
-   
+   DD4hep::Geometry::LCDD& lcdd = DD4hep::Geometry::LCDD::getInstance();
+   double bfieldV[3] ;
+   lcdd.field().magneticField( { 0., 0., 0. }  , bfieldV  ) ;
+   _Bz = bfieldV[2]/dd4hep::tesla ; //The B field in z direction
+
    if ( _drawMCPTracks ) MarlinCED::init(this) ;
 
    _nComplete_Sum            = 0;

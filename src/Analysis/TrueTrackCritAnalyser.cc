@@ -8,8 +8,11 @@
 #include "EVENT/Track.h"
 #include "marlin/VerbosityLevels.h"
 #include "marlin/Global.h"
-#include "gear/FTDParameters.h"
-#include "gear/FTDLayerLayout.h"
+
+//----From DD4Hep-----------------------------
+#include "DD4hep/LCDD.h"
+#include "DD4hep/DD4hepUnits.h"
+#include "DDRec/DetectorData.h"
 
 #include "Math/ProbFunc.h"
 
@@ -116,20 +119,23 @@ void TrueTrackCritAnalyser::init() {
    // usually a good idea to
    printParameters() ;
    
-   
-   const gear::FTDParameters& ftdParams = Global::GEAR->getFTDParameters() ;
-   const gear::FTDLayerLayout& ftdLayers = ftdParams.getFTDLayerLayout() ;
-   int nLayers = ftdLayers.getNLayers() + 1;
-   int nModules = ftdLayers.getNPetals(0);
-   int nSensors = ftdLayers.getNSensors(0);
-   
-   for( int i=1; i<nLayers; i++){
-      
-      if( ftdLayers.getNPetals(i) > nModules ) nModules = ftdLayers.getNPetals(i); 
-      if( ftdLayers.getNSensors(i) > nSensors ) nSensors = ftdLayers.getNSensors(i);
-      
+   DD4hep::Geometry::LCDD& lcdd = DD4hep::Geometry::LCDD::getInstance();
+   DD4hep::Geometry::DetElement ftdDE = lcdd.detector("FTD") ;
+   DD4hep::DDRec::ZDiskPetalsData* ftd = ftdDE.extension<DD4hep::DDRec::ZDiskPetalsData>() ;
+
+   int nLayers = ftd->layers.size() + 1; // we add one layer for the IP
+
+   int nModules(0),nSensors(0) ;
+
+   // make sure we take the highest number of modules / sensors available
+   for(unsigned i=0,n=ftd->layers.size() ; i<n; ++i){
+     
+     const DD4hep::DDRec::ZDiskPetalsData::LayerLayout& l = ftd->layers[i] ;
+
+     if( l.petalNumber > nModules ) nModules = l.petalNumber ;
+     if( l.sensorsPerPetal > nSensors ) nSensors = l.sensorsPerPetal ;
    }
-   
+  
    _sectorSystemFTD = new SectorSystemFTD( nLayers, nModules , nSensors );
    
    
