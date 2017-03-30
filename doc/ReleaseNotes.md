@@ -1,3 +1,19 @@
+# v01-11
+- moved code to GitHub
+
+Oleksandr Viazlo 2017-03-21 
+  - Replace ILDCellID0 with LCTrackerCellID
+
+Marko Petric 2017-03-23 
+  - Add install statement to CI
+  - Add CONTRIBUTING.md and PULL_REQUEST_TEMPLATE and fix test script
+
+Frank Gaede 2017-03-21 
+  - add AUTHORS file
+
+Marko Petric 2017-03-20 
+  - fix markdown
+  - Enable CI and add LICENCE
 
 # v01-10
 F.Gaede
