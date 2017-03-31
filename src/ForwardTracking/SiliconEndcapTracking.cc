@@ -349,7 +349,7 @@ void SiliconEndcapTracking::init() {
 }
 
 
-void SiliconEndcapTracking::processRunHeader( LCRunHeader* run) {
+void SiliconEndcapTracking::processRunHeader( LCRunHeader* ) {
 
    _nRun++ ;
 } 
@@ -1056,7 +1056,7 @@ void SiliconEndcapTracking::processEvent( LCEvent * evt ) {
 
 
 
-void SiliconEndcapTracking::check( LCEvent * evt ) {}
+void SiliconEndcapTracking::check( LCEvent* ) {}
 
 
 void SiliconEndcapTracking::end(){
@@ -1087,7 +1087,7 @@ void SiliconEndcapTracking::end(){
 
 std::map< IHit* , std::vector< IHit* > > SiliconEndcapTracking::getOverlapConnectionMap(
             const std::map< int , std::vector< IHit* > > & map_sector_hits, 
-            const SectorSystemEndcap* secSysEndcap,
+            const SectorSystemEndcap*,
             float distMax){
    
    
@@ -1102,7 +1102,7 @@ std::map< IHit* , std::vector< IHit* > > SiliconEndcapTracking::getOverlapConnec
    for ( it= map_sector_hits.begin() ; it != map_sector_hits.end(); it++ ){
            
      std::vector< IHit* > hitVecA = it->second;
-     int sector = it->first;
+     //int sector = it->first;
 
      for ( unsigned j=0; j < hitVecA.size(); j++ ){
        for ( unsigned k=j+1; k < hitVecA.size(); k++ ){
@@ -1261,7 +1261,7 @@ std::string SiliconEndcapTracking::getInfo_map_sector_hits(){
 }
 
 
-std::vector < RawTrack > SiliconEndcapTracking::getRawTracksPlusOverlappingHits( RawTrack rawTrack , std::map< IHit* , std::vector< IHit* > >& map_hitFront_hitsBack ){
+std::vector < RawTrack > SiliconEndcapTracking::getRawTracksPlusOverlappingHits( RawTrack rawTrack , std::map< IHit* , std::vector< IHit* > >& /*map_hitFront_hitsBack*/ ){
    
    
    
