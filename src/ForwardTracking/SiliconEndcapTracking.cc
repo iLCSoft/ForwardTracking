@@ -1,4 +1,4 @@
-#include "DDForwardTracking.h"
+#include "SiliconEndcapTracking.h"
 
 #include <algorithm>
 
@@ -49,17 +49,17 @@ using namespace marlin ;
 using namespace MarlinTrk ;
 
 // Used to fedine the quality of the track output collection
-const int DDForwardTracking::_output_track_col_quality_GOOD = 1;
-const int DDForwardTracking::_output_track_col_quality_FAIR = 2;
-const int DDForwardTracking::_output_track_col_quality_POOR = 3;
+const int SiliconEndcapTracking::_output_track_col_quality_GOOD = 1;
+const int SiliconEndcapTracking::_output_track_col_quality_FAIR = 2;
+const int SiliconEndcapTracking::_output_track_col_quality_POOR = 3;
 
 
-DDForwardTracking aDDForwardTracking ;
+SiliconEndcapTracking aSiliconEndcapTracking ;
 
 
-DDForwardTracking::DDForwardTracking() : Processor("DDForwardTracking") {
+SiliconEndcapTracking::SiliconEndcapTracking() : Processor("SiliconEndcapTracking") {
 
-   _description = "DDForwardTracking reconstructs tracks through the FTD" ;
+   _description = "SiliconEndcapTracking reconstructs tracks through the FTD" ;
 
 
 
@@ -243,7 +243,7 @@ DDForwardTracking::DDForwardTracking() : Processor("DDForwardTracking") {
 
 
 
-void DDForwardTracking::init() { 
+void SiliconEndcapTracking::init() {
 
    streamlog_out( DEBUG3 ) << "   init called  " << std::endl ;
 
@@ -349,20 +349,20 @@ void DDForwardTracking::init() {
 }
 
 
-void DDForwardTracking::processRunHeader( LCRunHeader* run) { 
+void SiliconEndcapTracking::processRunHeader( LCRunHeader* run) {
 
    _nRun++ ;
 } 
 
 
 
-void DDForwardTracking::processEvent( LCEvent * evt ) { 
+void SiliconEndcapTracking::processEvent( LCEvent * evt ) {
 
    streamlog_out( DEBUG4 ) << "processing event number " << _nEvt << "\n";
    
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    //                                                                                                              //
-   //                                 DDForwardTracking                                                              //
+   //                                 SiliconEndcapTracking                                                        //
    //                                                                                                              //
    //                            Track Reconstruction in the FTD                                                   //
    //                                                                                                              //
@@ -988,7 +988,7 @@ void DDForwardTracking::processEvent( LCEvent * evt ) {
             }
             catch( FitterException e ){
                
-               streamlog_out( DEBUG4 ) << "DDForwardTracking: track couldn't be finalized due to fitter error: " << e.what() << "\n";
+               streamlog_out( DEBUG4 ) << "SiliconEndcapTracking: track couldn't be finalized due to fitter error: " << e.what() << "\n";
                delete trackImpl;
             }
             
@@ -1056,10 +1056,10 @@ void DDForwardTracking::processEvent( LCEvent * evt ) {
 
 
 
-void DDForwardTracking::check( LCEvent * evt ) {}
+void SiliconEndcapTracking::check( LCEvent * evt ) {}
 
 
-void DDForwardTracking::end(){
+void SiliconEndcapTracking::end(){
    
  
    for ( unsigned i=0; i< _crit2Vec.size(); i++) delete _crit2Vec[i];
@@ -1085,7 +1085,7 @@ void DDForwardTracking::end(){
 
 
 
-std::map< IHit* , std::vector< IHit* > > DDForwardTracking::getOverlapConnectionMap( 
+std::map< IHit* , std::vector< IHit* > > SiliconEndcapTracking::getOverlapConnectionMap(
             const std::map< int , std::vector< IHit* > > & map_sector_hits, 
             const SectorSystemEndcap* secSysEndcap,
             float distMax){
@@ -1229,7 +1229,7 @@ std::map< IHit* , std::vector< IHit* > > DDForwardTracking::getOverlapConnection
 }
 
 
-std::string DDForwardTracking::getInfo_map_sector_hits(){
+std::string SiliconEndcapTracking::getInfo_map_sector_hits(){
    
    
    std::stringstream s;
@@ -1261,7 +1261,7 @@ std::string DDForwardTracking::getInfo_map_sector_hits(){
 }
 
 
-std::vector < RawTrack > DDForwardTracking::getRawTracksPlusOverlappingHits( RawTrack rawTrack , std::map< IHit* , std::vector< IHit* > >& map_hitFront_hitsBack ){
+std::vector < RawTrack > SiliconEndcapTracking::getRawTracksPlusOverlappingHits( RawTrack rawTrack , std::map< IHit* , std::vector< IHit* > >& map_hitFront_hitsBack ){
    
    
    
@@ -1356,7 +1356,7 @@ std::vector < RawTrack > DDForwardTracking::getRawTracksPlusOverlappingHits( Raw
 }
 
 
-bool DDForwardTracking::setCriteria( unsigned round ){
+bool SiliconEndcapTracking::setCriteria( unsigned round ){
  
    // delete the old ones
    for ( unsigned i=0; i< _crit2Vec.size(); i++) delete _crit2Vec[i];
@@ -1433,7 +1433,7 @@ bool DDForwardTracking::setCriteria( unsigned round ){
 }
 
 
-void DDForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
+void SiliconEndcapTracking::finaliseTrack( TrackImpl* trackImpl ){
    
    
    Fitter fitter( trackImpl , _trkSystem );
@@ -1508,7 +1508,7 @@ void DDForwardTracking::finaliseTrack( TrackImpl* trackImpl ){
 
 
 
-void DDForwardTracking::getCellID0AndPositionInfo(LCCollection*& col ){
+void SiliconEndcapTracking::getCellID0AndPositionInfo(LCCollection*& col ){
 
 
   std::string cellIDEcoding = col->getParameters().getStringVal("CellIDEncoding") ;  
@@ -1559,7 +1559,7 @@ void DDForwardTracking::getCellID0AndPositionInfo(LCCollection*& col ){
 
 
 
-EndcapHitSimple* DDForwardTracking::createVirtualIPHit( const SectorSystemEndcap* sectorSystemEndcap ){
+EndcapHitSimple* SiliconEndcapTracking::createVirtualIPHit( const SectorSystemEndcap* sectorSystemEndcap ){
    
    int layer = 0 ;
    int phi = 0 ;

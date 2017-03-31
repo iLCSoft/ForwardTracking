@@ -1,5 +1,5 @@
-#ifndef DDForwardTracking_h
-#define DDForwardTracking_h 1
+#ifndef SiliconEndcapTracking_h
+#define SiliconEndcapTracking_h 1
 
 #include <string>
 
@@ -106,14 +106,14 @@ typedef std::vector< IHit* > RawTrack;
  * @author Robin Glattauer HEPHY, Wien
  *
  */
-class DDForwardTracking : public Processor {
+class SiliconEndcapTracking : public Processor {
   
  public:
   
-  virtual Processor*  newProcessor() { return new DDForwardTracking ; }
+  virtual Processor*  newProcessor() { return new SiliconEndcapTracking ; }
   
   
-  DDForwardTracking() ;
+  SiliconEndcapTracking() ;
   
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
