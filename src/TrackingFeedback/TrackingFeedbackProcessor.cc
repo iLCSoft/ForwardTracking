@@ -251,7 +251,7 @@ void TrackingFeedbackProcessor::init() {
 }
 
 
-void TrackingFeedbackProcessor::processRunHeader( LCRunHeader* run) { 
+void TrackingFeedbackProcessor::processRunHeader( LCRunHeader* ) { 
 
    _nRun++;
    
@@ -613,7 +613,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void TrackingFeedbackProcessor::check( LCEvent * evt ) { 
+void TrackingFeedbackProcessor::check( LCEvent * ) { 
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

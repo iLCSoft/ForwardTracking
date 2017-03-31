@@ -11,7 +11,7 @@
  * and add the information of the changes to a file
  */
 
-int main(int argc,char *argv[]){
+int main(int ,char **){
 
    
    const std::string STEERING_FILE = "/scratch/ilcsoft/MyMarlinSteers/daily_reco_background.xml";

@@ -112,7 +112,7 @@ void StepAnalyser::init() {
 }
 
 
-void StepAnalyser::processRunHeader( LCRunHeader* run) { 
+void StepAnalyser::processRunHeader( LCRunHeader* ) { 
    
    _nRun++ ;
 } 
@@ -171,13 +171,13 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
             std::map < std::string , float > rootData;
             rootData["LayerA"] = prevLayer;
             rootData["LayerB"] = layer;
-            rootData[ "LayerDist" ] = fabs( layer - prevLayer );
+            rootData[ "LayerDist" ] = std::abs( layer - prevLayer );
             rootData["ModuleA"] = prevModule;
             rootData["ModuleB"] = module;
-            rootData[ "ModuleDist" ] = fabs( module - prevModule );
+            rootData[ "ModuleDist" ] = std::abs( module - prevModule );
             rootData["SensorA"] = prevSensor;
             rootData["SensorB"] = sensor;
-            rootData[ "SensorDist" ] = fabs( sensor - prevSensor );
+            rootData[ "SensorDist" ] = std::abs( sensor - prevSensor );
             rootData["pt"] = pt;
             rootDataVec2.push_back( rootData );
          }
@@ -227,7 +227,7 @@ void StepAnalyser::processEvent( LCEvent * evt ) {
 
 
 
-void StepAnalyser::check( LCEvent * evt ) { 
+void StepAnalyser::check( LCEvent* ) { 
    // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

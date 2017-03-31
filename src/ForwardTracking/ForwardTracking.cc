@@ -315,7 +315,7 @@ void ForwardTracking::init() {
 }
 
 
-void ForwardTracking::processRunHeader( LCRunHeader* run) { 
+void ForwardTracking::processRunHeader( LCRunHeader* ) { 
 
    _nRun++ ;
 } 
@@ -975,7 +975,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
 
 
 
-void ForwardTracking::check( LCEvent * evt ) {}
+void ForwardTracking::check( LCEvent * ) {}
 
 
 void ForwardTracking::end(){

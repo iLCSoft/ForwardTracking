@@ -143,9 +143,8 @@ void TrueTrackCritAnalyser::init() {
    _nEvt = 0 ;
    
    std::set< std::string > critNames = Criteria::getAllCriteriaNames();
-   std::set< std::string >::iterator it;
    
-   for( it = critNames.begin(); it!= critNames.end(); it++ ){
+   for( std::set< std::string >::iterator it = critNames.begin(); it!= critNames.end(); it++ ){
       
       ICriterion* crit = Criteria::createCriterion( (*it) );
       
@@ -358,7 +357,7 @@ void TrueTrackCritAnalyser::init() {
 }
 
 
-void TrueTrackCritAnalyser::processRunHeader( LCRunHeader* run) { 
+void TrueTrackCritAnalyser::processRunHeader( LCRunHeader* ) { 
    
    _nRun++ ;
 } 
@@ -760,13 +759,13 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
          /*                Clean up                                                                    */
          /**********************************************************************************************/
          
-         for (unsigned i=0; i<segments1.size(); i++) delete segments1[i];
+         for (unsigned j=0; j<segments1.size(); j++) delete segments1[j];
          segments1.clear();
-         for (unsigned i=0; i<segments2.size(); i++) delete segments2[i];
+         for (unsigned j=0; j<segments2.size(); j++) delete segments2[j];
          segments2.clear();
-         for (unsigned i=0; i<segments3.size(); i++) delete segments3[i];
+         for (unsigned j=0; j<segments3.size(); j++) delete segments3[j];
          segments3.clear();
-         for (unsigned i=0; i<hits.size(); i++) delete hits[i];
+         for (unsigned j=0; j<hits.size(); j++) delete hits[j];
          hits.clear();
          
          
@@ -802,7 +801,7 @@ void TrueTrackCritAnalyser::processEvent( LCEvent * evt ) {
 
 
 
-void TrueTrackCritAnalyser::check( LCEvent * evt ) { 
+void TrueTrackCritAnalyser::check( LCEvent * ) { 
    // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

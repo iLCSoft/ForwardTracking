@@ -135,7 +135,7 @@ void FTDBackgroundProcessor::init() {
 }
 
 
-void FTDBackgroundProcessor::processRunHeader( LCRunHeader* run) { 
+void FTDBackgroundProcessor::processRunHeader( LCRunHeader* ) { 
   _nRun++ ;
 } 
 
@@ -425,7 +425,7 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void FTDBackgroundProcessor::check( LCEvent * evt ) { 
+void FTDBackgroundProcessor::check( LCEvent * ) { 
   // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

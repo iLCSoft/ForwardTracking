@@ -64,7 +64,7 @@ void TrackPickProcessor::init() {
 }
 
 
-void TrackPickProcessor::processRunHeader( LCRunHeader* run) { 
+void TrackPickProcessor::processRunHeader( LCRunHeader* ) { 
 
     _nRun++ ;
 } 
@@ -145,7 +145,7 @@ void TrackPickProcessor::processEvent( LCEvent * evt ) {
 
 
 
-void TrackPickProcessor::check( LCEvent * evt ) { 
+void TrackPickProcessor::check( LCEvent * ) { 
     // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 
