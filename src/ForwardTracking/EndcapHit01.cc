@@ -77,7 +77,6 @@ EndcapHit01::EndcapHit01( TrackerHit* trackerHit , const SectorSystemEndcap* con
       
    double _cosTheta = (pos[2]/radius);
    double _phi = atan2(pos[1],pos[0]);
-   double _theta = acos( _cosTheta ) ;
       
    if (_phi < 0.) _phi = _phi + 2*M_PI;   
 

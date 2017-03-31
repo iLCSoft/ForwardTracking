@@ -80,7 +80,7 @@ int SectorSystemEndcap::getSector( int layer , int phi , int theta ) const throw
   
   //std::cout << "getting sector : layer " << layer << " phi " << phi << " theta " << theta << std::endl ;
 
-  if ( layer >= _nLayers ){
+  if ( layer >= int(_nLayers) ){
     
     std::stringstream s; 
     s << "Layer " << layer << " is too big, the outermost layer is layer " << _nLayers - 1 ;
@@ -89,7 +89,7 @@ int SectorSystemEndcap::getSector( int layer , int phi , int theta ) const throw
   }
 
   
-  if ( phi >= _nDivisionsInPhi ){
+  if ( phi >= int(_nDivisionsInPhi) ){
     
     std::stringstream s; 
     s << "Phi " << phi << " is too big, the highest phi division is " << _nDivisionsInPhi ;
@@ -99,7 +99,7 @@ int SectorSystemEndcap::getSector( int layer , int phi , int theta ) const throw
 
 
   
-  if ( theta >= _nDivisionsInTheta ){
+  if ( theta >= int(_nDivisionsInTheta) ){
     
     std::stringstream s;
     s << "Theta " << theta << " is too big, the highest theta division is " << _nDivisionsInTheta ;
@@ -126,7 +126,7 @@ int SectorSystemEndcap::getSector( int layer , double phi , double cosTheta ) co
 
   //std::cout << "getting sector : layer " << layer << " phi " << iPhi << " theta " << iTheta << std::endl ;
 
-  if ( layer >= _nLayers ){
+  if ( layer >= int(_nLayers) ){
     
     std::stringstream s; 
     s << "Layer " << layer << " is too big, the outermost layer is layer " << _nLayers - 1 ;
@@ -135,7 +135,7 @@ int SectorSystemEndcap::getSector( int layer , double phi , double cosTheta ) co
   }
 
   
-  if ( iPhi >= _nDivisionsInPhi ){
+  if ( iPhi >= int(_nDivisionsInPhi) ){
     
     std::stringstream s; 
     s << "Phi " << iPhi << " is too big, the highest phi division is " << _nDivisionsInPhi ;
@@ -145,7 +145,7 @@ int SectorSystemEndcap::getSector( int layer , double phi , double cosTheta ) co
 
 
   
-  if ( iTheta >= _nDivisionsInTheta ){
+  if ( iTheta >= int(_nDivisionsInTheta) ){
     
     std::stringstream s;
     s << "Theta " << iTheta << " is too big, the highest theta division is " << _nDivisionsInTheta ;

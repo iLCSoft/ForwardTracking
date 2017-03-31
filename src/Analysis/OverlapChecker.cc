@@ -59,7 +59,7 @@ void OverlapChecker::init() {
 }
 
 
-void OverlapChecker::processRunHeader( LCRunHeader* run) { 
+void OverlapChecker::processRunHeader( LCRunHeader* ) { 
    
    _nRun++ ;
 } 
@@ -155,7 +155,7 @@ void OverlapChecker::processEvent( LCEvent * evt ) {
 
 
 
-void OverlapChecker::check( LCEvent * evt ) { 
+void OverlapChecker::check( LCEvent * ) { 
    // nothing to check here - could be used to fill checkplots in reconstruction processor
 }
 

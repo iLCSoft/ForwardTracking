@@ -41,7 +41,7 @@ std::set< int > EndcapSectorConnector::getTargetSectors ( int sector ){
    int iTheta_Up  = iTheta + 1; 
    int iTheta_Low = iTheta - 1;
    if (iTheta_Low < 0) iTheta_Low = 0;
-   if (iTheta_Up  >= _nDivisionsInTheta) iTheta_Up = _nDivisionsInTheta-1;
+   if (iTheta_Up  >= int(_nDivisionsInTheta)) iTheta_Up = _nDivisionsInTheta-1;
    
    //*************************************************************************************
 
@@ -49,7 +49,7 @@ std::set< int > EndcapSectorConnector::getTargetSectors ( int sector ){
    for( unsigned layerStep = 1; layerStep <= _layerStepMax; layerStep++ ){
      
      //streamlog_out(DEBUG3) << " EndcapSectorConnector: layer " << layer << std::endl ;
-    if ( layer >= layerStep ){ // +1 makes sense if I use IP as innermost layer
+     if ( layer >= int(layerStep) ){ // +1 makes sense if I use IP as innermost layer
        
        unsigned layerTarget = layer - layerStep;
 
@@ -57,17 +57,15 @@ std::set< int > EndcapSectorConnector::getTargetSectors ( int sector ){
 
        //if (layerTarget >= 0 && layerTarget < 7 ){   // just a test to run cellular automaton over the whole VXD - SIT
 	 
-	 for (int iPhi = iPhi_Low ; iPhi <= iPhi_Up ; iPhi++){
+	 for (int ip = iPhi_Low ; ip <= iPhi_Up ; ip++){
 
-	   int ip = iPhi;
-	   
 	   // catch wrap-around
 	   if (ip < 0) ip = _nDivisionsInPhi-1;          
-	   if (ip >= _nDivisionsInPhi) ip = ip - _nDivisionsInPhi;
+	   if (ip >= int(_nDivisionsInPhi)) ip = ip - _nDivisionsInPhi;
 	   
-	   for (int iTheta = iTheta_Low ; iTheta <= iTheta_Up ; iTheta++){
+	   for (int iT = iTheta_Low ; iT <= iTheta_Up ; iT++){
 	     
-	     targetSectors.insert( _sectorSystemEndcap->getSector ( layerTarget , ip , iTheta ) ); 
+	     targetSectors.insert( _sectorSystemEndcap->getSector ( layerTarget , ip , iT ) ); 
 	     
 	   }
 	 }
@@ -76,15 +74,11 @@ std::set< int > EndcapSectorConnector::getTargetSectors ( int sector ){
    }
    
 
-   if ( layer > 0 && ( layer <= _lastLayerToIP ) ){
-      
-     unsigned layerTarget = 0;
+   if ( layer > 0 && ( layer <= int(_lastLayerToIP) ) ){
       
      for (int ip = iPhi_Low ; ip <= iPhi_Up ; ip++){
        
-       for (int iTheta = iTheta_Low ; iTheta <= iTheta_Up ; iTheta++){
-	 
-	 //streamlog_out(DEBUG3) << " EndcapSectorConnector: from layer " << layer << " to layer " << layerTarget << std::endl ;
+       for (int iT = iTheta_Low ; iT <= iTheta_Up ; iT++){
 	 
 	 targetSectors.insert( 0 ) ;
        }

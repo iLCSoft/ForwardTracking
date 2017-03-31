@@ -18,7 +18,7 @@ static ILCTest ilctest = ILCTest( "simple_circle" , std::cout );
 
 //=============================================================================
 
-int main(int argc, char** argv ){
+int main(int , char** ){
     
     try{
     
