@@ -18,6 +18,7 @@
 #include "SectorSystemEndcap.h"
 #include "EndcapHitSimple.h"
 
+
 using namespace lcio ;
 using namespace marlin ;
 using namespace KiTrack;
@@ -114,7 +115,9 @@ class SiliconEndcapTracking : public Processor {
   
   
   SiliconEndcapTracking() ;
-  
+  SiliconEndcapTracking(const SiliconEndcapTracking&) = delete;
+  SiliconEndcapTracking& operator=(const SiliconEndcapTracking&) = delete;
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -260,104 +263,104 @@ class SiliconEndcapTracking : public Processor {
    
    
    /** Input collection names */
-   std::vector<std::string> _FTDHitCollections;
+   std::vector<std::string> _FTDHitCollections{};
    
    /** Output collection name */
-   std::string _ForwardTrackCollection;
+   std::string _ForwardTrackCollection{};
 
 
-   int _nDivisionsInPhi;
-   int _nDivisionsInTheta;
+   int _nDivisionsInPhi=0;
+   int _nDivisionsInTheta=0;
    /* double _dPhi; */
    /* double _dTheta; */
 
 
-   int _nRun ;
-   int _nEvt ;
+   int _nRun=-1;
+   int _nEvt=-1;
 
    /** B field in z direction */
-   double _Bz;
+   double _Bz=0;
 
    /** Cut for the Kalman Fit (the chi squared probability) */
-   double _chi2ProbCut; 
+   double _chi2ProbCut=0;
    
    /** Cut for the Helix fit ( chi squared / degrees of freedom ) */
-   double _helixFitMax; 
+   double _helixFitMax=0;
 
    // Properties of the Kalman Fit
-   bool _MSOn ;
-   bool _ElossOn ;
-   bool _SmoothOn ;
+   bool _MSOn = false;
+   bool _ElossOn = false ;
+   bool _SmoothOn = false ;
    
    /** If this number of hits in a sector is surpassed for any sector, the hits in the sector will be dropped
     * and the quality of the output track collection will be set to poor */
-   int _maxHitsPerSector;
+   int _maxHitsPerSector=0;
    
    
    // Properties for the Hopfield Neural Network
-   double _HNN_Omega;
-   double _HNN_ActivationThreshold;
-   double _HNN_TInf;
+   double _HNN_Omega=0.0;
+   double _HNN_ActivationThreshold=0.0;
+   double _HNN_TInf=0.0;
    
    /** A map to store the hits according to their sectors */
-   std::map< int , std::vector< IHit* > > _map_sector_hits;
+   std::map< int , std::vector< IHit* > > _map_sector_hits{};
    
    /** Names of the used criteria */
-   std::vector< std::string > _criteriaNames;
+   std::vector< std::string > _criteriaNames{};
    
    /** Map containing the name of a criterion and a vector of the minimum cut offs for it */
-   std::map< std::string , std::vector<float> > _critMinima;
+   std::map< std::string , std::vector<float> > _critMinima{};
    
    /** Map containing the name of a criterion and a vector of the maximum cut offs for it */
-   std::map< std::string , std::vector<float> > _critMaxima;
+   std::map< std::string , std::vector<float> > _critMaxima{};
    
    /** Minimum number of hits a track has to have in order to be stored */
-   int _hitsPerTrackMin;
+   int _hitsPerTrackMin{};
    
    /** A vector of criteria for 2 hits (2 1-hit segments) */
-   std::vector <ICriterion*> _crit2Vec;
+   std::vector <ICriterion*> _crit2Vec{};
    
    /** A vector of criteria for 3 hits (2 2-hit segments) */
-   std::vector <ICriterion*> _crit3Vec;
+   std::vector <ICriterion*> _crit3Vec{};
    
    /** A vector of criteria for 4 hits (2 3-hit segments) */
-   std::vector <ICriterion*> _crit4Vec;
+  std::vector <ICriterion*> _crit4Vec{};
    
    
    // const SectorSystemFTD* _sectorSystemFTD;
-   const SectorSystemEndcap* _sectorSystemEndcap;
+   const SectorSystemEndcap* _sectorSystemEndcap=NULL;
    
    
-   bool _useCED;
+   bool _useCED=false;
    
    /** the maximum distance of two hits from overlapping petals to be considered as possible part of one track */
-   double _overlappingHitsDistMax;
+   double _overlappingHitsDistMax=0.0;
    
    /** true = when adding hits from overlapping petals, store only the best track; <br>
     * false = store all tracksS
     */
-   bool _takeBestVersionOfTrack;
+   bool _takeBestVersionOfTrack=0.0;
    
    /** the maximum number of connections that are allowed in the automaton, if this value is surpassed, rerun
     * the automaton with tighter cuts or stop it entirely. */
-   int _maxConnectionsAutomaton;
+   int _maxConnectionsAutomaton=0.0;
    
    /** The method used to find the best subset of tracks */
-   std::string _bestSubsetFinder;
+   std::string _bestSubsetFinder{};
    
-   unsigned _nTrackCandidates;
-   unsigned _nTrackCandidatesPlus;
+   unsigned _nTrackCandidates=0;
+   unsigned _nTrackCandidatesPlus=0;
 
    
    
-   MarlinTrk::IMarlinTrkSystem* _trkSystem;
+   MarlinTrk::IMarlinTrkSystem* _trkSystem=NULL;
 
-   std::string _trkSystemName ;
+   std::string _trkSystemName{};
 
-  bool _getTrackStateAtCaloFace ;
+   bool _getTrackStateAtCaloFace=false;
 
    /** The quality of the output track collection */
-   int _output_track_col_quality ; 
+   int _output_track_col_quality=0;
   
    static const int _output_track_col_quality_GOOD;
    static const int _output_track_col_quality_FAIR;
