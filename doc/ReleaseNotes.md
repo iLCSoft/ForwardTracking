@@ -1,4 +1,23 @@
 # v01-11
+
+* 2017-03-31 Frank Gaede ([PR#5](https://github.com/iLCSoft/ForwardTracking/pull/5))
+  - fix all warnings on clang, MacOS 
+      - does not include -WeffC++
+
+* 2017-03-31 Andre Sailer ([PR#4](https://github.com/iLCSoft/ForwardTracking/pull/4))
+  - Rename DDForwardTracking to SiliconEndcapTracking, solves #3 
+  - SiliconEndcapTracking: fix warnings
+  - Ignore warnings from external headers
+
+* 2017-03-31 Frank Gaede ([PR#2](https://github.com/iLCSoft/ForwardTracking/pull/2))
+  - replace Gear with DD4hep/DDRec
+      - using DD4hep::DDRec::ZDiskPetalsData as replacement for
+         gear::FTDParameters
+      - use DDSurfaces::Surface and DDRec::SurfaceManager as
+         replacement for gear::MeasurementSurfaceStore
+      - changed indentation for FTDBackgroundProcessor.cc
+
+# v01-11
 - moved code to GitHub
 
 Oleksandr Viazlo 2017-03-21 
