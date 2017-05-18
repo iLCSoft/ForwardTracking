@@ -160,9 +160,9 @@ ForwardTracking::ForwardTracking() : Processor("ForwardTracking") {
                               bool(false));
    
    registerProcessorParameter( "TrackSystemName",
-			       "Name of the track fitting system to be used (KalTest, DDKalTest, aidaTT, ... )",
+			       "Name of the track fitting system to be used ( DDKalTest, aidaTT, ... )",
 			       _trkSystemName,
-			       std::string("KalTest") );
+			       std::string("DDKalTest") );
 
    registerProcessorParameter("GetTrackStateAtCaloFace",
                               "Set to false if no track state at the calorimeter is needed",
@@ -265,7 +265,7 @@ void ForwardTracking::init() {
    /**********************************************************************************************/
 
   // set up the geometry needed by TrkSystem
-  _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( _trkSystemName , marlin::Global::GEAR , "" ) ;
+  _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( _trkSystemName , 0 , "" ) ;
   
   if( _trkSystem == 0 ){
     

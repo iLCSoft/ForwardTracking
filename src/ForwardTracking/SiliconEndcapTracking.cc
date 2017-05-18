@@ -192,7 +192,7 @@ SiliconEndcapTracking::SiliconEndcapTracking() : Processor("SiliconEndcapTrackin
                               bool(false));
    
    registerProcessorParameter( "TrackSystemName",
-			       "Name of the track fitting system to be used (KalTest, DDKalTest, aidaTT, ... )",
+			       "Name of the track fitting system to be used ( DDKalTest, aidaTT, ... )",
 			       _trkSystemName,
 			       std::string("DDKalTest") );
 
@@ -299,7 +299,7 @@ void SiliconEndcapTracking::init() {
    /**********************************************************************************************/
 
   // set up the geometry needed by TrkSystem
-  _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( _trkSystemName , marlin::Global::GEAR , "" ) ;
+  _trkSystem =  MarlinTrk::Factory::createMarlinTrkSystem( _trkSystemName , 0 , "" ) ;
   
   if( _trkSystem == 0 ){
     
