@@ -16,7 +16,7 @@
 #include "MarlinCED.h"
 
 //----From DD4Hep-----------------------------
-#include "DD4hep/LCDD.h"
+#include "DD4hep/Detector.h"
 #include "DD4hep/DD4hepUnits.h"
 
 
@@ -284,10 +284,10 @@ void SiliconEndcapTracking::init() {
    
    // Get the B Field in z direction
       //---------DD4Hep-------------  
-   DD4hep::Geometry::LCDD& lcdd = DD4hep::Geometry::LCDD::getInstance();
+   dd4hep::Detector& theDetector = dd4hep::Detector::getInstance();
    const double pos[3]={0,0,0}; 
    double magneticFieldVector[3]={0,0,0}; 
-   lcdd.field().magneticField(pos,magneticFieldVector); // get the magnetic field vector from DD4hep
+   theDetector.field().magneticField(pos,magneticFieldVector); // get the magnetic field vector from DD4hep
    _Bz = magneticFieldVector[2]/dd4hep::tesla;
 
    streamlog_out( DEBUG2 ) << " Bz = " << _Bz << " \n";
@@ -1521,7 +1521,7 @@ void SiliconEndcapTracking::getCellID0AndPositionInfo(LCCollection*& col ){
   for (int i=0; i<col->getNumberOfElements(); i++){    
     TrackerHitPlane* trackerHit = dynamic_cast<TrackerHitPlane*>( col->getElementAt(i) ) ;
 
-    DD4hep::long64 id = trackerHit->getCellID0() ;
+    dd4hep::long64 id = trackerHit->getCellID0();
     cellid_decoder.setValue( id ) ;
 
     int layer = cellid_decoder["layer"].value();

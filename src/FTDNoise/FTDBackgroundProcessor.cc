@@ -16,7 +16,7 @@
 #include "marlin/VerbosityLevels.h"
 
 //----From DD4Hep-----------------------------
-#include "DD4hep/LCDD.h"
+#include "DD4hep/Detector.h"
 #include "DD4hep/DD4hepUnits.h"
 #include "DDRec/DetectorData.h"
 #include "DDRec/Surface.h"
@@ -188,8 +188,8 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
   /*       Get geometry parameters and seed                                                         */
   /**********************************************************************************************/
 
-  DD4hep::Geometry::LCDD& lcdd = DD4hep::Geometry::LCDD::getInstance();
-  DD4hep::Geometry::DetElement ftdDE = lcdd.detector("FTD") ;
+  dd4hep::Detector& theDetector = dd4hep::Detector::getInstance();
+  dd4hep::DetElement ftdDE = theDetector.detector("FTD") ;
   DD4hep::DDRec::ZDiskPetalsData* ftd = ftdDE.extension<DD4hep::DDRec::ZDiskPetalsData>() ;
   int nLayers = ftd->layers.size() ; 
 
@@ -199,7 +199,7 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
 
    
   // map with tracking surfaces
-  DD4hep::DDRec::SurfaceManager& surfMan = *lcdd.extension< DD4hep::DDRec::SurfaceManager >() ;
+  DD4hep::DDRec::SurfaceManager& surfMan = *theDetector.extension< DD4hep::DDRec::SurfaceManager >() ;
   const DD4hep::DDRec::SurfaceMap& surfMap = *surfMan.map( "world" ) ;
 
    

@@ -10,7 +10,7 @@
 #include "marlin/Global.h"
 
 //----From DD4Hep-----------------------------
-#include "DD4hep/LCDD.h"
+#include "DD4hep/Detector.h"
 #include "DD4hep/DD4hepUnits.h"
 #include "DDRec/DetectorData.h"
 
@@ -119,9 +119,9 @@ void TrueTrackCritAnalyser::init() {
    // usually a good idea to
    printParameters() ;
    
-   DD4hep::Geometry::LCDD& lcdd = DD4hep::Geometry::LCDD::getInstance();
-   DD4hep::Geometry::DetElement ftdDE = lcdd.detector("FTD") ;
-   DD4hep::DDRec::ZDiskPetalsData* ftd = ftdDE.extension<DD4hep::DDRec::ZDiskPetalsData>() ;
+   dd4hep::Detector& theDetector = dd4hep::Detector::getInstance();
+   dd4hep::DetElement ftdDE = theDetector.detector("FTD") ;
+   dd4hep::rec::ZDiskPetalsData* ftd = ftdDE.extension<dd4hep::rec::ZDiskPetalsData>() ;
 
    int nLayers = ftd->layers.size() + 1; // we add one layer for the IP
 
@@ -130,7 +130,7 @@ void TrueTrackCritAnalyser::init() {
    // make sure we take the highest number of modules / sensors available
    for(unsigned i=0,n=ftd->layers.size() ; i<n; ++i){
      
-     const DD4hep::DDRec::ZDiskPetalsData::LayerLayout& l = ftd->layers[i] ;
+     const dd4hep::rec::ZDiskPetalsData::LayerLayout& l = ftd->layers[i] ;
 
      if( l.petalNumber > nModules ) nModules = l.petalNumber ;
      if( l.sensorsPerPetal > nSensors ) nSensors = l.sensorsPerPetal ;
