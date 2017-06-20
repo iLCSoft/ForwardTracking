@@ -190,7 +190,7 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
 
   dd4hep::Detector& theDetector = dd4hep::Detector::getInstance();
   dd4hep::DetElement ftdDE = theDetector.detector("FTD") ;
-  DD4hep::DDRec::ZDiskPetalsData* ftd = ftdDE.extension<DD4hep::DDRec::ZDiskPetalsData>() ;
+  dd4hep::rec::ZDiskPetalsData* ftd = ftdDE.extension<dd4hep::rec::ZDiskPetalsData>() ;
   int nLayers = ftd->layers.size() ; 
 
   unsigned seed = Global::EVENTSEEDER->getSeed(this);   
@@ -199,8 +199,8 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
 
    
   // map with tracking surfaces
-  DD4hep::DDRec::SurfaceManager& surfMan = *theDetector.extension< DD4hep::DDRec::SurfaceManager >() ;
-  const DD4hep::DDRec::SurfaceMap& surfMap = *surfMan.map( "world" ) ;
+  dd4hep::rec::SurfaceManager& surfMan = *theDetector.extension< dd4hep::rec::SurfaceManager >() ;
+  const dd4hep::rec::SurfaceMap& surfMap = *surfMan.map( "world" ) ;
 
    
   CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( LCTrackerCellID::encoding_string() , colPixel ) ;
@@ -219,8 +219,8 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
          
       unsigned nModules = ftd->layers[layer].petalNumber ;
       unsigned nSensors = ftd->layers[layer].sensorsPerPetal;
-      bool isPixel       = ftd->layers[layer].typeFlags[ DD4hep::DDRec::ZDiskPetalsData::SensorType::Pixel ] ;
-      bool isDoubleSided = ftd->layers[layer].typeFlags[ DD4hep::DDRec::ZDiskPetalsData::SensorType::DoubleSided ] ;
+      bool isPixel       = ftd->layers[layer].typeFlags[ dd4hep::rec::ZDiskPetalsData::SensorType::Pixel ] ;
+      bool isDoubleSided = ftd->layers[layer].typeFlags[ dd4hep::rec::ZDiskPetalsData::SensorType::DoubleSided ] ;
       if( isDoubleSided ) assert( nSensors%2 == 0 ); // make sure there is an even number of sensors if doublesided
          
       // fg: nomenclature for petal dimensions has changed wrt. Gear
@@ -272,10 +272,10 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
 	  cellid_encoder[ LCTrackerCellID::sensor() ] = sensor ;
                
 
-	  DD4hep::DDRec::SurfaceMap::const_iterator si = surfMap.find( cellid_encoder.lowWord() )  ;
-	  DDSurfaces::ISurface* surf = ( si != surfMap.end()  ?  si->second  : 0 )  ; 
+	  dd4hep::rec::SurfaceMap::const_iterator si = surfMap.find( cellid_encoder.lowWord() )  ;
+	  dd4hep::rec::ISurface* surf = ( si != surfMap.end()  ?  si->second  : 0 )  ; 
 
-	  DDSurfaces::Vector3D surfOrigin = surf->localToGlobal( DDSurfaces::Vector2D( 0., 0. ) ) ;
+	  dd4hep::rec::Vector3D surfOrigin = surf->localToGlobal( dd4hep::rec::Vector2D( 0., 0. ) ) ;
 	  surfOrigin = (1./dd4hep::mm) * surfOrigin ;
 
 	  double petalPhi = surfOrigin.phi() ;
@@ -361,8 +361,8 @@ void FTDBackgroundProcessor::processEvent( LCEvent * evt ) {
 	    trkHit->setPosition( pos ) ;
                   
                   
-	    DDSurfaces::Vector3D uVec = surf->u() ;
-	    DDSurfaces::Vector3D vVec = surf->v() ;
+	    dd4hep::rec::Vector3D uVec = surf->u() ;
+	    dd4hep::rec::Vector3D vVec = surf->v() ;
                   
 	    float u_direction[2] ;
 	    u_direction[0] = uVec.theta();
