@@ -1,3 +1,31 @@
+# v01-12
+
+* 2017-06-20 Frank Gaede ([PR#8](https://github.com/iLCSoft/ForwardTracking/pull/8))
+  - fix leftover dd4hep namespace changes
+
+* 2017-06-20 Andre Sailer ([PR#7](https://github.com/iLCSoft/ForwardTracking/pull/7))
+  - Adapt to changes in namespaces and LCDD -->  Detector
+
+* 2017-03-31 Frank Gaede ([PR#5](https://github.com/iLCSoft/ForwardTracking/pull/5))
+  - fix all warnings on clang, MacOS 
+      - does not include -WeffC++
+
+* 2017-03-31 Andre Sailer ([PR#4](https://github.com/iLCSoft/ForwardTracking/pull/4))
+  - Rename DDForwardTracking to SiliconEndcapTracking, solves #3 
+  - SiliconEndcapTracking: fix warnings
+  - Ignore warnings from external headers
+
+* 2017-03-31 Frank Gaede ([PR#2](https://github.com/iLCSoft/ForwardTracking/pull/2))
+  - replace Gear with DD4hep/DDRec
+      - using DD4hep::DDRec::ZDiskPetalsData as replacement for
+         gear::FTDParameters
+      - use DDSurfaces::Surface and DDRec::SurfaceManager as
+         replacement for gear::MeasurementSurfaceStore
+      - changed indentation for FTDBackgroundProcessor.cc
+
+* 2017-05-18 Frank Gaede ([PR#6](https://github.com/iLCSoft/ForwardTracking/pull/6))
+  - remove all references to Gear and MarlinKalTest
+
 # v01-11
 
 * 2017-03-31 Frank Gaede ([PR#5](https://github.com/iLCSoft/ForwardTracking/pull/5))
