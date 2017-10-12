@@ -324,6 +324,11 @@ void ForwardTracking::processRunHeader( LCRunHeader* ) {
 
 void ForwardTracking::processEvent( LCEvent * evt ) { 
 
+  // set the correct configuration for the tracking system for this event 
+  MarlinTrk::TrkSysConfig< MarlinTrk::IMarlinTrkSystem::CFG::useQMS>       mson( _trkSystem,  _MSOn ) ;
+  MarlinTrk::TrkSysConfig< MarlinTrk::IMarlinTrkSystem::CFG::usedEdx>      elosson( _trkSystem,_ElossOn) ;
+  MarlinTrk::TrkSysConfig< MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing> smoothon( _trkSystem,_SmoothOn) ;
+ 
    streamlog_out( DEBUG4 ) << "processing event number " << _nEvt << "\n";
    
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
