@@ -1,3 +1,8 @@
+# v01-13
+
+* 2017-10-12 Frank Gaede ([PR#9](https://github.com/iLCSoft/ForwardTracking/pull/9))
+  - set correct MarlinTrkSystem configuration for every event with `MarlinTrk::TrkSysConfig`
+
 # v01-12
 
 * 2017-06-20 Frank Gaede ([PR#8](https://github.com/iLCSoft/ForwardTracking/pull/8))
