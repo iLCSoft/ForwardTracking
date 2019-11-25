@@ -35,7 +35,7 @@ unsigned SectorSystemEndcap::getThetaSectors() const {
 } 
   
 
-unsigned SectorSystemEndcap::getLayer( int sector ) const throw ( OutOfRange ){
+unsigned SectorSystemEndcap::getLayer( int sector ) const {
   
   //std::cout << " SectorSystemEndcap::getLayer  total no of layers = " << _nLayers << " n divisions in phi = " << _nDivisionsInPhi << " sector = " << sector << std::endl ;
   
@@ -52,7 +52,7 @@ unsigned SectorSystemEndcap::getLayer( int sector ) const throw ( OutOfRange ){
 }
 
 
-unsigned SectorSystemEndcap::getPhi( int sector) const throw ( OutOfRange ){
+unsigned SectorSystemEndcap::getPhi( int sector) const {
 
   int theta = sector/(_nLayers*_nDivisionsInPhi) ;
 
@@ -65,7 +65,7 @@ unsigned SectorSystemEndcap::getPhi( int sector) const throw ( OutOfRange ){
 }
 
 
-unsigned SectorSystemEndcap::getTheta( int sector ) const throw ( OutOfRange ){
+unsigned SectorSystemEndcap::getTheta( int sector ) const {
 
    int Theta = sector/(_nLayers*_nDivisionsInPhi) ;
 
@@ -76,7 +76,7 @@ unsigned SectorSystemEndcap::getTheta( int sector ) const throw ( OutOfRange ){
 }
 
 
-int SectorSystemEndcap::getSector( int layer , int phi , int theta ) const throw ( OutOfRange ){
+int SectorSystemEndcap::getSector( int layer , int phi , int theta ) const {
   
   //std::cout << "getting sector : layer " << layer << " phi " << phi << " theta " << theta << std::endl ;
 
@@ -116,7 +116,7 @@ int SectorSystemEndcap::getSector( int layer , int phi , int theta ) const throw
 }
 
 
-int SectorSystemEndcap::getSector( int layer , double phi , double cosTheta ) const throw ( OutOfRange ){
+int SectorSystemEndcap::getSector( int layer , double phi , double cosTheta ) const {
   
 
   double _dPhi = (2*M_PI)/_nDivisionsInPhi;
@@ -163,7 +163,7 @@ int SectorSystemEndcap::getSector( int layer , double phi , double cosTheta ) co
 
 
 
-void SectorSystemEndcap::checkSectorIsInRange( int sector ) const throw ( OutOfRange ){
+void SectorSystemEndcap::checkSectorIsInRange( int sector ) const {
 
 
    if ( sector > _sectorMax ){
