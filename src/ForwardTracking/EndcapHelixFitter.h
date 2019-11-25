@@ -21,13 +21,13 @@ protected:
    EndcapHelixFitterException(){  /*no_op*/ ; } 
    
 public: 
-   virtual ~EndcapHelixFitterException() throw() { /*no_op*/; } 
+   virtual ~EndcapHelixFitterException() { /*no_op*/; } 
    
    EndcapHelixFitterException( const std::string& text ){
       message = "EndcapHelixFitterException: " + text ;
    }
    
-   virtual const char* what() const  throw() { return  message.c_str() ; } 
+   virtual const char* what() const noexcept { return  message.c_str() ; } 
    
 };
 
@@ -46,8 +46,8 @@ class EndcapHelixFitter{
    
 public:
    
-   EndcapHelixFitter( Track* track ) throw( EndcapHelixFitterException );
-   EndcapHelixFitter( std::vector < TrackerHit* > trackerHits ) throw( EndcapHelixFitterException );
+   EndcapHelixFitter( Track* track ) ;
+   EndcapHelixFitter( std::vector < TrackerHit* > trackerHits ) ;
    
    
    double getChi2(){ return _chi2; }
@@ -63,7 +63,7 @@ private:
    
   
    
-   void fit()throw( EndcapHelixFitterException );
+   void fit();
    
    double _chi2;
    int _Ndf;

@@ -110,7 +110,7 @@ void EndcapTrack::addHit( IEndcapHit* hit ){
 
 
 
-void EndcapTrack::fit() throw( FitterException ){
+void EndcapTrack::fit() {
    
    
   Fitter fitter( _lcioTrack , _trkSystem , 1 );

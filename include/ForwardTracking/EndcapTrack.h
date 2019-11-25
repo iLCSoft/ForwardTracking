@@ -61,7 +61,7 @@ namespace KiTrackMarlin{
       
       /** Fits the track and sets chi2, Ndf etc.
        */
-      virtual void fit() throw( FitterException );
+      virtual void fit() ;
       
       virtual ~EndcapTrack(){ delete _lcioTrack; }
       

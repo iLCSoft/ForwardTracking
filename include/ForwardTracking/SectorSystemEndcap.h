@@ -47,11 +47,11 @@ namespace KiTrackMarlin{
        * 
        * @return the layer corresponding to the passed sector number
        */
-      virtual unsigned getLayer( int sector ) const throw ( OutOfRange );
+      virtual unsigned getLayer( int sector ) const ;
       
-      virtual unsigned getPhi( int sector ) const throw ( OutOfRange );
+      virtual unsigned getPhi( int sector ) const ;
 
-      virtual unsigned getTheta( int sector ) const throw ( OutOfRange );
+      virtual unsigned getTheta( int sector ) const ;
 
       /** @return some information on the sector as string */
       virtual std::string getInfoOnSector( int sector) const;
@@ -59,9 +59,9 @@ namespace KiTrackMarlin{
 
       /** Calculates the sector number corresponding to the passed parameters
        */
-      int getSector( int layer, int phi, int theta ) const throw( OutOfRange );
+      int getSector( int layer, int phi, int theta ) const ;
 
-      int getSector( int layer, double phi, double cosTheta ) const throw( OutOfRange );
+      int getSector( int layer, double phi, double cosTheta ) const ;
       
       unsigned getPhiSectors() const ;
 
@@ -78,7 +78,7 @@ namespace KiTrackMarlin{
       unsigned _nDivisionsInPhi ;
       unsigned _nDivisionsInTheta ;
       
-      void checkSectorIsInRange( int sector ) const throw ( OutOfRange );
+      void checkSectorIsInRange( int sector ) const ;
       
    };
 

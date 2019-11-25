@@ -13,7 +13,7 @@
 #include "Tools/KiTrackMarlinTools.h"
 
 
-EndcapHelixFitter::EndcapHelixFitter( std::vector< TrackerHit* > trackerHits )throw( EndcapHelixFitterException ){
+EndcapHelixFitter::EndcapHelixFitter( std::vector< TrackerHit* > trackerHits ){
    
    _trackerHits = trackerHits;
    
@@ -21,7 +21,7 @@ EndcapHelixFitter::EndcapHelixFitter( std::vector< TrackerHit* > trackerHits )th
    
 }
 
-EndcapHelixFitter::EndcapHelixFitter( Track* track )throw( EndcapHelixFitterException ){
+EndcapHelixFitter::EndcapHelixFitter( Track* track ){
    
    _trackerHits = track->getTrackerHits();
    
@@ -29,7 +29,7 @@ EndcapHelixFitter::EndcapHelixFitter( Track* track )throw( EndcapHelixFitterExce
 
 }
 
-void EndcapHelixFitter::fit()throw( EndcapHelixFitterException ){
+void EndcapHelixFitter::fit(){
    
 
    std::sort( _trackerHits.begin(), _trackerHits.end(), KiTrackMarlin::compare_TrackerHit_R );
