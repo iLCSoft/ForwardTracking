@@ -1,3 +1,8 @@
+# v01-14
+
+* 2019-11-25 Remi Ete ([PR#10](https://github.com/iLCSoft/ForwardTracking/pull/10))
+  - Remove dynamic exception specifier (c++17 compatibility)
+
 # v01-13
 
 * 2017-10-12 Frank Gaede ([PR#9](https://github.com/iLCSoft/ForwardTracking/pull/9))
