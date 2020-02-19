@@ -15,7 +15,6 @@ SET( ${PROJECT_NAME}_VERSION_MINOR 14 )
 SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
 cmake_policy(SET CMP0008 NEW)
-cmake_policy(SET CMP0026 OLD)
 
 ### DEPENDENCIES ############################################################
 
@@ -159,6 +158,7 @@ TARGET_LINK_LIBRARIES( param_runner_background ${PROJECT_NAME} )
 
 
 ### TESTING #################################################################
+cmake_policy(SET CMP0026 OLD)
 
 MACRO( ADD_UNIT_TEST _name )
     IF( BUILD_TESTING )
