@@ -166,7 +166,7 @@ MACRO( ADD_UNIT_TEST _name )
         ADD_EXECUTABLE( test_${_name} EXCLUDE_FROM_ALL ${ARGN} )
     ENDIF()        
     TARGET_LINK_LIBRARIES( test_${_name} ${PROJECT_NAME} )
-    ADD_TEST( t_${_name} test_${_name} )
+    ADD_TEST( t_${_name} $<TARGET_FILE:test_${_name}> )
 ENDMACRO()
 
 INCLUDE_DIRECTORIES( SYSTEM ${ILCTEST_INCLUDE_DIRS} )
