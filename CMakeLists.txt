@@ -158,7 +158,6 @@ TARGET_LINK_LIBRARIES( param_runner_background ${PROJECT_NAME} )
 
 
 ### TESTING #################################################################
-cmake_policy(SET CMP0026 OLD)
 
 MACRO( ADD_UNIT_TEST _name )
     IF( BUILD_TESTING )
@@ -167,8 +166,7 @@ MACRO( ADD_UNIT_TEST _name )
         ADD_EXECUTABLE( test_${_name} EXCLUDE_FROM_ALL ${ARGN} )
     ENDIF()        
     TARGET_LINK_LIBRARIES( test_${_name} ${PROJECT_NAME} )
-    GET_TARGET_PROPERTY( _executable test_${_name} LOCATION )
-    ADD_TEST( t_${_name} ${_executable} )
+    ADD_TEST(NAME t_${_name} COMMAND test_${_name})
 ENDMACRO()
 
 INCLUDE_DIRECTORIES( SYSTEM ${ILCTEST_INCLUDE_DIRS} )
@@ -185,4 +183,3 @@ SET_TESTS_PROPERTIES( t_simple_circle PROPERTIES WILL_FAIL TRUE )
 
 # display some variables and write them to cache
 DISPLAY_STD_VARIABLES()
-
