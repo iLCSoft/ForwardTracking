@@ -1,3 +1,9 @@
+# v01-14-01
+
+* 2022-06-29 Thomas Madlener ([PR#14](https://github.com/iLCSoft/ForwardTracking/pull/14))
+  - Migrate the CI to github actions and remove the travis CI config
+  - Make the doxygen cmake config work with newer cmake versions (>= 3.17)
+
 # v01-14
 
 * 2019-11-25 Remi Ete ([PR#10](https://github.com/iLCSoft/ForwardTracking/pull/10))
