@@ -1,5 +1,5 @@
 # ForwardTracking
-[![Build Status](https://travis-ci.org/iLCSoft/ForwardTracking.svg?branch=master)](https://travis-ci.org/iLCSoft/ForwardTracking)
+[![linux](https://github.com/iLCSoft/ForwardTracking/actions/workflows/linux.yml/badge.svg)](https://github.com/iLCSoft/ForwardTracking/actions/workflows/linux.yml)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/12350/badge.svg)](https://scan.coverity.com/projects/ilcsoft-forwardtracking)
 
 Track Reconstruction for the Forward Direction (for the FTD)
