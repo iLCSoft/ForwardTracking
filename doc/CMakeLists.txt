@@ -16,6 +16,7 @@ IF( DOXYGEN_FOUND )
     # directories to search for documentation
     SET( DOX_INPUT overview.html ../include ../src )
 
+    FILE(GLOB DOXYGEN_SOURCES ../include/* ../src/*)
 
     # custom command to build documentation
     ADD_CUSTOM_COMMAND(
@@ -27,7 +28,7 @@ IF( DOXYGEN_FOUND )
                 "${DOXYGEN_EXECUTABLE}"
         WORKING_DIRECTORY "${DOC_SRC_DIR}"
         COMMENT "Building API Documentation..."
-        DEPENDS Doxyfile overview.html CMakeLists.txt ../include/* ../src/*
+        DEPENDS Doxyfile overview.html CMakeLists.txt ${DOXYGEN_SOURCES}
     )
 
     # add doc target
