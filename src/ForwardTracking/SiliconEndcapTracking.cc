@@ -1526,7 +1526,7 @@ void SiliconEndcapTracking::getCellID0AndPositionInfo(LCCollection*& col ){
   for (int i=0; i<col->getNumberOfElements(); i++){    
     TrackerHitPlane* trackerHit = dynamic_cast<TrackerHitPlane*>( col->getElementAt(i) ) ;
 
-    dd4hep::long64 id = trackerHit->getCellID0();
+    const dd4hep::CellID id = trackerHit->getCellID0();
     cellid_decoder.setValue( id ) ;
 
     int layer = cellid_decoder["layer"].value();
