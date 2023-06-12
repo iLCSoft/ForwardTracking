@@ -16,13 +16,10 @@ class EndcapHelixFitterException : public std::exception {
    
    
 protected:
-   std::string message ;
-   
-   EndcapHelixFitterException(){  /*no_op*/ ; } 
-   
+   std::string message{} ;
+
 public: 
-   virtual ~EndcapHelixFitterException() { /*no_op*/; } 
-   
+
    EndcapHelixFitterException( const std::string& text ){
       message = "EndcapHelixFitterException: " + text ;
    }
@@ -65,16 +62,16 @@ private:
    
    void fit();
    
-   double _chi2;
-   int _Ndf;
+   double _chi2{};
+   int _Ndf{};
    
-   float _omega;
-   float _tanLambda;
-   float _phi0;
-   float _d0;
-   float _z0;
+   float _omega{};
+   float _tanLambda{};
+   float _phi0{};
+   float _d0{};
+   float _z0{};
    
-   std::vector< TrackerHit* > _trackerHits;
+   std::vector< TrackerHit* > _trackerHits{};
   
    
 };

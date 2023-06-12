@@ -23,21 +23,22 @@ namespace KiTrackMarlin{
    public:
       
     EndcapSectorConnector ( const SectorSystemEndcap* sectorSystemEndcap , unsigned layerStepMax, unsigned lastLayerToIP ) ;
-      
+    EndcapSectorConnector(const EndcapSectorConnector&) = default;
+    EndcapSectorConnector& operator=(const EndcapSectorConnector&) = default;
+    ~EndcapSectorConnector() = default;
+
       /** @return a set of all sectors that are connected to the passed sector */
       virtual std::set <int>  getTargetSectors ( int sector );
-      
-      virtual ~EndcapSectorConnector(){};
-      
+
    private:
       
-      const SectorSystemEndcap* _sectorSystemEndcap;
+      const SectorSystemEndcap* _sectorSystemEndcap{nullptr};
       
-      unsigned _layerStepMax;
-      unsigned _nLayers;
-      unsigned _lastLayerToIP;
-      unsigned _nDivisionsInPhi ;
-      unsigned _nDivisionsInTheta ;      
+      unsigned _layerStepMax{};
+      unsigned _nLayers{};
+      unsigned _lastLayerToIP{};
+      unsigned _nDivisionsInPhi{};
+      unsigned _nDivisionsInTheta{};
       
    };
    
