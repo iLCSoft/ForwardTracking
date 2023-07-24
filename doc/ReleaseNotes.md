@@ -1,3 +1,11 @@
+# v01-14-02
+
+* 2023-06-12 tmadlener ([PR#15](https://github.com/iLCSoft/ForwardTracking/pull/15))
+  -  Replace `dd4hep::long64` by more appropriate `dd4hep::CellID` after [AIDASoft/DD4hep#1125](https://github.com/AIDASoft/DD4hep/pull/1125)
+  - Bump versions of github action versions
+  - Add key4hep based CI workflow
+  - Fix several compiler warnings
+
 # v01-14-01
 
 * 2022-06-29 Thomas Madlener ([PR#14](https://github.com/iLCSoft/ForwardTracking/pull/14))
