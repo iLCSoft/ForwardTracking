@@ -94,7 +94,7 @@ std::string TrueTrack::getTrueTrackInfo() const{
       << ", Ndf = " << fitter.getNdf( lcio::TrackState::AtIP ) << "\n";
       
    }
-   catch( FitterException e ){
+   catch( const FitterException& e ){
       
       trackInfo << "Could not be fitted!!!\n";
       

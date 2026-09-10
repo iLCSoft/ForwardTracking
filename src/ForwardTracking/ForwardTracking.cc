@@ -712,7 +712,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                else streamlog_out( DEBUG2 ) << "Keeping track because of good helix fit: chi2/ndf = " << chi2OverNdf << "\n";
                
             }
-            catch( FTDHelixFitterException e ){
+            catch( const FTDHelixFitterException& e ){
                
                
                streamlog_out( DEBUG3 ) << "Track rejected, because fit failed: " <<  e.what() << "\n";
@@ -752,7 +752,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                
                
             }
-            catch( FitterException e ){
+            catch( const FitterException& e ){
                
                
                streamlog_out( DEBUG3 ) << "Track rejected, because fit failed: " <<  e.what() << "\n";
@@ -916,7 +916,7 @@ void ForwardTracking::processEvent( LCEvent * evt ) {
                trkCol->addElement( trackImpl );
                
             }
-            catch( FitterException e ){
+            catch( const FitterException& e ){
                
                streamlog_out( DEBUG4 ) << "ForwardTracking: track couldn't be finalized due to fitter error: " << e.what() << "\n";
                delete trackImpl;
