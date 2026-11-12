@@ -76,14 +76,14 @@ EndcapHit01::EndcapHit01( TrackerHit* trackerHit , const SectorSystemEndcap* con
    radius = sqrt(radius);
       
    double _cosTheta = (pos[2]/radius);
-   double _phi = atan2(pos[1],pos[0]);
-      
-   if (_phi < 0.) _phi = _phi + 2*M_PI;   
+   double phi = atan2(pos[1],pos[0]);
+
+   if (phi < 0.) phi = phi + 2*M_PI;
 
    // YV, for debugging. Calculate sector here and not through the IVXHit base class
    //calculateSector();
 
-   _sector = _sectorSystemEndcap->getSector( _layer, _phi, _cosTheta );
+   _sector = _sectorSystemEndcap->getSector( _layer, phi, _cosTheta );
 
    
    //We assume a real hit. If it is virtual, this has to be set.

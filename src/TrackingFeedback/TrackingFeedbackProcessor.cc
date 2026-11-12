@@ -335,7 +335,7 @@ void TrackingFeedbackProcessor::processEvent( LCEvent * evt ) {
       chi2Prob = fitter.getChi2Prob( lcio::TrackState::AtIP );
       
       }
-      catch( FitterException e ){
+      catch( const FitterException& e ){
          
          streamlog_out( DEBUG3 ) << "Monte Carlo Track " << i << " fit failed: " <<  e.what() << "\n";
          
@@ -858,7 +858,7 @@ void TrackingFeedbackProcessor::saveRootInformation(){
          _trueTrack_Ndf = fitter.getNdf( lcio::TrackState::AtIP );
          
       }
-      catch( FitterException e ){
+      catch( const FitterException& e ){
          
          _trueTrack_chi2prob = -1;
          _trueTrack_chi2 = -1;
@@ -903,7 +903,7 @@ void TrackingFeedbackProcessor::saveRootInformation(){
          _recoTrack_Ndf = fitter.getNdf( lcio::TrackState::AtIP );
          
       }
-      catch( FitterException e ){
+      catch( const FitterException& e ){
          
          _recoTrack_chi2prob = -1;
          _recoTrack_chi2 = -1;
