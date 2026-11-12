@@ -1,3 +1,8 @@
+# v01-15
+
+* 2026-11-12 Juan Miguel Carceller ([PR#18](https://github.com/iLCSoft/ForwardTracking/pull/18))
+  - Fix CMake 4 compatibility by raising the minimum required CMake version from 2.6 to 3.10.
+
 # v01-14-02
 
 * 2023-06-12 tmadlener ([PR#15](https://github.com/iLCSoft/ForwardTracking/pull/15))
